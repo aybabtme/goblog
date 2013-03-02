@@ -24,10 +24,10 @@ func init() {
 
 	createTable := `
    CREATE TABLE Posts(
-      id INTEGER NOT NULL PRIMARY KEY
-      author VARCHAR(255)
-      content TEXT
-      date TIMESTAMP
+      id INTEGER NOT NULL PRIMARY KEY,
+      author VARCHAR(255),
+      content TEXT,
+      date TIMESTAMP,
    )`
 
 	_, err = db.Exec(createTable)
