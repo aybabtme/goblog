@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS Posts(
 
 var insertOrReplaceRowForId string = `
 INSERT OR REPLACE INTO Posts( author, content, date)
-VALUES( ?, ?, ?)
-`
+VALUES( ?, ?, ?)`
+
 var findRowById string = `
 SELECT P.author, P.content, P.date
 FROM Posts AS P
@@ -34,14 +34,6 @@ WHERE Posts.id = ?`
 var queryForAll string = `
 SELECT P.id, P.author, P.content, P.date
 FROM Posts AS P`
-
-// Represents a post in the blog
-type Post struct {
-	id      int64
-	author  string
-	content string
-	date    time.Time
-}
 
 func init() {
 	db, err := sql.Open(DBDriver(), DBName())
@@ -59,14 +51,53 @@ func init() {
 
 }
 
-func NewPost(author, content string) *Post {
+// Represents a post in the blog
+type Post struct {
+	id      int64
+	author  string
+	content string
+	date    time.Time
+}
 
+func NewPost(author, content string) *Post {
 	p := new(Post)
 	p.author = author
 	p.content = content
 	p.date = time.Now().UTC()
 	return p
 }
+
+func (p *Post) Id() int64 {
+	return p.id
+}
+
+func (p *Post) Author() string {
+	return p.author
+}
+
+func (p *Post) SetAuthor(author string) {
+	p.author = author
+}
+
+func (p *Post) Content() string {
+	return p.content
+}
+
+func (p *Post) SetContent(content string) {
+	p.content = content
+}
+
+func (p *Post) Date() time.Time {
+	return p.date
+}
+
+func (p *Post) SetDate(time time.Time) {
+	p.date = time
+}
+
+//
+// SQL stuff
+//
 
 // Finds a post that match the given id
 func FindPostById(id int64) (Post, error) {
