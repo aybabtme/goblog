@@ -129,6 +129,7 @@ func FindPostById(id int64) (Post, error) {
 	p.id = id
 	p.author = author
 	p.content = content
+	p.date = date
 
 	return p, nil
 }
