@@ -31,6 +31,10 @@ var deleteRowById string = `
 DELETE FROM Posts
 WHERE Posts.id = ?`
 
+var queryForAll string = `
+SELECT P.id, P.author, P.content, P.date
+FROM Posts AS P`
+
 // Represents a post in the blog
 type Post struct {
 	id      int64
@@ -65,19 +69,19 @@ func NewPost(author, content string) *Post {
 }
 
 // Finds a post that match the given id
-func FindPostByID(id int64) (Post, error) {
+func FindPostById(id int64) (Post, error) {
 	var p Post
 
 	db, err := sql.Open(DBDriver(), DBName())
 	if err != nil {
-		fmt.Println("FindPostByID", err)
+		fmt.Println("FindPostById", err)
 		return p, err
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare(findRowById)
 	if err != nil {
-		fmt.Println("FindPostByID", err)
+		fmt.Println("FindPostById", err)
 		return p, err
 	}
 	defer stmt.Close()
@@ -87,7 +91,7 @@ func FindPostByID(id int64) (Post, error) {
 	var date time.Time
 	err = stmt.QueryRow(id).Scan(&author, &content, &date)
 	if err != nil {
-		fmt.Println("FindPostByID", err)
+		fmt.Println("FindPostById", err)
 		return p, err
 	}
 
@@ -98,26 +102,56 @@ func FindPostByID(id int64) (Post, error) {
 	return p, nil
 }
 
+// Finds all the posts in the database
+func FindAllPosts() ([]Post, error) {
+	var posts []Post
+	db, err := sql.Open(DBDriver(), DBName())
+	if err != nil {
+		fmt.Println("FindAllPosts:", err)
+		return posts, err
+	}
+	defer db.Close()
+
+	rows, err := db.Query(queryForAll)
+	if err != nil {
+		fmt.Println("FindAllPosts:", err)
+		return posts, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id int64
+		var author string
+		var content string
+		var date time.Time
+		rows.Scan(&id, &author, &content, &date)
+		p := Post{id, author, content, date}
+		posts = append(posts, p)
+	}
+
+	return posts, nil
+}
+
 // Saves the post (or update it if it already exists)
 // to the database
 func (p *Post) Save() {
 	db, err := sql.Open(DBDriver(), DBName())
 	if err != nil {
-		fmt.Println("Save", err)
+		fmt.Println("Save:", err)
 		return
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare(insertOrReplaceRowForId)
 	if err != nil {
-		fmt.Println("Save", err)
+		fmt.Println("Save:", err)
 		return
 	}
 	defer stmt.Close()
 
 	res, err := stmt.Exec(p.author, p.content, p.date)
 	if err != nil {
-		fmt.Println("Save", err)
+		fmt.Println("Save:", err)
 		return
 	}
 
@@ -129,21 +163,21 @@ func (p *Post) Destroy() {
 
 	db, err := sql.Open(DBDriver(), DBName())
 	if err != nil {
-		fmt.Println("Destroy", err)
+		fmt.Println("Destroy:", err)
 		return
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare(deleteRowById)
 	if err != nil {
-		fmt.Println("Destroy", err)
+		fmt.Println("Destroy:", err)
 		return
 	}
 	defer stmt.Close()
 
 	_, err = stmt.Exec(p.id)
 	if err != nil {
-		fmt.Println("Destroy", err)
+		fmt.Println("Destroy:", err)
 		return
 	}
 

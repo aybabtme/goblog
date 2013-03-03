@@ -1,5 +1,9 @@
 package db
 
+import (
+	"fmt"
+)
+
 func DBName() string {
 	return "./goblog.db"
 }
@@ -18,4 +22,13 @@ func Start() {
 	p2.Save()
 	p2.Destroy()
 
+	posts, err := FindAllPosts()
+	if err != nil {
+		fmt.Println("Start:", err)
+		return
+	}
+
+	for idx, val := range posts {
+		fmt.Printf("%d : named %s\n", idx, val.author)
+	}
 }
