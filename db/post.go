@@ -59,11 +59,11 @@ type Post struct {
 	date    time.Time
 }
 
-func NewPost(author, content string) *Post {
+func NewPost(author, content string, date time.Time) *Post {
 	p := new(Post)
 	p.author = author
 	p.content = content
-	p.date = time.Now().UTC()
+	p.date = date
 	return p
 }
 
