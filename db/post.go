@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS Posts(
    id INTEGER PRIMARY KEY AUTOINCREMENT,
    author VARCHAR(255),
    content TEXT,
-   date TIMESTAMP
+   date DATETIME
 )`
 
 var insertOrReplaceRowForId string = `
