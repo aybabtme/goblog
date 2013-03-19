@@ -5,14 +5,13 @@ import (
 	"fmt"
 	_ "github.com/bmizerany/pq"
 	_ "github.com/mattn/go-sqlite3"
-	"time"
 )
 
 // Interface to abstract between different drivers (SQLite or Postgres)
 type Databaser interface {
 	// not exported because only used within package
-	name() string
-	driver() string
+	Name() string
+	Driver() string
 }
 
 // A connection to a SQLite3 db
@@ -20,9 +19,14 @@ type SQLiter struct {
 	name string
 }
 
+// Prepares a SQLiter for use as Databaser
+func NewSQLiter(dbName string) SQLiter {
+	return SQLiter{name: dbName}
+}
+
 // The name of the SQLite3 db
 func (db SQLiter) Name() string {
-	return fmt.Sprintf("./%s.d", db.name)
+	return fmt.Sprintf("./%s.db", db.name)
 }
 
 // The name of the driver for the SQLite3 driver
@@ -36,18 +40,38 @@ type Postgreser struct {
 	username string
 }
 
+// Prepares a Postgreser for use as Databaser
+func NewPostgreser(dbName, username string) Postgreser {
+	return Postgreser{name: dbName, username: username}
+}
+
 // The name of the PostgreSQL db
-func (db Postgreser) name() string {
+func (db Postgreser) Name() string {
 	return "postgres"
 }
 
 // The name of the driver for the PostgreSQL driver
-func (db Postgreser) driver() string {
+func (db Postgreser) Driver() string {
 	return fmt.Sprintf("user=%s dbname=%s host=%s sslmode=disable",
-		db.username, db.name, "/var/run/postgresql")
+		db.username, db.name, "localhost")
 }
 
-// Databaser specific stuff
-func (d *Databaser) CreateTables() {
-	d.createPostTable()
+//
+// Persistance abstraction
+//
+
+// Keeps all info required to save stuff on a persistance
+type Persister struct {
+	databaser Databaser
+}
+
+func NewPersistance(dbaser Databaser) (*Persister, error) {
+	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
+	if err != nil {
+		return nil, err
+	}
+	db.Close()
+	var persist = &Persister{databaser: dbaser}
+	persist.createPostTable()
+	return persist, nil
 }

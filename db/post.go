@@ -80,9 +80,11 @@ func (p *Post) SetDate(time time.Time) {
 //
 
 // Create the table Post in the database interface
-func (d *Databaser) createPostTable() {
+func (persist *Persister) createPostTable() {
 
-	db, err := sql.Open(d.name(), d.driver())
+	var dbaser = persist.databaser
+
+	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
 	if err != nil {
 		fmt.Println("Error on open of database", err)
 		return
@@ -97,20 +99,23 @@ func (d *Databaser) createPostTable() {
 }
 
 // Creates a new Post attached to the Database (but not saved)
-func (d *Databaser) NewPost(author string, content string, date time.Time) {
+func (persist *Persister) NewPost(author string, content string, date time.Time) *Post {
 
 	return &Post{
 		author:  author,
 		content: content,
 		date:    date,
-		db:      d,
+		db:      persist.databaser,
 	}
 }
 
 // Finds all the posts in the database
-func (d *Databaser) FindAllPosts() ([]Post, error) {
+func (persist *Persister) FindAllPosts() ([]Post, error) {
+
 	var posts []Post
-	db, err := sql.Open(d.driver(), d.name())
+	var dbaser = persist.databaser
+
+	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
 	if err != nil {
 		fmt.Println("FindAllPosts:", err)
 		return posts, err
@@ -135,7 +140,7 @@ func (d *Databaser) FindAllPosts() ([]Post, error) {
 			author:  author,
 			content: content,
 			date:    date,
-			db:      d,
+			db:      dbaser,
 		}
 		posts = append(posts, p)
 	}
@@ -144,19 +149,22 @@ func (d *Databaser) FindAllPosts() ([]Post, error) {
 }
 
 // Finds a post that matches the given id
-func (d *Databaser) FindPostById(id int64) (Post, error) {
+func (persist *Persister) FindPostById(id int64) (*Post, error) {
 
-	db, err := sql.Open(d.driver(), d.Name())
+	var p *Post
+	var dbaser = persist.databaser
+
+	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
 	if err != nil {
 		fmt.Println("FindPostById:", err)
-		return nil, err
+		return p, err
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare(findRowById)
 	if err != nil {
 		fmt.Println("FindPostById:", err)
-		return nil, err
+		return p, err
 	}
 	defer stmt.Close()
 
@@ -166,15 +174,17 @@ func (d *Databaser) FindPostById(id int64) (Post, error) {
 	err = stmt.QueryRow(id).Scan(&author, &content, &date)
 	if err != nil {
 		fmt.Println("FindPostById:", err)
-		return nil, err
+		return p, err
 	}
 
-	return &Post{
+	p = &Post{
 		id:     id,
 		author: author,
 		date:   date,
-		db:     d,
-	}, nil
+		db:     dbaser,
+	}
+
+	return p, nil
 }
 
 //
@@ -184,7 +194,7 @@ func (d *Databaser) FindPostById(id int64) (Post, error) {
 // Saves the post (or update it if it already exists)
 // to the database
 func (p *Post) Save() {
-	db, err := sql.Open(p.db.driver(), p.db.name())
+	db, err := sql.Open(p.db.Driver(), p.db.Name())
 	if err != nil {
 		fmt.Println("Save:", err)
 		return
@@ -210,7 +220,7 @@ func (p *Post) Save() {
 // Deletes the post from the database
 func (p *Post) Destroy() {
 
-	db, err := sql.Open(p.db.driver(), p.db.name())
+	db, err := sql.Open(p.db.Driver(), p.db.Name())
 	if err != nil {
 		fmt.Println("Destroy:", err)
 		return
