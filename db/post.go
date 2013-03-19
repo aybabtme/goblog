@@ -3,7 +3,6 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
 	"time"
 )
 
@@ -35,36 +34,13 @@ var queryForAll string = `
 SELECT P.id, P.author, P.content, P.date
 FROM Posts AS P`
 
-func init() {
-	db, err := sql.Open(DBDriver(), DBName())
-	if err != nil {
-		fmt.Println("Error on Post init", err)
-		return
-	}
-	defer db.Close()
-
-	_, err = db.Exec(createTable)
-	if err != nil {
-		fmt.Println("Error creating Posts table:", err)
-		return
-	}
-
-}
-
 // Represents a post in the blog
 type Post struct {
 	id      int64
 	author  string
 	content string
 	date    time.Time
-}
-
-func NewPost(author, content string, date time.Time) *Post {
-	p := new(Post)
-	p.author = author
-	p.content = content
-	p.date = date
-	return p
+	db      Databaser
 }
 
 func (p *Post) Id() int64 {
@@ -99,45 +75,42 @@ func (p *Post) SetDate(time time.Time) {
 // SQL stuff
 //
 
-// Finds a post that match the given id
-func FindPostById(id int64) (Post, error) {
-	var p Post
+//
+// Post-specific operations on Databaser
+//
 
-	db, err := sql.Open(DBDriver(), DBName())
+// Create the table Post in the database interface
+func (d *Databaser) createPostTable() {
+
+	db, err := sql.Open(d.name(), d.driver())
 	if err != nil {
-		fmt.Println("FindPostById", err)
-		return p, err
+		fmt.Println("Error on open of database", err)
+		return
 	}
 	defer db.Close()
 
-	stmt, err := db.Prepare(findRowById)
+	_, err = db.Exec(createTable)
 	if err != nil {
-		fmt.Println("FindPostById", err)
-		return p, err
+		fmt.Println("Error creating Posts table:", err)
+		return
 	}
-	defer stmt.Close()
+}
 
-	var author string
-	var content string
-	var date time.Time
-	err = stmt.QueryRow(id).Scan(&author, &content, &date)
-	if err != nil {
-		fmt.Println("FindPostById", err)
-		return p, err
+// Creates a new Post attached to the Database (but not saved)
+func (d *Databaser) NewPost(author string, content string, date time.Time) {
+
+	return &Post{
+		author:  author,
+		content: content,
+		date:    date,
+		db:      d,
 	}
-
-	p.id = id
-	p.author = author
-	p.content = content
-	p.date = date
-
-	return p, nil
 }
 
 // Finds all the posts in the database
-func FindAllPosts() ([]Post, error) {
+func (d *Databaser) FindAllPosts() ([]Post, error) {
 	var posts []Post
-	db, err := sql.Open(DBDriver(), DBName())
+	db, err := sql.Open(d.driver(), d.name())
 	if err != nil {
 		fmt.Println("FindAllPosts:", err)
 		return posts, err
@@ -157,17 +130,61 @@ func FindAllPosts() ([]Post, error) {
 		var content string
 		var date time.Time
 		rows.Scan(&id, &author, &content, &date)
-		p := Post{id, author, content, date}
+		p := Post{
+			id:      id,
+			author:  author,
+			content: content,
+			date:    date,
+			db:      d,
+		}
 		posts = append(posts, p)
 	}
 
 	return posts, nil
 }
 
+// Finds a post that matches the given id
+func (d *Databaser) FindPostById(id int64) (Post, error) {
+
+	db, err := sql.Open(d.driver(), d.Name())
+	if err != nil {
+		fmt.Println("FindPostById:", err)
+		return nil, err
+	}
+	defer db.Close()
+
+	stmt, err := db.Prepare(findRowById)
+	if err != nil {
+		fmt.Println("FindPostById:", err)
+		return nil, err
+	}
+	defer stmt.Close()
+
+	var author string
+	var content string
+	var date time.Time
+	err = stmt.QueryRow(id).Scan(&author, &content, &date)
+	if err != nil {
+		fmt.Println("FindPostById:", err)
+		return nil, err
+	}
+
+	return &Post{
+		id:     id,
+		author: author,
+		date:   date,
+		db:     d,
+	}, nil
+}
+
+//
+// Operations on Post
+//
+
 // Saves the post (or update it if it already exists)
 // to the database
 func (p *Post) Save() {
-	db, err := sql.Open(DBDriver(), DBName())
+	db, err := sql.Open(p.db.driver(), p.db.name())
 	if err != nil {
 		fmt.Println("Save:", err)
 		return
@@ -193,7 +210,7 @@ func (p *Post) Save() {
 // Deletes the post from the database
 func (p *Post) Destroy() {
 
-	db, err := sql.Open(DBDriver(), DBName())
+	db, err := sql.Open(p.db.driver(), p.db.name())
 	if err != nil {
 		fmt.Println("Destroy:", err)
 		return
