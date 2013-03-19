@@ -1,9 +1,5 @@
 package db
 
-import (
-	"fmt"
-)
-
 func DBName() string {
 	return "./goblog.db"
 }
