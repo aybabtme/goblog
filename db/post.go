@@ -157,14 +157,14 @@ func (persist *Persister) FindAllPosts() ([]Post, error) {
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
 	if err != nil {
-		fmt.Println("FindAllPosts:", err)
+		fmt.Println("FindAllPosts 1:", err)
 		return posts, err
 	}
 	defer db.Close()
 
 	rows, err := db.Query(queryForAllPost)
 	if err != nil {
-		fmt.Println("FindAllPosts:", err)
+		fmt.Println("FindAllPosts 2:", err)
 		return posts, err
 	}
 	defer rows.Close()

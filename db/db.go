@@ -26,10 +26,12 @@ func NewPersistance(dbaser Databaser) (*Persister, error) {
 	persist.createPostTable()
 	persist.createUserTable()
 	persist.createAuthorTable()
+	persist.createLabelTable()
 	return persist, nil
 }
 
 func (p *Persister) DeletePersistance() {
+	p.dropLabelTable()
 	p.dropAuthorTable()
 	p.dropUserTable()
 	p.dropPostTable()
