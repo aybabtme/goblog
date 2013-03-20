@@ -9,54 +9,56 @@ import (
 //
 // SQL queries
 //
-var createTable string = `
+var createPostTable string = `
 CREATE TABLE IF NOT EXISTS Posts(
    id %s,
-   author VARCHAR(255),
+   title VARCHAR(255),
    content TEXT,
+   imageURL VARCHAR(255),
    date %s
 )`
 
-var dropTable string = `
+var dropPostTable string = `
 DROP TABLE Posts;
 `
 
-var insertOrReplaceRowForId string = `
-INSERT OR REPLACE INTO Posts( author, content, date)
-VALUES( ?, ?, ?)`
+var insertOrReplacePostForId string = `
+INSERT OR REPLACE INTO Posts( title, content, imageURL, date)
+VALUES( ?, ?, ?, ?)`
 
-var findRowById string = `
-SELECT P.author, P.content, P.date
+var findPostById string = `
+SELECT P.title, P.content, P.imageURL, P.date
 FROM Posts AS P
 WHERE P.id = ?`
 
-var deleteRowById string = `
+var deletePostById string = `
 DELETE FROM Posts
 WHERE Posts.id = ?`
 
-var queryForAll string = `
-SELECT P.id, P.author, P.content, P.date
+var queryForAllPost string = `
+SELECT P.id, P.title, P.content, P.imageURL, P.date
 FROM Posts AS P`
 
 // Represents a post in the blog
 type Post struct {
-	id      int64
-	author  string
-	content string
-	date    time.Time
-	db      Databaser
+	id       int64
+	title    string
+	content  string
+	imageURL string
+	date     time.Time
+	db       Databaser
 }
 
 func (p *Post) Id() int64 {
 	return p.id
 }
 
-func (p *Post) Author() string {
-	return p.author
+func (p *Post) Title() string {
+	return p.title
 }
 
-func (p *Post) SetAuthor(author string) {
-	p.author = author
+func (p *Post) SetTitle(title string) {
+	p.title = title
 }
 
 func (p *Post) Content() string {
@@ -65,6 +67,14 @@ func (p *Post) Content() string {
 
 func (p *Post) SetContent(content string) {
 	p.content = content
+}
+
+func (p *Post) ImageURL() string {
+	return p.imageURL
+}
+
+func (p *Post) SetImageURL(imageURL string) {
+	p.imageURL = imageURL
 }
 
 func (p *Post) Date() time.Time {
@@ -80,7 +90,7 @@ func (p *Post) SetDate(time time.Time) {
 //
 
 //
-// Post-specific operations on Databaser
+// Post-specific operations on Persister
 //
 
 // Create the table Post in the database interface
@@ -96,13 +106,15 @@ func (persist *Persister) createPostTable() {
 	defer db.Close()
 
 	var query = fmt.Sprintf(
-		createTable,
+		createPostTable,
 		dbaser.IncrementPrimaryKey(),
 		dbaser.DateField())
 
 	_, err = db.Exec(query)
 	if err != nil {
-		fmt.Printf("Error creating Posts table, query = \"%s\":", query, err)
+		fmt.Printf("Error creating Posts table, driver \"%s\", dbname \"%s\", query = \"%s\"\n",
+			dbaser.Driver(), dbaser.Name(), query)
+		fmt.Println(err)
 		return
 	}
 }
@@ -117,22 +129,23 @@ func (persist *Persister) dropPostTable() {
 	}
 	defer db.Close()
 
-	_, err = db.Exec(dropTable)
+	_, err = db.Exec(dropPostTable)
 	if err != nil {
-		fmt.Println("Error droping table", err)
+		fmt.Println("Error droping table:", err)
 	}
 
 }
 
 // Creates a new Post attached to the Database (but not saved)
-func (persist *Persister) NewPost(author string, content string, date time.Time) *Post {
+func (persist *Persister) NewPost(title string, content string, imageURL string, date time.Time) *Post {
 
 	return &Post{
-		id:      -1,
-		author:  author,
-		content: content,
-		date:    date,
-		db:      persist.databaser,
+		id:       -1,
+		title:    title,
+		content:  content,
+		imageURL: imageURL,
+		date:     date,
+		db:       persist.databaser,
 	}
 }
 
@@ -149,7 +162,7 @@ func (persist *Persister) FindAllPosts() ([]Post, error) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query(queryForAll)
+	rows, err := db.Query(queryForAllPost)
 	if err != nil {
 		fmt.Println("FindAllPosts:", err)
 		return posts, err
@@ -158,16 +171,18 @@ func (persist *Persister) FindAllPosts() ([]Post, error) {
 
 	for rows.Next() {
 		var id int64
-		var author string
+		var title string
 		var content string
+		var imageURL string
 		var date time.Time
-		rows.Scan(&id, &author, &content, &date)
+		rows.Scan(&id, &title, &content, &imageURL, &date)
 		p := Post{
-			id:      id,
-			author:  author,
-			content: content,
-			date:    date,
-			db:      dbaser,
+			id:       id,
+			title:    title,
+			content:  content,
+			imageURL: imageURL,
+			date:     date,
+			db:       dbaser,
 		}
 		posts = append(posts, p)
 	}
@@ -188,28 +203,30 @@ func (persist *Persister) FindPostById(id int64) (*Post, error) {
 	}
 	defer db.Close()
 
-	stmt, err := db.Prepare(findRowById)
+	stmt, err := db.Prepare(findPostById)
 	if err != nil {
 		fmt.Println("FindPostById 2:", err)
 		return p, err
 	}
 	defer stmt.Close()
 
-	var author string
+	var title string
 	var content string
+	var imageURL string
 	var date time.Time
-	err = stmt.QueryRow(id).Scan(&author, &content, &date)
+	err = stmt.QueryRow(id).Scan(&title, &content, &imageURL, &date)
 	if err != nil {
 		// normal if the post doesnt exist
 		return p, err
 	}
 
 	p = &Post{
-		id:      id,
-		author:  author,
-		content: content,
-		date:    date,
-		db:      dbaser,
+		id:       id,
+		title:    title,
+		content:  content,
+		imageURL: imageURL,
+		date:     date,
+		db:       dbaser,
 	}
 
 	return p, nil
@@ -224,21 +241,21 @@ func (persist *Persister) FindPostById(id int64) (*Post, error) {
 func (p *Post) Save() error {
 	db, err := sql.Open(p.db.Driver(), p.db.Name())
 	if err != nil {
-		fmt.Println("Save:", err)
+		fmt.Println("Save 1:", err)
 		return err
 	}
 	defer db.Close()
 
-	stmt, err := db.Prepare(insertOrReplaceRowForId)
+	stmt, err := db.Prepare(insertOrReplacePostForId)
 	if err != nil {
-		fmt.Println("Save:", err)
+		fmt.Println("Save 2:", err)
 		return err
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(p.author, p.content, p.date)
+	res, err := stmt.Exec(p.title, p.content, p.imageURL, p.date)
 	if err != nil {
-		fmt.Println("Save:", err)
+		fmt.Println("Save 3:", err)
 		return err
 	}
 
@@ -256,7 +273,7 @@ func (p *Post) Destroy() error {
 	}
 	defer db.Close()
 
-	stmt, err := db.Prepare(deleteRowById)
+	stmt, err := db.Prepare(deletePostById)
 	if err != nil {
 		fmt.Println("Destroy:", err)
 		return err

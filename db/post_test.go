@@ -6,34 +6,34 @@ import (
 	"time"
 )
 
-func TestSQLiteNewPost(t *testing.T) {
-	var sqlite = setupSQLitePersist()
-	newPost(t, sqlite)
-
-	var pg = setupPGPersist()
-	newPost(t, pg)
+func TestNewPost(t *testing.T) {
+	newPost(t, setupSQLitePersist())
+	//newPost(t, setupPGPersist())
 }
 
 func newPost(t *testing.T, persist *Persister) {
 	defer persist.DeletePersistance()
 
-	var post = persist.NewPost("Antoine", "Hello World", time.Now().UTC())
+	var post = persist.NewPost("Antoine",
+		"Hello World",
+		"fake.url/to/image.jpg",
+		time.Now().UTC())
 	if post == nil {
 		t.Error("Receive a nil post")
 	}
 }
 
 func TestSavePost(t *testing.T) {
-	var pg = setupSQLitePersist()
-	savePost(t, pg)
-
-	var sqlite = setupSQLitePersist()
-	savePost(t, sqlite)
+	savePost(t, setupSQLitePersist())
+	//savePost(t, setupPGPersist())
 }
 
 func savePost(t *testing.T, persist *Persister) {
 	defer persist.DeletePersistance()
-	var post = persist.NewPost("Antoine", "Hello World", time.Now().UTC())
+	var post = persist.NewPost("Antoine",
+		"Hello World",
+		"fake.url/to/image.jpg",
+		time.Now().UTC())
 	if post == nil {
 		t.Error("Receive a nil post")
 	}
@@ -62,8 +62,9 @@ func destroyPost(t *testing.T, pers *Persister) {
 
 	for i := int64(1); i < 100; i++ {
 		var expected = pers.NewPost(
-			fmt.Sprintf("Author #%d", i),
+			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
+			fmt.Sprintf("ImageUrl #%d", i),
 			time.Now().UTC())
 
 		var id = expected.Id()
@@ -93,8 +94,9 @@ func findByIdPost(t *testing.T, persist *Persister) {
 	defer persist.DeletePersistance()
 	for i := int64(1); i < 100; i++ {
 		var expected = persist.NewPost(
-			fmt.Sprintf("Author #%d", i),
+			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
+			fmt.Sprintf("ImageUrl #%d", i),
 			time.Now().UTC())
 		expected.Save()
 
@@ -122,8 +124,9 @@ func findAllPost(t *testing.T, pers *Persister) {
 
 	for i := int64(1); i <= postCount; i++ {
 		var post = pers.NewPost(
-			fmt.Sprintf("Author #%d", i),
+			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
+			fmt.Sprintf("ImageUrl #%d", i),
 			time.Now().UTC())
 		post.Save()
 	}
@@ -160,8 +163,9 @@ func idIncrements(t *testing.T, persist *Persister) {
 
 	for i := int64(1); i < 100; i++ {
 		var post = persist.NewPost(
-			fmt.Sprintf("Author #%d", i),
+			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
+			fmt.Sprintf("ImageUrl #%d", i),
 			time.Now().UTC())
 
 		if post.Id() != -1 {
