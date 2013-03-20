@@ -14,7 +14,8 @@ func TestNewAuthor(t *testing.T) {
 func newAuthor(t *testing.T, persist *Persister) {
 	defer persist.DeletePersistance()
 
-	var user = persist.NewUser("Antoine", time.Now().UTC(), -5, "a@g.com")
+	var user = persist.NewUser("Author Antoine",
+		time.Now().UTC(), -5, "a@g.com")
 
 	var author = persist.NewAuthor(
 		"aybabtme",
@@ -33,7 +34,8 @@ func TestSaveAuthor(t *testing.T) {
 func saveAuthor(t *testing.T, persist *Persister) {
 	defer persist.DeletePersistance()
 
-	var user = persist.NewUser("Antoine", time.Now().UTC(), -5, "a@g.com")
+	var user = persist.NewUser("Author Antoine",
+		time.Now().UTC(), -5, "a@g.com")
 
 	var author = persist.NewAuthor(
 		"aybabtme",
@@ -67,7 +69,7 @@ func destroyAuthor(t *testing.T, pers *Persister) {
 
 	for i := int64(1); i < 100; i++ {
 		var user = pers.NewUser(
-			fmt.Sprintf("Antoine #%d", i),
+			fmt.Sprintf("Author Antoine #%d", i),
 			time.Now().UTC(),
 			-5,
 			fmt.Sprintf("a%d@b.com", i))
@@ -103,7 +105,7 @@ func findByIdAuthor(t *testing.T, persist *Persister) {
 	defer persist.DeletePersistance()
 	for i := int64(1); i < 100; i++ {
 		var user = persist.NewUser(
-			fmt.Sprintf("Antoine #%d", i),
+			fmt.Sprintf("Author Antoine #%d", i),
 			time.Now().UTC(),
 			-5,
 			fmt.Sprintf("a%d@b.com", i))
@@ -117,10 +119,13 @@ func findByIdAuthor(t *testing.T, persist *Persister) {
 
 		if err != nil {
 			t.Errorf("Error while querying author %d: %v", i, err)
+			return
 		}
 
 		if actual.Twitter() != expected.Twitter() {
-			t.Errorf("Expected <%s> but was <%s>\n", expected.Twitter(), actual.Twitter())
+			t.Errorf("Expected <%s> but was <%s>\n",
+				expected.Twitter(), actual.Twitter())
+			return
 		}
 	}
 }
@@ -131,13 +136,12 @@ func TestFindAllAuthor(t *testing.T) {
 }
 
 func findAllAuthor(t *testing.T, pers *Persister) {
-	defer pers.DeletePersistance()
 
 	var authorCount = int64(10)
 
 	for i := int64(1); i <= authorCount; i++ {
 		var user = pers.NewUser(
-			fmt.Sprintf("Antoine #%d", i),
+			fmt.Sprintf("Author Antoine #%d", i),
 			time.Now().UTC(),
 			-5,
 			fmt.Sprintf("a%d@b.com", i))
@@ -150,11 +154,13 @@ func findAllAuthor(t *testing.T, pers *Persister) {
 
 	authors, err := pers.FindAllAuthors()
 	if err != nil {
-		t.Errorf("Couldn't query authors although just saved %d", authorCount)
+		t.Errorf("Couldn't query authors although just saved %d",
+			authorCount)
 	}
 
 	if authors == nil {
-		t.Errorf("Saved %d authors but query returns none", authorCount)
+		t.Errorf("Saved %d authors but query returns none",
+			authorCount)
 	}
 
 	if int64(len(authors)) != authorCount {
@@ -165,8 +171,12 @@ func findAllAuthor(t *testing.T, pers *Persister) {
 	for idx, author := range authors {
 		if author.Id() != int64(idx)+int64(1) {
 			t.Errorf("Expected <%d> but was <%d>", idx+1, author.Id())
+			fmt.Printf("UserID(%d) Twitter(%s)\n",
+				author.UserId(), author.Twitter())
 		}
 	}
+
+	defer pers.DeletePersistance()
 }
 
 func TestAuthorIdIncrements(t *testing.T) {

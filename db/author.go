@@ -22,8 +22,8 @@ DROP TABLE Authors;
 `
 
 var insertOrReplaceAuthorForId string = `
-INSERT OR REPLACE INTO Authors(twitter)
-VALUES(?)`
+INSERT OR REPLACE INTO Authors(userId, twitter)
+VALUES(?, ?)`
 
 var findAuthorById string = `
 SELECT
@@ -145,7 +145,7 @@ func (persist *Persister) FindAllAuthors() ([]Author, error) {
 	}
 	defer db.Close()
 
-	rows, err := db.Query(queryForAllUser)
+	rows, err := db.Query(queryForAllAuthor)
 	if err != nil {
 		fmt.Println("FindAllAuthors 2:", err)
 		return authors, err
@@ -274,7 +274,7 @@ func (a *Author) Save() error {
 		a.userId = a.user.Id()
 	}
 
-	res, err := stmt.Exec(a.twitter)
+	res, err := stmt.Exec(a.userId, a.twitter)
 	if err != nil {
 		fmt.Println("Save 4:", err)
 		return err
