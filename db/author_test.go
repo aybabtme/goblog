@@ -218,24 +218,25 @@ func TestDeleteUserCascadesToAuthor(t *testing.T) {
 
 func deleteUserCascadesToAuthor(t *testing.T, persist *Persister) {
 	defer persist.DeletePersistance()
-   var user = persist.NewUser("Antony", time.Now().UTC(), -5, "antoine@g.com")
-   var author = persist.NewAuthor("aybabtme", user)
-   _ = author.Save()
+	var user = persist.NewUser("Antony", time.Now().UTC(), -5, "antoine@g.com")
+	var author = persist.NewAuthor("aybabtme", user)
+	_ = author.Save()
 
-   var copyUser, _ = persist.FindUserById(author.UserId())
-   var copyAuthor, _ = persist.FindAuthorById(author.Id())
+	var copyUser, _ = persist.FindUserById(author.UserId())
+	var copyAuthor, _ = persist.FindAuthorById(author.Id())
 
-   if author.Twitter() != copyAuthor.Twitter() {
-      t.Errorf("Expected <%s> but was <%s>", author.Twitter(), copyAuthor.Twitter())
-      return
-   }
+	// Tested elsewhere, kind of redundant
+	if author.Twitter() != copyAuthor.Twitter() {
+		t.Errorf("Expected <%s> but was <%s>", author.Twitter(), copyAuthor.Twitter())
+		return
+	}
 
-   copyUser.Destroy()
+	copyUser.Destroy()
 
-   var _, err = persist.FindAuthorById(author.Id())
-   if err == nil {
-      t.Error("User was deleted but Author could still be found.")
-      return
-   }
+	var _, err = persist.FindAuthorById(author.Id())
+	if err == nil {
+		t.Error("User was deleted but Author could still be found.")
+		return
+	}
 
 }
