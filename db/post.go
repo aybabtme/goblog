@@ -183,14 +183,14 @@ func (persist *Persister) FindPostById(id int64) (*Post, error) {
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
 	if err != nil {
-		fmt.Println("FindPostById:", err)
+		fmt.Println("FindPostById 1:", err)
 		return p, err
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare(findRowById)
 	if err != nil {
-		fmt.Println("FindPostById:", err)
+		fmt.Println("FindPostById 2:", err)
 		return p, err
 	}
 	defer stmt.Close()
@@ -200,7 +200,7 @@ func (persist *Persister) FindPostById(id int64) (*Post, error) {
 	var date time.Time
 	err = stmt.QueryRow(id).Scan(&author, &content, &date)
 	if err != nil {
-		fmt.Println("FindPostById:", err)
+		// normal if the post doesnt exist
 		return p, err
 	}
 
