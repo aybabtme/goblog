@@ -51,13 +51,36 @@ func savePost(t *testing.T, persist *Persister) {
 	}
 }
 
+func TestFindById(t *testing.T) {
+	findByIdPost(t, setupSQLitePersist())
+	findByIdPost(t, setupPGPersist())
+}
+
+func findByIdPost(t *testing.T, persist *Persister) {
+	defer persist.DeletePersistance()
+	for i := int64(1); i < 100; i++ {
+		var expected = persist.NewPost(
+			fmt.Sprintf("Author #%d", i),
+			fmt.Sprintf("Content #%d", i),
+			time.Now().UTC())
+		expected.Save()
+
+		actual, err := persist.FindPostById(expected.Id())
+
+		if err != nil {
+			t.Errorf("Error while querying post %d: %v", i, err)
+		}
+
+		if actual.Content() != expected.Content() {
+			t.Errorf("Expected <%s> but was <%s>\n", expected.Content(), actual.Content())
+		}
+	}
+
+}
+
 func TestIdIncrements(t *testing.T) {
-	var sqlite = setupSQLitePersist()
-	idIncrements(t, sqlite)
-
-	var pg = setupSQLitePersist()
-	idIncrements(t, pg)
-
+	idIncrements(t, setupSQLitePersist())
+	idIncrements(t, setupSQLitePersist())
 }
 
 func idIncrements(t *testing.T, persist *Persister) {

@@ -205,10 +205,11 @@ func (persist *Persister) FindPostById(id int64) (*Post, error) {
 	}
 
 	p = &Post{
-		id:     id,
-		author: author,
-		date:   date,
-		db:     dbaser,
+		id:      id,
+		author:  author,
+		content: content,
+		date:    date,
+		db:      dbaser,
 	}
 
 	return p, nil
