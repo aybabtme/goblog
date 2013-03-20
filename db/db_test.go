@@ -29,14 +29,16 @@ func TestSQLiteDatabaseCreation(t *testing.T) {
 
 func TestPostgresDatabaseCreation(t *testing.T) {
 	var dbName = "test"
-	var username = "postgres"
+	var username = "antoine"
 
 	var postgres = NewPostgreser(dbName, username)
 
 	var persist, err = NewPersistance(postgres)
 
 	if err != nil {
-		t.Error("NewPersistance returned nil object, %v", persist, err)
+		t.Error("NewPersistance returned nil object", err)
 	}
+
+	persist.DeletePersistance()
 
 }

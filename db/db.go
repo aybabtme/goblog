@@ -12,6 +12,8 @@ type Databaser interface {
 	// not exported because only used within package
 	Name() string
 	Driver() string
+	IncrementPrimaryKey() string
+	DateField() string
 }
 
 // A connection to a SQLite3 db
@@ -34,6 +36,14 @@ func (db SQLiter) Driver() string {
 	return "sqlite3"
 }
 
+func (db SQLiter) IncrementPrimaryKey() string {
+	return "INTEGER PRIMARY KEY AUTOINCREMENT"
+}
+
+func (db SQLiter) DateField() string {
+	return "DATETIME"
+}
+
 // A connection to a PostgreSQL db.
 type Postgreser struct {
 	name     string
@@ -47,13 +57,21 @@ func NewPostgreser(dbName, username string) Postgreser {
 
 // The name of the PostgreSQL db
 func (db Postgreser) Name() string {
-	return "postgres"
+	return fmt.Sprintf("user=%s dbname=%s host=%s sslmode=disable",
+		db.username, db.name, "localhost")
 }
 
 // The name of the driver for the PostgreSQL driver
 func (db Postgreser) Driver() string {
-	return fmt.Sprintf("user=%s dbname=%s host=%s sslmode=disable",
-		db.username, db.name, "localhost")
+	return "postgres"
+}
+
+func (db Postgreser) IncrementPrimaryKey() string {
+	return "SERIAL PRIMARY KEY"
+}
+
+func (db Postgreser) DateField() string {
+	return "TIMESTAMP"
 }
 
 //
@@ -74,4 +92,8 @@ func NewPersistance(dbaser Databaser) (*Persister, error) {
 	var persist = &Persister{databaser: dbaser}
 	persist.createPostTable()
 	return persist, nil
+}
+
+func (p *Persister) DeletePersistance() {
+	p.dropPostTable()
 }

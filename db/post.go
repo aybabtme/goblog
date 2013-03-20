@@ -11,11 +11,15 @@ import (
 //
 var createTable string = `
 CREATE TABLE IF NOT EXISTS Posts(
-   id INTEGER PRIMARY KEY AUTOINCREMENT,
+   id %s,
    author VARCHAR(255),
    content TEXT,
-   date DATETIME
+   date %s
 )`
+
+var dropTable string = `
+DROP TABLE Posts;
+`
 
 var insertOrReplaceRowForId string = `
 INSERT OR REPLACE INTO Posts( author, content, date)
@@ -91,11 +95,33 @@ func (persist *Persister) createPostTable() {
 	}
 	defer db.Close()
 
-	_, err = db.Exec(createTable)
+	var query = fmt.Sprintf(
+		createTable,
+		dbaser.IncrementPrimaryKey(),
+		dbaser.DateField())
+
+	_, err = db.Exec(query)
 	if err != nil {
-		fmt.Println("Error creating Posts table:", err)
+		fmt.Printf("Error creating Posts table, query = \"%s\":", query, err)
 		return
 	}
+}
+
+func (persist *Persister) dropPostTable() {
+	var dbaser = persist.databaser
+
+	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
+	if err != nil {
+		fmt.Println("Error on open of database", err)
+		return
+	}
+	defer db.Close()
+
+	_, err = db.Exec(dropTable)
+	if err != nil {
+		fmt.Println("Error droping table", err)
+	}
+
 }
 
 // Creates a new Post attached to the Database (but not saved)
