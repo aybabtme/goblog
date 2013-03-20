@@ -108,7 +108,45 @@ func findByIdPost(t *testing.T, persist *Persister) {
 			t.Errorf("Expected <%s> but was <%s>\n", expected.Content(), actual.Content())
 		}
 	}
+}
 
+func TestFindAllPost(t *testing.T) {
+	findAllPost(t, setupSQLitePersist())
+	//findAllPost(t, setupPGPersist())
+}
+
+func findAllPost(t *testing.T, pers *Persister) {
+	defer pers.DeletePersistance()
+
+	var postCount = int64(10)
+
+	for i := int64(1); i <= postCount; i++ {
+		var post = pers.NewPost(
+			fmt.Sprintf("Author #%d", i),
+			fmt.Sprintf("Content #%d", i),
+			time.Now().UTC())
+		post.Save()
+	}
+
+	posts, err := pers.FindAllPosts()
+	if err != nil {
+		t.Errorf("Couldn't query posts although just saved %d", postCount)
+	}
+
+	if posts == nil {
+		t.Errorf("Saved %d posts but query returns none", postCount)
+	}
+
+	if int64(len(posts)) != postCount {
+		t.Errorf("Saved and expected <%d> posts, was <%d>",
+			postCount, len(posts))
+	}
+
+	for idx, post := range posts {
+		if post.Id() != int64(idx)+int64(1) {
+			t.Errorf("Expected <%d> but was <%d>", idx+1, post.Id())
+		}
+	}
 }
 
 func TestIdIncrements(t *testing.T) {
