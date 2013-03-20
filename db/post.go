@@ -128,6 +128,7 @@ func (persist *Persister) dropPostTable() {
 func (persist *Persister) NewPost(author string, content string, date time.Time) *Post {
 
 	return &Post{
+		id:      -1,
 		author:  author,
 		content: content,
 		date:    date,
@@ -219,51 +220,53 @@ func (persist *Persister) FindPostById(id int64) (*Post, error) {
 
 // Saves the post (or update it if it already exists)
 // to the database
-func (p *Post) Save() {
+func (p *Post) Save() error {
 	db, err := sql.Open(p.db.Driver(), p.db.Name())
 	if err != nil {
 		fmt.Println("Save:", err)
-		return
+		return err
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare(insertOrReplaceRowForId)
 	if err != nil {
 		fmt.Println("Save:", err)
-		return
+		return err
 	}
 	defer stmt.Close()
 
 	res, err := stmt.Exec(p.author, p.content, p.date)
 	if err != nil {
 		fmt.Println("Save:", err)
-		return
+		return err
 	}
 
 	p.id, _ = res.LastInsertId()
+	return nil
 }
 
 // Deletes the post from the database
-func (p *Post) Destroy() {
+func (p *Post) Destroy() error {
 
 	db, err := sql.Open(p.db.Driver(), p.db.Name())
 	if err != nil {
 		fmt.Println("Destroy:", err)
-		return
+		return err
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare(deleteRowById)
 	if err != nil {
 		fmt.Println("Destroy:", err)
-		return
+		return err
 	}
 	defer stmt.Close()
 
 	_, err = stmt.Exec(p.id)
 	if err != nil {
 		fmt.Println("Destroy:", err)
-		return
+		return err
 	}
 
+	return nil
 }

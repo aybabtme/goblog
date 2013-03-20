@@ -7,6 +7,30 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+//
+// Persistance abstraction
+//
+
+// Keeps all info required to save stuff on a persistance
+type Persister struct {
+	databaser Databaser
+}
+
+func NewPersistance(dbaser Databaser) (*Persister, error) {
+	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
+	if err != nil {
+		return nil, err
+	}
+	db.Close()
+	var persist = &Persister{databaser: dbaser}
+	persist.createPostTable()
+	return persist, nil
+}
+
+func (p *Persister) DeletePersistance() {
+	p.dropPostTable()
+}
+
 // Interface to abstract between different drivers (SQLite or Postgres)
 type Databaser interface {
 	// not exported because only used within package
@@ -72,28 +96,4 @@ func (db Postgreser) IncrementPrimaryKey() string {
 
 func (db Postgreser) DateField() string {
 	return "TIMESTAMP"
-}
-
-//
-// Persistance abstraction
-//
-
-// Keeps all info required to save stuff on a persistance
-type Persister struct {
-	databaser Databaser
-}
-
-func NewPersistance(dbaser Databaser) (*Persister, error) {
-	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
-	if err != nil {
-		return nil, err
-	}
-	db.Close()
-	var persist = &Persister{databaser: dbaser}
-	persist.createPostTable()
-	return persist, nil
-}
-
-func (p *Persister) DeletePersistance() {
-	p.dropPostTable()
 }
