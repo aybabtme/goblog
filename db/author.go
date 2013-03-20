@@ -1,9 +1,15 @@
 package db
 
+import (
+	"time"
+	"database/sql"
+	"fmt"
+)
+
 //
 // SQL queries
 //
-var createTableAuthor string = `
+var createAuthorTable string = `
 CREATE TABLE IF NOT EXISTS Authors(
    id %s,
    userId INTEGER,
@@ -11,26 +17,40 @@ CREATE TABLE IF NOT EXISTS Authors(
    FOREIGN KEY(userId) REFERENCES (Users.id) ON DELETE CASCADE
 )`
 
-var dropTableAuthor string = `
+var dropAuthorTable string = `
 DROP TABLE Authors;
 `
 
 var insertOrReplaceAuthorForId string = `
-INSERT OR REPLACE INTO Authors( userId, twitter)
-VALUES( ?, ?)`
+INSERT OR REPLACE INTO Authors(twitter)
+VALUES(?)`
 
 var findAuthorById string = `
-SELECT A.userId, A.twitter
-FROM Authors AS A
-WHERE A.id = ?`
+SELECT
+   A.userId,
+   A.twitter,
+   U.username,
+   U.registrationDate,
+   U.timezone,
+   U.email
+FROM Authors AS A, Users AS U
+WHERE A.id = ? AND A.userID = U.id`
 
 var deleteAuthorById string = `
 DELETE FROM Authors
 WHERE Authors.id = ?`
 
 var queryForAllAuthor string = `
-SELECT A.id, A.userId, A.twitter
-FROM Authors AS A`
+SELECT
+   A.id,
+   A.userId,
+   A.twitter,
+   U.username,
+   U.registrationDate,
+   U.timezone,
+   U.email
+FROM Authors AS A, Users AS U
+WHERE A.userId = U.id`
 
 // Represents an author of the blog
 type Author struct {
@@ -40,3 +60,235 @@ type Author struct {
 	user    User
 	db      Databaser
 }
+
+/*
+*  SQL Stuff
+*/
+
+func (p *Persister) createAuthorTable() {
+   var dbaser = p.databaser
+
+   db, err := sql.Open(dbaser.Driver(), dbaser.Name())
+   if err != nil {
+      fmt.Println("Error on open of database", err)
+      return
+   }
+
+   var query = fmt.Sprintf(
+      createAuthorTable,
+      dbaser.IncrementPrimaryKey())
+
+   _, err = db.Exec(query)
+   if err != nil {
+      fmt.Printf("Error creating Author table, driver \"%s\", dbname \"%s\", query = %s\n"
+         dbaser.Driver(), dbaser.Name(), query)
+      fmt.Println(err)
+      return
+   }
+}
+
+func (persist *Persister) dropAuthorTable() {
+   var dbaser = persist.databaser
+
+   db, err := sql.Open(dbaser.Driver(), dbaser.Name())
+   if err != nil {
+      fmt.Println("Error on open of database", err)
+      return
+   }
+   defer db.Close()
+
+   _, err = db.Exec(dropAuthorTable)
+   if err != nil {
+      fmt.Println("Error droping table:", err)
+   }
+}
+
+func (persist *Persister) NewAuthor(twitter string, user User) *Author {
+   return &Author{
+      id: -1,
+      userId: user.Id(),
+      twitter: twitter,
+      user: user,
+      db: persist.databaser,
+   }
+}
+
+func (persist *Persister) FindAllAuthors() ([]Author, error) {
+
+   var authors []Author
+   var dbaser = persist.databaser
+
+   db, err := sql.Open(dbaser.Driver(), dbaser.Name())
+   if err != nil {
+      fmt.Println("FindAllAuthors 1:", err)
+      return authors, err
+   }
+   defer db.Close()
+
+   rows, err := db.Query(queryForAllUser)
+   if err != nil {
+      fmt.Println("FindAllAuthors 2:", err)
+      return authors, err
+   }
+   defer rows.Close()
+
+   for rows.Next() {
+      var id int64
+      var twitter string
+      var userId int64
+      var username string
+      var date time.Time
+      var timezone int
+      var email string
+      rows.Scan(&id, &twitter, &userId, &username, &date, &timezone, &email)
+      u := User{
+         userId:           userId,
+         username:         username,
+         registrationDate: date,
+         timezone:         timezone,
+         email:            email,
+         db:               dbaser,
+      }
+
+      a := Author{
+         id: id,
+         userId: userId,
+         twitter: twitter,
+         user: u,
+         db: dbaser,
+      }
+      authors = append(authors, a)
+   }
+
+   return authors, nil
+}
+
+func (persist *Persister) FindAuthorById(id int64) (*User, error) {
+
+   var a *Author
+   var dbaser = persist.databaser
+
+   db, err := sql.Open(dbaser.Driver(), dbaser.Name())
+   if err != nil {
+      fmt.Println("FindAuthorById 1:", err)
+      return a, err
+   }
+   defer db.Close()
+
+   stmt, err := db.Prepare(findAuthorById)
+   if err != nil {
+      fmt.Println("FindAuthorById 2:", err)
+      return a, err
+   }
+   defer stmt.Close()
+
+   var userId int64
+   var twitter string
+   var username string
+   var date time.Time
+   var timezone int
+   var email string
+
+   err = stmt.QueryRow(id).Scan(&userId,
+      &twitter,
+      &username,
+      &date,
+      &timezone,
+      &email)
+
+   if err != nil {
+      // normal if the author doesnt exist
+      return a, err
+   }
+
+   u := User{
+      id: userId,
+      username: username,
+      registrationDate: date,
+      timezone: timezone,
+      email: email,
+      db: dbaser,
+   }
+
+   a = &Author{
+      id: id,
+      userId: userId,
+      twitter: twitter,
+      user: u,
+      db: dbaser,
+   }
+
+   return a, nil
+}
+
+/*
+*  Operations on Author
+*/
+
+// Save an author to the persistence.  If the provided
+// user didn't exist, it will create it first.
+func (a *Author) Save() error {
+   db, err := sql.Open(a.db.Driver(), a.db.Name())
+   if err != nil {
+      fmt.Println("Save 1:", err)
+      return err
+   }
+   defer db.Close()
+
+   stmt, err := db.Prepare(insertOrReplaceAuthorForId)
+   if err != nil {
+      fmt.Println("Save 2:", err)
+      return err
+   }
+   defer stmt.Close()
+
+   // If our user doesn't exist, create it first
+   if( a.user.Id() == -1 ){
+      err := a.user.Save()
+      // Save might fail for User, in which case we do not
+      // want to continue the creation of this author
+      if err != nil {
+         fmt.Println("Save 3:", err)
+         return err
+      }
+      a.userId = a.user.Id()
+   }
+
+   res, err := stmt.Exec(a.twitter)
+   if err != nil {
+      fmt.Println("Save 4:", err)
+      return err
+   }
+
+   a.id, _ = res.LastInsertId()
+
+   return nil
+}
+
+// Removes the user from the author table.  The user
+// is not destroyed.
+func (a *Author) Destroy() error {
+   db, err := sql.Open(a.db.Driver(), a.db.Name())
+   if err != nil {
+      fmt.Println("Destroy 1:", err)
+      return err
+   }
+   defer db.Close()
+
+   stmt, err := db.Prepare(deleteAuthorById)
+   if err != nil {
+      fmt.Println("Destroy 2:", err)
+      return err
+   }
+   defer stmt.Close()
+
+   _, err = stmt.Exec(a.id)
+   if err != nil {
+      fmt.Println("Destroy 3:", err)
+      return err
+   }
+
+   return nil
+}
+
+
