@@ -151,7 +151,8 @@ func findAllPost(t *testing.T, pers *Persister) {
 
 func TestIdIncrements(t *testing.T) {
 	idIncrements(t, setupSQLitePersist())
-	idIncrements(t, setupSQLitePersist())
+	// TODO PG doesnt work
+	// idIncrements(t, setupPGPersist())
 }
 
 func idIncrements(t *testing.T, persist *Persister) {
