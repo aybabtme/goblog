@@ -12,6 +12,7 @@ import (
 var createUserTable string = `
 CREATE TABLE IF NOT EXISTS Users(
    id %s,
+   username VARCHAR(255),
    registrationDate %s,
    timezone INTEGER,
    email VARCHAR(255) UNIQUE,
@@ -22,11 +23,11 @@ DROP TABLE Users;
 `
 
 var insertOrReplaceUserForId string = `
-INSERT OR REPLACE INTO Users( registrationDate, timezone, email)
-VALUES( ?, ?, ? )`
+INSERT OR REPLACE INTO Users( username, registrationDate, timezone, email)
+VALUES( ?, ?, ?, ? )`
 
 var findUserById string = `
-SELECT U.registrationDate, U.timezone, U.email
+SELECT U.username, U.registrationDate, U.timezone, U.email
 FROM Users AS U
 WHERE U.id = ?`
 
@@ -35,11 +36,13 @@ DELETE FROM Users
 WHERE Users.id = ?`
 
 var queryForAllUser string = `
-SELECT U.id, U.registrationDate, U.timezone, U.email
+SELECT U.id, U.username, U.registrationDate, U.timezone, U.email
 FROM Users AS U`
 
+// Represents a User of the blog
 type User struct {
 	id               int64
+	username         string
 	registrationDate time.Time
 	timezone         int
 	email            string
@@ -48,6 +51,14 @@ type User struct {
 
 func (u *User) Id() int64 {
 	return u.id
+}
+
+func (u *User) Username() string {
+	return u.username
+}
+
+func (u *User) SetUsername(username string) {
+	u.username = username
 }
 
 func (u *User) RegistrationDate() time.Time {
@@ -108,6 +119,7 @@ func (persist *Persister) createUserTable() {
 	}
 }
 
+// Drops the table User and all its data
 func (persist *Persister) dropUserTable() {
 	var dbaser = persist.databaser
 
@@ -124,15 +136,19 @@ func (persist *Persister) dropUserTable() {
 	}
 }
 
-func (persist *Persister) NewUser(regDate time.Time, timez int, email string) *User {
+// Creates a new User attached to the Database (but it is not saved).
+func (persist *Persister) NewUser(username string, regDate time.Time,
+	timezone int, email string) *User {
 	return &User{
 		id:               -1,
+		username:         username,
 		registrationDate: regDate,
-		timezone:         timez,
+		timezone:         timezone,
 		email:            email,
 	}
 }
 
+// Finds all the posts in the database
 func (persist *Persister) FindAllUsers() ([]Post, error) {
 
 	var users []User
@@ -154,24 +170,26 @@ func (persist *Persister) FindAllUsers() ([]Post, error) {
 
 	for rows.Next() {
 		var id int64
+		var username string
 		var date time.Time
 		var timezone int
 		var email string
-		rows.Scan(&id, &date, &timezone, &email)
+		rows.Scan(&id, &username, &date, &timezone, &email)
 		u := User{
 			id:               id,
+			username:         username,
 			registrationDate: date,
 			timezone:         timezone,
 			email:            email,
 			db:               dbaser,
 		}
-		users = append(Users, u)
+		users = append(users, u)
 	}
 
-	return Users, nil
+	return users, nil
 }
 
-// Finds a post that matches the given id
+// Finds a user that matches the given id
 func (persist *Persister) FindUserById(id int64) (*User, error) {
 
 	var u *User
@@ -179,23 +197,24 @@ func (persist *Persister) FindUserById(id int64) (*User, error) {
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
 	if err != nil {
-		fmt.Println("FindPostById 1:", err)
+		fmt.Println("FindUserById 1:", err)
 		return u, err
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare(findPostById)
 	if err != nil {
-		fmt.Println("FindPostById 2:", err)
+		fmt.Println("FindUserById 2:", err)
 		return u, err
 	}
 	defer stmt.Close()
 
 	var id int64
+	var username string
 	var date time.Time
 	var timezone int
 	var email string
-	err = stmt.QueryRow(id).Scan(&date, &timezone, &email)
+	err = stmt.QueryRow(id).Scan(&username, &date, &timezone, &email)
 	if err != nil {
 		// normal if the User doesnt exist
 		return u, err
@@ -203,6 +222,7 @@ func (persist *Persister) FindUserById(id int64) (*User, error) {
 
 	u := &User{
 		id:               id,
+		username:         username,
 		registrationDate: date,
 		timezone:         timezone,
 		email:            email,
@@ -233,7 +253,7 @@ func (u *User) Save() error {
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(u.registrationDate, u.timezone, u.email)
+	res, err := stmt.Exec(u.username, u.registrationDate, u.timezone, u.email)
 	if err != nil {
 		fmt.Println("Save 3:", err)
 		return err
