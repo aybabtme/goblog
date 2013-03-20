@@ -24,10 +24,12 @@ func NewPersistance(dbaser Databaser) (*Persister, error) {
 	db.Close()
 	var persist = &Persister{databaser: dbaser}
 	persist.createPostTable()
+	persist.createUserTable()
 	return persist, nil
 }
 
 func (p *Persister) DeletePersistance() {
+	p.dropUserTable()
 	p.dropPostTable()
 }
 

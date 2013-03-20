@@ -12,10 +12,11 @@ import (
 var createUserTable string = `
 CREATE TABLE IF NOT EXISTS Users(
    id %s,
-   username VARCHAR(255),
-   registrationDate %s,
-   timezone INTEGER,
-   email VARCHAR(255) UNIQUE,
+   username VARCHAR(255) NOT NULL,
+   registrationDate %s NOT NULL,
+   timezone INTEGER NOT NULL,
+   email VARCHAR(255) NOT NULL,
+   UNIQUE(email)
 )`
 
 var dropUserTable string = `
@@ -145,11 +146,12 @@ func (persist *Persister) NewUser(username string, regDate time.Time,
 		registrationDate: regDate,
 		timezone:         timezone,
 		email:            email,
+		db:               persist.databaser,
 	}
 }
 
-// Finds all the posts in the database
-func (persist *Persister) FindAllUsers() ([]Post, error) {
+// Finds all the users in the database
+func (persist *Persister) FindAllUsers() ([]User, error) {
 
 	var users []User
 	var dbaser = persist.databaser
@@ -202,14 +204,13 @@ func (persist *Persister) FindUserById(id int64) (*User, error) {
 	}
 	defer db.Close()
 
-	stmt, err := db.Prepare(findPostById)
+	stmt, err := db.Prepare(findUserById)
 	if err != nil {
 		fmt.Println("FindUserById 2:", err)
 		return u, err
 	}
 	defer stmt.Close()
 
-	var id int64
 	var username string
 	var date time.Time
 	var timezone int
@@ -220,7 +221,7 @@ func (persist *Persister) FindUserById(id int64) (*User, error) {
 		return u, err
 	}
 
-	u := &User{
+	u = &User{
 		id:               id,
 		username:         username,
 		registrationDate: date,
@@ -239,6 +240,7 @@ func (persist *Persister) FindUserById(id int64) (*User, error) {
 // Saves the user (or update it if it already exists)
 // to the database
 func (u *User) Save() error {
+
 	db, err := sql.Open(u.db.Driver(), u.db.Name())
 	if err != nil {
 		fmt.Println("Save 1:", err)
@@ -263,7 +265,7 @@ func (u *User) Save() error {
 	return nil
 }
 
-// Deletes the post from the database
+// Deletes the user from the database
 func (u *User) Destroy() error {
 
 	db, err := sql.Open(u.db.Driver(), u.db.Name())

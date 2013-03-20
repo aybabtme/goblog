@@ -15,9 +15,9 @@ func newUser(t *testing.T, persist *Persister) {
 	defer persist.DeletePersistance()
 
 	var user = persist.NewUser("Antoine",
-		"Hello World",
-		"fake.url/to/image.jpg",
-		time.Now().UTC())
+		time.Now().UTC(),
+		-5,
+		"a@b.com")
 	if user == nil {
 		t.Error("Receive a nil user")
 	}
@@ -31,9 +31,9 @@ func TestSaveUser(t *testing.T) {
 func saveUser(t *testing.T, persist *Persister) {
 	defer persist.DeletePersistance()
 	var user = persist.NewUser("Antoine",
-		"Hello World",
-		"fake.url/to/image.jpg",
-		time.Now().UTC())
+		time.Now().UTC(),
+		-5,
+		"a@b.com")
 	if user == nil {
 		t.Error("Receive a nil user")
 	}
@@ -62,10 +62,10 @@ func destroyUser(t *testing.T, pers *Persister) {
 
 	for i := int64(1); i < 100; i++ {
 		var expected = pers.NewUser(
-			fmt.Sprintf("Title #%d", i),
-			fmt.Sprintf("Content #%d", i),
-			fmt.Sprintf("ImageUrl #%d", i),
-			time.Now().UTC())
+			fmt.Sprintf("Antoine #%d", i),
+			time.Now().UTC(),
+			-5,
+			fmt.Sprintf("a%d@b.com", i))
 
 		var id = expected.Id()
 		expected.Save()
@@ -91,25 +91,29 @@ func TestFindByIdUser(t *testing.T) {
 }
 
 func findByIdUser(t *testing.T, persist *Persister) {
-	defer persist.DeletePersistance()
+
 	for i := int64(1); i < 100; i++ {
 		var expected = persist.NewUser(
-			fmt.Sprintf("Title #%d", i),
-			fmt.Sprintf("Content #%d", i),
-			fmt.Sprintf("ImageUrl #%d", i),
-			time.Now().UTC())
+			fmt.Sprintf("Antoine #%d", i),
+			time.Now().UTC(),
+			-5,
+			fmt.Sprintf("a%d@b.com", i))
+
 		expected.Save()
 
 		actual, err := persist.FindUserById(expected.Id())
 
 		if err != nil {
-			t.Errorf("Error while querying User %d: %v", i, err)
+			t.Errorf("Error while querying User %d, expected <%d> but was: %v", i, expected.Id(), err)
+			return
 		}
 
-		if actual.Content() != expected.Content() {
-			t.Errorf("Expected <%s> but was <%s>\n", expected.Content(), actual.Content())
+		if actual.Username() != expected.Username() {
+			t.Errorf("Expected <%s> but was <%s>\n", expected.Username(), actual.Username())
 		}
 	}
+
+	defer persist.DeletePersistance()
 }
 
 func TestFindAllUser(t *testing.T) {
@@ -124,25 +128,28 @@ func findAllUser(t *testing.T, pers *Persister) {
 
 	for i := int64(1); i <= userCount; i++ {
 		var user = pers.NewUser(
-			fmt.Sprintf("Title #%d", i),
-			fmt.Sprintf("Content #%d", i),
-			fmt.Sprintf("ImageUrl #%d", i),
-			time.Now().UTC())
+			fmt.Sprintf("Antoine #%d", i),
+			time.Now().UTC(),
+			-5,
+			fmt.Sprintf("a%d@b.com", i))
 		user.Save()
 	}
 
 	users, err := pers.FindAllUsers()
 	if err != nil {
 		t.Errorf("Couldn't query Users although just saved %d", userCount)
+		return
 	}
 
 	if users == nil {
 		t.Errorf("Saved %d Users but query returns none", userCount)
+		return
 	}
 
 	if int64(len(users)) != userCount {
 		t.Errorf("Saved and expected <%d> Users, was <%d>",
 			userCount, len(users))
+		return
 	}
 
 	for idx, user := range users {
@@ -152,21 +159,21 @@ func findAllUser(t *testing.T, pers *Persister) {
 	}
 }
 
-func TestIdIncrements(t *testing.T) {
-	idIncrements(t, setupSQLitePersist())
+func TestUserIdIncrements(t *testing.T) {
+	userIdIncrements(t, setupSQLitePersist())
 	// TODO PG doesnt work
 	// idIncrements(t, setupPGPersist())
 }
 
-func idIncrements(t *testing.T, persist *Persister) {
+func userIdIncrements(t *testing.T, persist *Persister) {
 	defer persist.DeletePersistance()
 
 	for i := int64(1); i < 100; i++ {
 		var user = persist.NewUser(
-			fmt.Sprintf("Title #%d", i),
-			fmt.Sprintf("Content #%d", i),
-			fmt.Sprintf("ImageUrl #%d", i),
-			time.Now().UTC())
+			fmt.Sprintf("Antoine #%d", i),
+			time.Now().UTC(),
+			-5,
+			fmt.Sprintf("a%d@b.com", i))
 
 		if user.Id() != -1 {
 			t.Error("Id should be of -1 at this point")
@@ -178,18 +185,4 @@ func idIncrements(t *testing.T, persist *Persister) {
 			t.Errorf("Id expected %d but was %d", i, user.Id())
 		}
 	}
-}
-
-//
-// Helpers
-//
-
-func setupSQLitePersist() *Persister {
-	var pers, _ = NewPersistance(NewSQLiter("test"))
-	return pers
-}
-
-func setupPGPersist() *Persister {
-	var pers, _ = NewPersistance(NewUsergreser("test", "antoine"))
-	return pers
 }
