@@ -39,11 +39,39 @@ SELECT U.id, U.registrationDate, U.timezone, U.email
 FROM Users AS U`
 
 type User struct {
-	userId           int64
+	id               int64
 	registrationDate time.Time
 	timezone         int
 	email            string
 	db               Databaser
+}
+
+func (u *User) Id() int64 {
+	return u.id
+}
+
+func (u *User) RegistrationDate() time.Time {
+	return u.registrationDate
+}
+
+func (u *User) SetRegistrationDate(date time.Time) {
+	u.registrationDate = date
+}
+
+func (u *User) Timezone() int {
+	return u.timezone
+}
+
+func (u *User) SetTimezone(zone int) {
+	u.timezone = zone
+}
+
+func (u *User) Email() string {
+	return u.email
+}
+
+func (u *User) SetEmail(email string) {
+	u.email = email
 }
 
 //
@@ -98,7 +126,7 @@ func (persist *Persister) dropUserTable() {
 
 func (persist *Persister) NewUser(regDate time.Time, timez int, email string) *User {
 	return &User{
-		userId:           -1,
+		id:               -1,
 		registrationDate: regDate,
 		timezone:         timez,
 		email:            email,
@@ -170,7 +198,7 @@ func (persist *Persister) FindUserById(id int64) (*User, error) {
 	err = stmt.QueryRow(id).Scan(&date, &timezone, &email)
 	if err != nil {
 		// normal if the User doesnt exist
-		return p, err
+		return u, err
 	}
 
 	u := &User{
@@ -182,4 +210,61 @@ func (persist *Persister) FindUserById(id int64) (*User, error) {
 	}
 
 	return u, nil
+}
+
+//
+// Operations on User
+//
+
+// Saves the user (or update it if it already exists)
+// to the database
+func (u *User) Save() error {
+	db, err := sql.Open(u.db.Driver(), u.db.Name())
+	if err != nil {
+		fmt.Println("Save 1:", err)
+		return err
+	}
+	defer db.Close()
+
+	stmt, err := db.Prepare(insertOrReplaceUserForId)
+	if err != nil {
+		fmt.Println("Save 2:", err)
+		return err
+	}
+	defer stmt.Close()
+
+	res, err := stmt.Exec(u.registrationDate, u.timezone, u.email)
+	if err != nil {
+		fmt.Println("Save 3:", err)
+		return err
+	}
+
+	u.id, _ = res.LastInsertId()
+	return nil
+}
+
+// Deletes the post from the database
+func (u *User) Destroy() error {
+
+	db, err := sql.Open(u.db.Driver(), u.db.Name())
+	if err != nil {
+		fmt.Println("Destroy 1:", err)
+		return err
+	}
+	defer db.Close()
+
+	stmt, err := db.Prepare(deleteUserById)
+	if err != nil {
+		fmt.Println("Destroy 2:", err)
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(u.id)
+	if err != nil {
+		fmt.Println("Destroy 3:", err)
+		return err
+	}
+
+	return nil
 }
