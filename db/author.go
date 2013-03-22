@@ -52,6 +52,13 @@ SELECT
 FROM Authors AS A, Users AS U
 WHERE A.userId = U.id`
 
+// Relations
+var queryForAllPostsOfAuthorId string = `
+SELECT P.id, P.authorId, P.title, P.content, P.imageURL, P.date
+FROM Posts AS P
+WHERE P.authorId = ?
+`
+
 // Represents an author of the blog
 type Author struct {
 	id      int64
@@ -79,6 +86,54 @@ func (a *Author) Twitter() string {
 
 func (a *Author) SetTwitter(twitter string) {
 	a.twitter = twitter
+}
+
+func (a *Author) Posts() ([]Post, error) {
+	db, err := sql.Open(a.db.Driver(), a.db.Name())
+	if err != nil {
+		fmt.Println("Couldn't open DB:", err)
+		return nil, err
+	}
+	defer db.Close()
+
+	stmt, err := db.Prepare(queryForAllPostsOfAuthorId)
+	if err != nil {
+		fmt.Printf("Couldn't prepare statement: %s", queryForAllPostsOfAuthorId)
+		fmt.Println(err)
+		return nil, err
+	}
+	defer stmt.Close()
+
+	var posts []Post
+
+	rows, err := stmt.Query(a.id)
+	if err != nil {
+		fmt.Println("Couldn't read rows from statement", err)
+		return posts, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id int64
+		var authorId int64
+		var title string
+		var content string
+		var imageURL string
+		var date time.Time
+		rows.Scan(&id, &authorId, &title, &content, &imageURL, &date)
+		p := Post{
+			id:       id,
+			authorId: authorId,
+			title:    title,
+			content:  content,
+			imageURL: imageURL,
+			date:     date,
+			db:       a.db,
+		}
+		posts = append(posts, p)
+	}
+
+	return posts, nil
 }
 
 /*

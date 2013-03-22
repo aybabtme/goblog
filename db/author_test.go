@@ -240,3 +240,55 @@ func deleteUserCascadesToAuthor(t *testing.T, persist *Persister) {
 	}
 
 }
+
+func TestFindAllAuthorPosts(t *testing.T) {
+	findAllAuthorPosts(t, setupSQLitePersist())
+	//findAllAuthorPosts(t, setupPGPersist())
+}
+
+func findAllAuthorPosts(t *testing.T, persist *Persister) {
+	defer persist.DeletePersistance()
+	var postCount = 10
+
+	var user = persist.NewUser("Antony", time.Now().UTC(), -5, "antoine@g.com")
+	var author = persist.NewAuthor("aybabtme", user)
+	_ = author.Save()
+
+	var ghostPosts, err = author.Posts()
+	if len(ghostPosts) != 0 {
+		t.Errorf("Author has no posts yet but query returned posts with len(%d).",
+			len(ghostPosts))
+		return
+	}
+
+	var expected []Post
+	for i := 0; i < postCount; i++ {
+		var post = persist.NewPost(author.Id(),
+			fmt.Sprintf("Great Topic #%d", i),
+			fmt.Sprintf("cool content #%d", i),
+			fmt.Sprint("awesome@email%d.com", i),
+			time.Now().UTC())
+		post.Save()
+		expected = append(expected, *post)
+	}
+
+	actual, err := author.Posts()
+	if err != nil {
+		t.Errorf("Author has %d posts but an error was returned when queried.",
+			postCount)
+		return
+	}
+
+	if len(actual) != len(expected) {
+		t.Errorf("Expected <len(%d)> but was <len(%d)>", len(expected), len(actual))
+		return
+	}
+
+	for i := 0; i < len(expected); i++ {
+		if expected[i].Content() != actual[i].Content() {
+			t.Errorf("Compare #%d, expected <%s> but was <%s>",
+				i, expected[i].Content(), actual[i].Content())
+			return
+		}
+	}
+}
