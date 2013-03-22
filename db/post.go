@@ -41,6 +41,12 @@ var queryForAllPost string = `
 SELECT P.id, P.authorId, P.title, P.content, P.imageURL, P.date
 FROM Posts AS P`
 
+// Relations
+var queryForAllCommentsOfPostId string = `
+SELECT C.userId, C.postId, C.content, C.date, C.upVote, C.downVote
+FROM Comments as C
+WHERE C.postId = ?`
+
 // Represents a post in the blog
 type Post struct {
 	id       int64
@@ -94,6 +100,56 @@ func (p *Post) Date() time.Time {
 
 func (p *Post) SetDate(time time.Time) {
 	p.date = time
+}
+
+func (p *Post) Comments() ([]Comment, error) {
+	db, err := sql.Open(p.db.Driver(), p.db.Name())
+	if err != nil {
+		fmt.Println("Couldn't open DB:", err)
+		return nil, err
+	}
+	defer db.Close()
+
+	stmt, err := db.Prepare(queryForAllCommentsOfPostId)
+	if err != nil {
+		fmt.Printf("Couldn't prepare statement: %s", queryForAllPostsOfAuthorId)
+		fmt.Println(err)
+		return nil, err
+	}
+	defer stmt.Close()
+
+	var comments []Comment
+
+	rows, err := stmt.Query(p.id)
+	if err != nil {
+		fmt.Println("Couldn't read rows from statement", err)
+		return comments, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id int64
+		var userId int64
+		var postId int64
+		var content string
+		var date time.Time
+		var upVote int64
+		var downVote int64
+		rows.Scan(&id, &userId, &postId, &content, &date, &upVote, &downVote)
+		c := Comment{
+			id:       id,
+			userId:   userId,
+			postId:   postId,
+			content:  content,
+			date:     date,
+			upVote:   upVote,
+			downVote: downVote,
+			db:       p.db,
+		}
+		comments = append(comments, c)
+	}
+
+	return comments, nil
 }
 
 //
