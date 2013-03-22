@@ -12,10 +12,12 @@ import (
 var createPostTable string = `
 CREATE TABLE IF NOT EXISTS Posts(
    id %s,
+   authorId INTEGER,
    title VARCHAR(255),
    content TEXT,
    imageURL VARCHAR(255),
-   date %s
+   date %s,
+   FOREIGN KEY (authorId) REFERENCES Authors(id) ON DELETE SET NULL
 )`
 
 var dropPostTable string = `
@@ -23,11 +25,11 @@ DROP TABLE Posts;
 `
 
 var insertOrReplacePostForId string = `
-INSERT OR REPLACE INTO Posts( title, content, imageURL, date)
-VALUES( ?, ?, ?, ?)`
+INSERT OR REPLACE INTO Posts( authorId, title, content, imageURL, date)
+VALUES( ?, ?, ?, ?, ?)`
 
 var findPostById string = `
-SELECT P.title, P.content, P.imageURL, P.date
+SELECT P.authorId, P.title, P.content, P.imageURL, P.date
 FROM Posts AS P
 WHERE P.id = ?`
 
@@ -36,12 +38,13 @@ DELETE FROM Posts
 WHERE Posts.id = ?`
 
 var queryForAllPost string = `
-SELECT P.id, P.title, P.content, P.imageURL, P.date
+SELECT P.id, P.authorId, P.title, P.content, P.imageURL, P.date
 FROM Posts AS P`
 
 // Represents a post in the blog
 type Post struct {
 	id       int64
+	authorId int64
 	title    string
 	content  string
 	imageURL string
@@ -51,6 +54,14 @@ type Post struct {
 
 func (p *Post) Id() int64 {
 	return p.id
+}
+
+func (p *Post) AuthorId() int64 {
+	return p.authorId
+}
+
+func (p *Post) SetAuthorId(id int64) {
+	p.authorId = id
 }
 
 func (p *Post) Title() string {
@@ -137,10 +148,11 @@ func (persist *Persister) dropPostTable() {
 }
 
 // Creates a new Post attached to the Database (but not saved)
-func (persist *Persister) NewPost(title string, content string, imageURL string, date time.Time) *Post {
+func (persist *Persister) NewPost(authorId int64, title string, content string, imageURL string, date time.Time) *Post {
 
 	return &Post{
 		id:       -1,
+		authorId: authorId,
 		title:    title,
 		content:  content,
 		imageURL: imageURL,
@@ -171,13 +183,15 @@ func (persist *Persister) FindAllPosts() ([]Post, error) {
 
 	for rows.Next() {
 		var id int64
+		var authorId int64
 		var title string
 		var content string
 		var imageURL string
 		var date time.Time
-		rows.Scan(&id, &title, &content, &imageURL, &date)
+		rows.Scan(&id, &authorId, &title, &content, &imageURL, &date)
 		p := Post{
 			id:       id,
+			authorId: authorId,
 			title:    title,
 			content:  content,
 			imageURL: imageURL,
@@ -210,11 +224,12 @@ func (persist *Persister) FindPostById(id int64) (*Post, error) {
 	}
 	defer stmt.Close()
 
+	var authorId int64
 	var title string
 	var content string
 	var imageURL string
 	var date time.Time
-	err = stmt.QueryRow(id).Scan(&title, &content, &imageURL, &date)
+	err = stmt.QueryRow(id).Scan(&authorId, &title, &content, &imageURL, &date)
 	if err != nil {
 		// normal if the post doesnt exist
 		return p, err
@@ -222,6 +237,7 @@ func (persist *Persister) FindPostById(id int64) (*Post, error) {
 
 	p = &Post{
 		id:       id,
+		authorId: authorId,
 		title:    title,
 		content:  content,
 		imageURL: imageURL,
@@ -253,7 +269,7 @@ func (p *Post) Save() error {
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(p.title, p.content, p.imageURL, p.date)
+	res, err := stmt.Exec(p.authorId, p.title, p.content, p.imageURL, p.date)
 	if err != nil {
 		fmt.Println("Save 3:", err)
 		return err

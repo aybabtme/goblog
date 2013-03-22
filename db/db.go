@@ -23,20 +23,25 @@ func NewPersistance(dbaser Databaser) (*Persister, error) {
 	}
 	db.Close()
 	var persist = &Persister{databaser: dbaser}
-	persist.createPostTable()
+
+	// Order matters, topologically sorted since tables are
+	// inter dependent
 	persist.createUserTable()
 	persist.createAuthorTable()
+	persist.createPostTable()
 	persist.createLabelTable()
 	persist.createCommentTable()
 	return persist, nil
 }
 
 func (p *Persister) DeletePersistance() {
+	// Order matters, topologically sorted since tables are
+	// inter dependent
 	p.dropCommentTable()
 	p.dropLabelTable()
+	p.dropPostTable()
 	p.dropAuthorTable()
 	p.dropUserTable()
-	p.dropPostTable()
 }
 
 // Interface to abstract between different drivers (SQLite or Postgres)

@@ -11,10 +11,13 @@ func TestNewPost(t *testing.T) {
 	//newPost(t, setupPGPersist())
 }
 
-func newPost(t *testing.T, persist *Persister) {
-	defer persist.DeletePersistance()
+func newPost(t *testing.T, pers *Persister) {
+	defer pers.DeletePersistance()
 
-	var post = persist.NewPost("Antoine",
+	var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
+	var author = pers.NewAuthor("aybabtme", user)
+	var post = pers.NewPost(author.Id(),
+		"My first post",
 		"Hello World",
 		"fake.url/to/image.jpg",
 		time.Now().UTC())
@@ -28,9 +31,12 @@ func TestSavePost(t *testing.T) {
 	//savePost(t, setupPGPersist())
 }
 
-func savePost(t *testing.T, persist *Persister) {
-	defer persist.DeletePersistance()
-	var post = persist.NewPost("Antoine",
+func savePost(t *testing.T, pers *Persister) {
+	defer pers.DeletePersistance()
+	var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
+	var author = pers.NewAuthor("aybabtme", user)
+	var post = pers.NewPost(author.Id(),
+		"My first post",
 		"Hello World",
 		"fake.url/to/image.jpg",
 		time.Now().UTC())
@@ -61,7 +67,9 @@ func destroyPost(t *testing.T, pers *Persister) {
 	defer pers.DeletePersistance()
 
 	for i := int64(1); i < 100; i++ {
-		var expected = pers.NewPost(
+		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
+		var author = pers.NewAuthor("aybabtme", user)
+		var expected = pers.NewPost(author.Id(),
 			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
 			fmt.Sprintf("ImageUrl #%d", i),
@@ -90,17 +98,19 @@ func TestFindByIdPost(t *testing.T) {
 	//findByIdPost(t, setupPGPersist())
 }
 
-func findByIdPost(t *testing.T, persist *Persister) {
-	defer persist.DeletePersistance()
+func findByIdPost(t *testing.T, pers *Persister) {
+	defer pers.DeletePersistance()
 	for i := int64(1); i < 100; i++ {
-		var expected = persist.NewPost(
+		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
+		var author = pers.NewAuthor("aybabtme", user)
+		var expected = pers.NewPost(author.Id(),
 			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
 			fmt.Sprintf("ImageUrl #%d", i),
 			time.Now().UTC())
 		expected.Save()
 
-		actual, err := persist.FindPostById(expected.Id())
+		actual, err := pers.FindPostById(expected.Id())
 
 		if err != nil {
 			t.Errorf("Error while querying post %d: %v", i, err)
@@ -123,7 +133,9 @@ func findAllPost(t *testing.T, pers *Persister) {
 	var postCount = int64(10)
 
 	for i := int64(1); i <= postCount; i++ {
-		var post = pers.NewPost(
+		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
+		var author = pers.NewAuthor("aybabtme", user)
+		var post = pers.NewPost(author.Id(),
 			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
 			fmt.Sprintf("ImageUrl #%d", i),
@@ -158,11 +170,13 @@ func TestIdIncrements(t *testing.T) {
 	// idIncrements(t, setupPGPersist())
 }
 
-func idIncrements(t *testing.T, persist *Persister) {
-	defer persist.DeletePersistance()
+func idIncrements(t *testing.T, pers *Persister) {
+	defer pers.DeletePersistance()
 
 	for i := int64(1); i < 100; i++ {
-		var post = persist.NewPost(
+		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
+		var author = pers.NewAuthor("aybabtme", user)
+		var post = pers.NewPost(author.Id(),
 			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
 			fmt.Sprintf("ImageUrl #%d", i),
