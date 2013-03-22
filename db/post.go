@@ -112,7 +112,7 @@ func (p *Post) Comments() ([]Comment, error) {
 
 	stmt, err := db.Prepare(queryForAllCommentsOfPostId)
 	if err != nil {
-		fmt.Printf("Couldn't prepare statement: %s", queryForAllPostsOfAuthorId)
+		fmt.Printf("Couldn't prepare statement: %s", queryForAllCommentsOfPostId)
 		fmt.Println(err)
 		return nil, err
 	}
