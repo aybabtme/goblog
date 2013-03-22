@@ -9,21 +9,25 @@ import (
 var createCommentTable string = `
 CREATE TABLE IF NOT EXISTS Comments(
    id %s,
+   userId INTEGER,
+   postId INTEGER,
    content TEXT,
    date %s,
    upVote INTEGER,
-   downVote INTEGER
+   downVote INTEGER,
+   FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE,
+   FOREIGN KEY (postId) REFERENCES Posts(id) ON DELETE CASCADE
 )`
 
 var dropCommentTable string = `
 DROP TABLE Comments;`
 
 var insertOrReplaceCommentForId string = `
-INSERT OR REPLACE INTO Comments( content, date, upVote, downVote )
-VALUES( ?, ?, ?, ? )`
+INSERT OR REPLACE INTO Comments( userId, postId, content, date, upVote, downVote )
+VALUES( ?, ?, ?, ?, ?, ? )`
 
 var findCommentById string = `
-SELECT C.content, C.date, C.upVote, C.downVote
+SELECT C.userId, C.postId, C.content, C.date, C.upVote, C.downVote
 FROM Comments as C
 WHERE C.id = ?`
 
@@ -32,11 +36,13 @@ DELETE FROM Comments
 WHERE Comments.id = ?`
 
 var queryForAllComment string = `
-SELECT C.id, C.content, C.date, C.upVote, C.downVote
+SELECT C.id, C.userId, C.postId, C.content, C.date, C.upVote, C.downVote
 FROM Comments AS C`
 
 type Comment struct {
 	id       int64
+	userId   int64
+	postId   int64
 	content  string
 	date     time.Time
 	upVote   int64
@@ -132,9 +138,11 @@ func (persist *Persister) dropCommentTable() {
 
 }
 
-func (persist *Persister) NewComment(content string, date time.Time) *Comment {
+func (persist *Persister) NewComment(userId int64, postId int64, content string, date time.Time) *Comment {
 	return &Comment{
 		id:       -1,
+		userId:   userId,
+		postId:   postId,
 		content:  content,
 		date:     date,
 		upVote:   0,
@@ -165,13 +173,17 @@ func (persist *Persister) FindAllComments() ([]Comment, error) {
 
 	for rows.Next() {
 		var id int64
+		var userId int64
+		var postId int64
 		var content string
 		var date time.Time
 		var upVote int64
 		var downVote int64
-		rows.Scan(&id, &content, &date, &upVote, &downVote)
+		rows.Scan(&id, &userId, &postId, &content, &date, &upVote, &downVote)
 		c := Comment{
 			id:       id,
+			userId:   userId,
+			postId:   postId,
 			content:  content,
 			date:     date,
 			upVote:   upVote,
@@ -204,11 +216,13 @@ func (persist *Persister) FindCommentById(id int64) (*Comment, error) {
 	}
 	defer stmt.Close()
 
+	var userId int64
+	var postId int64
 	var content string
 	var date time.Time
 	var upVote int64
 	var downVote int64
-	err = stmt.QueryRow(id).Scan(&content, &date, &upVote, &downVote)
+	err = stmt.QueryRow(id).Scan(&userId, &postId, &content, &date, &upVote, &downVote)
 	if err != nil {
 		// normal if the comment doesnt exist
 		return c, err
@@ -216,6 +230,8 @@ func (persist *Persister) FindCommentById(id int64) (*Comment, error) {
 
 	c = &Comment{
 		id:       id,
+		userId:   userId,
+		postId:   postId,
 		content:  content,
 		date:     date,
 		upVote:   upVote,
@@ -247,7 +263,7 @@ func (c *Comment) Save() error {
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(c.content, c.date, c.upVote, c.downVote)
+	res, err := stmt.Exec(c.userId, c.postId, c.content, c.date, c.upVote, c.downVote)
 	if err != nil {
 		fmt.Println("Save 3:", err)
 		return err

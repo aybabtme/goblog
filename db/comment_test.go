@@ -6,15 +6,34 @@ import (
 	"time"
 )
 
+func generateUserAndPost(pers *Persister, i int64) (*User, *Post) {
+	var user = pers.NewUser("John", time.Now().UTC(), -5, "john@smith.com")
+	_ = user.Save()
+	var authUser = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
+	var author = pers.NewAuthor(
+		fmt.Sprintf("aybabtme#%d", i),
+		authUser)
+	_ = author.Save()
+	var post = pers.NewPost(author.Id(),
+		fmt.Sprintf("Title #%d", i),
+		fmt.Sprintf("Content #%d", i),
+		fmt.Sprintf("ImageUrl #%d", i),
+		time.Now().UTC())
+	return user, post
+}
+
 func TestNewComment(t *testing.T) {
 	newComment(t, setupSQLitePersist())
 	//newComment(t, setupPGPersist())
 }
 
-func newComment(t *testing.T, persist *Persister) {
-	defer persist.DeletePersistance()
+func newComment(t *testing.T, pers *Persister) {
+	defer pers.DeletePersistance()
 
-	var comment = persist.NewComment(
+	var user, post = generateUserAndPost(pers, 0)
+	var comment = pers.NewComment(
+		user.Id(),
+		post.Id(),
 		"I really love your new pointless post on Justin Bieber",
 		time.Now().UTC())
 
@@ -28,10 +47,13 @@ func TestSaveComment(t *testing.T) {
 	//saveComment(t, setupPGPersist())
 }
 
-func saveComment(t *testing.T, persist *Persister) {
-	defer persist.DeletePersistance()
+func saveComment(t *testing.T, pers *Persister) {
+	defer pers.DeletePersistance()
 
-	var comment = persist.NewComment(
+	var user, post = generateUserAndPost(pers, 0)
+	var comment = pers.NewComment(
+		user.Id(),
+		post.Id(),
 		"I really love your new pointless post on Justin Bieber",
 		time.Now().UTC())
 
@@ -63,7 +85,10 @@ func destroyComment(t *testing.T, pers *Persister) {
 
 	for i := int64(1); i < 100; i++ {
 
+		var user, post = generateUserAndPost(pers, 0)
 		var expected = pers.NewComment(
+			user.Id(),
+			post.Id(),
 			fmt.Sprintf("I really love your new pointless post #%d", i),
 			time.Now().UTC())
 
@@ -90,16 +115,19 @@ func TestFindByIdComment(t *testing.T) {
 	//findByIdComment(t, setupPGPersist())
 }
 
-func findByIdComment(t *testing.T, persist *Persister) {
-	defer persist.DeletePersistance()
+func findByIdComment(t *testing.T, pers *Persister) {
+	defer pers.DeletePersistance()
 	for i := int64(1); i < 100; i++ {
-		var expected = persist.NewComment(
+		var user, post = generateUserAndPost(pers, 0)
+		var expected = pers.NewComment(
+			user.Id(),
+			post.Id(),
 			fmt.Sprintf("I really love your new pointless post #%d", i),
 			time.Now().UTC())
 
 		expected.Save()
 
-		actual, err := persist.FindCommentById(expected.Id())
+		actual, err := pers.FindCommentById(expected.Id())
 
 		if err != nil {
 			t.Errorf("Error while querying comment %d: %v", i, err)
@@ -124,7 +152,10 @@ func findAllComment(t *testing.T, pers *Persister) {
 	var commentCount = int64(10)
 
 	for i := int64(1); i <= commentCount; i++ {
+		var user, post = generateUserAndPost(pers, 0)
 		var comment = pers.NewComment(
+			user.Id(),
+			post.Id(),
 			fmt.Sprintf("I really love your new pointless post #%d", i),
 			time.Now().UTC())
 
@@ -160,11 +191,14 @@ func TestCommentIdIncrements(t *testing.T) {
 	// idIncrements(t, setupPGPersist())
 }
 
-func commentIdIncrements(t *testing.T, persist *Persister) {
-	defer persist.DeletePersistance()
+func commentIdIncrements(t *testing.T, pers *Persister) {
+	defer pers.DeletePersistance()
 
 	for i := int64(1); i < 100; i++ {
-		var comment = persist.NewComment(
+		var user, post = generateUserAndPost(pers, 0)
+		var comment = pers.NewComment(
+			user.Id(),
+			post.Id(),
 			fmt.Sprintf("I really love your new pointless post #%d", i),
 			time.Now().UTC())
 

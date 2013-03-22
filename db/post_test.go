@@ -16,6 +16,7 @@ func newPost(t *testing.T, pers *Persister) {
 
 	var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
 	var author = pers.NewAuthor("aybabtme", user)
+	_ = author.Save()
 	var post = pers.NewPost(author.Id(),
 		"My first post",
 		"Hello World",
@@ -35,6 +36,7 @@ func savePost(t *testing.T, pers *Persister) {
 	defer pers.DeletePersistance()
 	var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
 	var author = pers.NewAuthor("aybabtme", user)
+	_ = author.Save()
 	var post = pers.NewPost(author.Id(),
 		"My first post",
 		"Hello World",
@@ -69,6 +71,7 @@ func destroyPost(t *testing.T, pers *Persister) {
 	for i := int64(1); i < 100; i++ {
 		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
 		var author = pers.NewAuthor("aybabtme", user)
+		_ = author.Save()
 		var expected = pers.NewPost(author.Id(),
 			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
@@ -103,6 +106,7 @@ func findByIdPost(t *testing.T, pers *Persister) {
 	for i := int64(1); i < 100; i++ {
 		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
 		var author = pers.NewAuthor("aybabtme", user)
+		_ = author.Save()
 		var expected = pers.NewPost(author.Id(),
 			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
@@ -135,6 +139,7 @@ func findAllPost(t *testing.T, pers *Persister) {
 	for i := int64(1); i <= postCount; i++ {
 		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
 		var author = pers.NewAuthor("aybabtme", user)
+		_ = author.Save()
 		var post = pers.NewPost(author.Id(),
 			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
@@ -176,6 +181,7 @@ func idIncrements(t *testing.T, pers *Persister) {
 	for i := int64(1); i < 100; i++ {
 		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
 		var author = pers.NewAuthor("aybabtme", user)
+		_ = author.Save()
 		var post = pers.NewPost(author.Id(),
 			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
