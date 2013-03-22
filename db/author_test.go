@@ -67,7 +67,7 @@ func TestDestroyAuthor(t *testing.T) {
 func destroyAuthor(t *testing.T, pers *Persister) {
 	defer pers.DeletePersistance()
 
-	for i := int64(1); i < 100; i++ {
+	for i := int64(1); i < 10; i++ {
 		var user = pers.NewUser(
 			fmt.Sprintf("Author Antoine #%d", i),
 			time.Now().UTC(),
@@ -103,7 +103,7 @@ func TestFindByIdAuthor(t *testing.T) {
 
 func findByIdAuthor(t *testing.T, persist *Persister) {
 	defer persist.DeletePersistance()
-	for i := int64(1); i < 100; i++ {
+	for i := int64(1); i < 10; i++ {
 		var user = persist.NewUser(
 			fmt.Sprintf("Author Antoine #%d", i),
 			time.Now().UTC(),
@@ -188,7 +188,7 @@ func TestAuthorIdIncrements(t *testing.T) {
 func authorIdIncrements(t *testing.T, persist *Persister) {
 	defer persist.DeletePersistance()
 
-	for i := int64(1); i < 100; i++ {
+	for i := int64(1); i < 10; i++ {
 		var user = persist.NewUser(
 			fmt.Sprintf("Antoine #%d", i),
 			time.Now().UTC(),

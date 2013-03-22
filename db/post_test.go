@@ -68,7 +68,7 @@ func TestDestroyPost(t *testing.T) {
 func destroyPost(t *testing.T, pers *Persister) {
 	defer pers.DeletePersistance()
 
-	for i := int64(1); i < 100; i++ {
+	for i := int64(1); i < 10; i++ {
 		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
 		var author = pers.NewAuthor("aybabtme", user)
 		_ = author.Save()
@@ -103,7 +103,7 @@ func TestFindByIdPost(t *testing.T) {
 
 func findByIdPost(t *testing.T, pers *Persister) {
 	defer pers.DeletePersistance()
-	for i := int64(1); i < 100; i++ {
+	for i := int64(1); i < 10; i++ {
 		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
 		var author = pers.NewAuthor("aybabtme", user)
 		_ = author.Save()
@@ -178,7 +178,7 @@ func TestIdIncrements(t *testing.T) {
 func idIncrements(t *testing.T, pers *Persister) {
 	defer pers.DeletePersistance()
 
-	for i := int64(1); i < 100; i++ {
+	for i := int64(1); i < 10; i++ {
 		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
 		var author = pers.NewAuthor("aybabtme", user)
 		_ = author.Save()

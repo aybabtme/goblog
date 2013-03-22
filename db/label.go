@@ -181,12 +181,10 @@ func (l *Label) Save() error {
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(l.name, l.id)
+	_, err = stmt.Exec(l.name, l.id)
 	if err != nil {
 		fmt.Println("Save 3:", err)
 		return err
 	}
-
-	l.id, _ = res.LastInsertId()
 	return nil
 }

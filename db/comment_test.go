@@ -83,7 +83,7 @@ func TestDestroyComment(t *testing.T) {
 func destroyComment(t *testing.T, pers *Persister) {
 	defer pers.DeletePersistance()
 
-	for i := int64(1); i < 100; i++ {
+	for i := int64(1); i < 10; i++ {
 
 		var user, post = generateUserAndPost(pers, 0)
 		var expected = pers.NewComment(
@@ -117,7 +117,7 @@ func TestFindByIdComment(t *testing.T) {
 
 func findByIdComment(t *testing.T, pers *Persister) {
 	defer pers.DeletePersistance()
-	for i := int64(1); i < 100; i++ {
+	for i := int64(1); i < 10; i++ {
 		var user, post = generateUserAndPost(pers, 0)
 		var expected = pers.NewComment(
 			user.Id(),
@@ -194,7 +194,7 @@ func TestCommentIdIncrements(t *testing.T) {
 func commentIdIncrements(t *testing.T, pers *Persister) {
 	defer pers.DeletePersistance()
 
-	for i := int64(1); i < 100; i++ {
+	for i := int64(1); i < 10; i++ {
 		var user, post = generateUserAndPost(pers, 0)
 		var comment = pers.NewComment(
 			user.Id(),

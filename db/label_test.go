@@ -88,7 +88,7 @@ func TestFindByIdLabel(t *testing.T) {
 func findByIdLabel(t *testing.T, pers *Persister) {
 	defer pers.DeletePersistance()
 
-	for i := int64(1); i < 100; i++ {
+	for i := int64(1); i < 10; i++ {
 		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
 		var author = pers.NewAuthor("aybabtme", user)
 		_ = author.Save()
@@ -124,7 +124,7 @@ func TestFindAllLabel(t *testing.T) {
 
 func findAllLabel(t *testing.T, pers *Persister) {
 	defer pers.DeletePersistance()
-	var labelCount = int64(10)
+	var labelCount = int64(9)
 
 	for i := int64(1); i <= labelCount; i++ {
 		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
