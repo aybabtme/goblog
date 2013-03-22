@@ -265,7 +265,10 @@ func (l *Label) Destroy() error {
 	}
 	defer db.Close()
 
-	stmt, err := db.Prepare(deleteAllLabelsWithId)
+	// This is not working becauethe constraint on Label is not enforced.
+	// commented out so that it wont compile and force me to find back this very error
+	// next time i open my computer, kthxbai
+	//stmt, err := db.Prepare(deleteAllLabelsWithId)
 	if err != nil {
 		return err
 	}

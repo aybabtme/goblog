@@ -62,11 +62,15 @@ func destroyLabel(t *testing.T, pers *Persister) {
 		var id = expected.Id()
 		expected.Save()
 
-		expected.Destroy()
+		err = expected.Destroy()
+		if err != nil {
+			t.Error("Couldn't delete the label", err)
+		}
 		actual, err := pers.FindLabelById(id)
 
-		if actual != nil {
-			t.Error("Label shouldnt exist in DB after destroy")
+		if actual.Id() != -1 {
+			t.Errorf("Label should be destroyed but id=%d and name=%s",
+				actual.Id(), actual.Name())
 		}
 
 		if err == nil {
