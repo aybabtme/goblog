@@ -43,7 +43,7 @@ FROM Posts AS P`
 
 // Relations
 var queryForAllCommentsOfPostId string = `
-SELECT C.userId, C.postId, C.content, C.date, C.upVote, C.downVote
+SELECT C.id, C.userId, C.postId, C.content, C.date, C.upVote, C.downVote
 FROM Comments as C
 WHERE C.postId = ?`
 
@@ -136,6 +136,10 @@ func (p *Post) Comments() ([]Comment, error) {
 		var upVote int64
 		var downVote int64
 		rows.Scan(&id, &userId, &postId, &content, &date, &upVote, &downVote)
+		if err != nil {
+			fmt.Println("Error while scanning comments", err)
+			return comments, err
+		}
 		c := Comment{
 			id:       id,
 			userId:   userId,

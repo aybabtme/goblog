@@ -121,6 +121,10 @@ func (a *Author) Posts() ([]Post, error) {
 		var imageURL string
 		var date time.Time
 		rows.Scan(&id, &authorId, &title, &content, &imageURL, &date)
+		if err != nil {
+			fmt.Println("Error while scanning comments", err)
+			return posts, err
+		}
 		p := Post{
 			id:       id,
 			authorId: authorId,
