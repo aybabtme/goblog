@@ -186,3 +186,43 @@ func userIdIncrements(t *testing.T, persist *Persister) {
 		}
 	}
 }
+
+func TestFindAllUserComments(t *testing.T) {
+	findAllUserComments(t, setupSQLitePersist())
+	//findAllUsersComments(t, setupPGPersist())
+}
+
+func findAllUserComments(t *testing.T, persist *Persister) {
+	defer persist.DeletePersistance()
+	var commentCount = 10
+
+	var user, post = generateUserAndPost(persist, 0)
+	var expected []Comment
+	for i := 0; i < commentCount; i++ {
+		var comment = persist.NewComment(user.Id(), post.Id(),
+			fmt.Sprintf("I agree * %d", i),
+			time.Now().UTC())
+		comment.Save()
+		expected = append(expected, *comment)
+	}
+
+	actual, err := user.Comments()
+	if err != nil {
+		t.Errorf("Post had %d comments but an error was returned when queried.",
+			commentCount)
+		return
+	}
+
+	if len(actual) != len(expected) {
+		t.Errorf("Expected <len(%d)> but was <len(%d)>", len(expected), len(actual))
+		return
+	}
+
+	for i := 0; i < len(expected); i++ {
+		if expected[i].Content() != actual[i].Content() {
+			t.Errorf("Compare #%d, expected <%s> but was <%s>",
+				i, expected[i].Content(), actual[i].Content())
+			return
+		}
+	}
+}

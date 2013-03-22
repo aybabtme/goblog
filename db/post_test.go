@@ -201,8 +201,8 @@ func idIncrements(t *testing.T, pers *Persister) {
 }
 
 func TestFindAllPostComments(t *testing.T) {
-	findAllAuthorPosts(t, setupSQLitePersist())
-	//findAllAuthorPosts(t, setupPGPersist())
+	findAllPostComments(t, setupSQLitePersist())
+	//findAllPostComments(t, setupPGPersist())
 }
 
 func findAllPostComments(t *testing.T, persist *Persister) {
@@ -213,7 +213,7 @@ func findAllPostComments(t *testing.T, persist *Persister) {
 	var expected []Comment
 	for i := 0; i < commentCount; i++ {
 		var comment = persist.NewComment(user.Id(), post.Id(),
-			fmt.Sprintf("I agree * %d", i),
+			fmt.Sprintf("I agree times %d thousand", i),
 			time.Now().UTC())
 		comment.Save()
 		expected = append(expected, *comment)

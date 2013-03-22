@@ -40,6 +40,12 @@ var queryForAllUser string = `
 SELECT U.id, U.username, U.registrationDate, U.timezone, U.email
 FROM Users AS U`
 
+// Relations
+var queryForAllCommentsOfUserId string = `
+SELECT C.userId, C.postId, C.content, C.date, C.upVote, C.downVote
+FROM Comments as C
+WHERE C.userId = ?`
+
 // Represents a User of the blog
 type User struct {
 	id               int64
@@ -84,6 +90,56 @@ func (u *User) Email() string {
 
 func (u *User) SetEmail(email string) {
 	u.email = email
+}
+
+func (u *User) Comments() ([]Comment, error) {
+	db, err := sql.Open(u.db.Driver(), u.db.Name())
+	if err != nil {
+		fmt.Println("Couldn't open DB:", err)
+		return nil, err
+	}
+	defer db.Close()
+
+	stmt, err := db.Prepare(queryForAllCommentsOfUserId)
+	if err != nil {
+		fmt.Printf("Couldn't prepare statement: %s", queryForAllCommentsOfUserId)
+		fmt.Println(err)
+		return nil, err
+	}
+	defer stmt.Close()
+
+	var comments []Comment
+
+	rows, err := stmt.Query(u.id)
+	if err != nil {
+		fmt.Println("Couldn't read rows from statement", err)
+		return comments, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id int64
+		var userId int64
+		var postId int64
+		var content string
+		var date time.Time
+		var upVote int64
+		var downVote int64
+		rows.Scan(&id, &userId, &postId, &content, &date, &upVote, &downVote)
+		c := Comment{
+			id:       id,
+			userId:   userId,
+			postId:   postId,
+			content:  content,
+			date:     date,
+			upVote:   upVote,
+			downVote: downVote,
+			db:       u.db,
+		}
+		comments = append(comments, c)
+	}
+
+	return comments, nil
 }
 
 //
