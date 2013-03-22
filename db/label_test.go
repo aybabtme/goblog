@@ -3,78 +3,80 @@ package db
 import (
 	"fmt"
 	"testing"
+	"time"
 )
-
-func TestNewLabel(t *testing.T) {
-	newLabel(t, setupSQLitePersist())
-	//newLabel(t, setupPGPersist())
-}
-
-func newLabel(t *testing.T, persist *Persister) {
-	defer persist.DeletePersistance()
-
-	var label = persist.NewLabel("justin bieber topic")
-
-	if label == nil {
-		t.Error("Receive a nil label")
-	}
-}
 
 func TestSaveLabel(t *testing.T) {
 	saveLabel(t, setupSQLitePersist())
 	//saveLabel(t, setupPGPersist())
 }
 
-func saveLabel(t *testing.T, persist *Persister) {
-	defer persist.DeletePersistance()
-
-	var label = persist.NewLabel("food label")
-
-	if label == nil {
-		t.Error("Receive a nil label")
-	}
-
-	if label.Id() != -1 {
-		t.Error("Id should be of -1 at this point")
-	}
-
-	if err := label.Save(); err != nil {
-		t.Error("Save failed", err)
-	}
-
-	if label.Id() != 1 {
-		t.Error("Id should be 1 at this point")
-	}
-}
-
-func TestDestroyLabel(t *testing.T) {
-	destroyLabel(t, setupSQLitePersist())
-	// TODO fix this, it crashes for some reason
-	// destroyLabel(t, setupPGPersist())
-}
-
-func destroyLabel(t *testing.T, pers *Persister) {
+func saveLabel(t *testing.T, pers *Persister) {
 	defer pers.DeletePersistance()
 
-	for i := int64(1); i < 100; i++ {
+	var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
+	var author = pers.NewAuthor("aybabtme", user)
+	_ = author.Save()
+	var post = pers.NewPost(author.Id(),
+		"My first post",
+		"Hello World",
+		"fake.url/to/image.jpg",
+		time.Now().UTC())
+	_ = post.Save()
 
-		var expected = pers.NewLabel(fmt.Sprintf("cool topic #%d", i))
-
-		var id = expected.Id()
-		expected.Save()
-
-		expected.Destroy()
-		actual, err := pers.FindLabelById(id)
-
-		if actual != nil {
-			t.Error("Label shouldnt exist in DB after destroy")
-		}
-
-		if err == nil {
-			t.Error("An error should have been raised")
-		}
-
+	expected, err := post.AddLabel("food")
+	if err != nil {
+		t.Error("Couldn't create label", err)
+		return
 	}
+
+	if expected.Id() == -1 {
+		t.Error("Received a label that wasn't saved")
+		return
+	}
+
+	expected.SetName("delicious food")
+
+	if err := expected.Save(); err != nil {
+		t.Error("Save failed", err)
+		return
+	}
+
+	if expected.Id() != 1 {
+		t.Errorf("Id should be 1 at this point, but was %d", expected.Id())
+		return
+	}
+
+	expected.Save()
+	if expected.Id() != 1 {
+		t.Errorf("Id should be 1 at this point, but was %d", expected.Id())
+		return
+	}
+
+	labels, err := post.Labels()
+	if err != nil {
+		t.Error("Couldn't get labels back from the post", err)
+		return
+	}
+
+	if len(labels) != 1 {
+		t.Errorf("Created only 1 label but received %d", len(labels))
+		return
+	}
+
+	var actual = labels[0]
+
+	if actual.Id() != expected.Id() {
+		t.Errorf("Id expected <%d> but was <%d>", expected.Id(), actual.Id())
+		return
+	}
+
+	if actual.Name() != expected.Name() {
+		t.Errorf("After saving, expected name=<%s> but was <%s>",
+			expected.Name(), actual.Name())
+		return
+	}
+
 }
 
 func TestFindByIdLabel(t *testing.T) {
@@ -83,13 +85,24 @@ func TestFindByIdLabel(t *testing.T) {
 	//findByIdLabel(t, setupPGPersist())
 }
 
-func findByIdLabel(t *testing.T, persist *Persister) {
-	defer persist.DeletePersistance()
-	for i := int64(1); i < 100; i++ {
-		var expected = persist.NewLabel(fmt.Sprintf("cool topic #%d", i))
-		expected.Save()
+func findByIdLabel(t *testing.T, pers *Persister) {
+	defer pers.DeletePersistance()
 
-		actual, err := persist.FindLabelById(expected.Id())
+	for i := int64(1); i < 100; i++ {
+		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
+		var author = pers.NewAuthor("aybabtme", user)
+		_ = author.Save()
+		var post = pers.NewPost(author.Id(),
+			fmt.Sprintf("Title #%d", i),
+			fmt.Sprintf("Content #%d", i),
+			fmt.Sprintf("ImageUrl #%d", i),
+			time.Now().UTC())
+		_ = post.Save()
+		expected, err := post.AddLabel(fmt.Sprintf("cool topic #%d", i))
+		if err != nil {
+			t.Error("Couldn't create a label to begin with.")
+		}
+		actual, err := pers.FindLabelById(expected.Id())
 
 		if err != nil {
 			t.Errorf("Error while querying label %d: %v", i, err)
@@ -110,12 +123,23 @@ func TestFindAllLabel(t *testing.T) {
 }
 
 func findAllLabel(t *testing.T, pers *Persister) {
-
+	defer pers.DeletePersistance()
 	var labelCount = int64(10)
 
 	for i := int64(1); i <= labelCount; i++ {
-		var label = pers.NewLabel(fmt.Sprintf("cool topic #%d", i))
-		label.Save()
+		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
+		var author = pers.NewAuthor("aybabtme", user)
+		_ = author.Save()
+		var post = pers.NewPost(author.Id(),
+			fmt.Sprintf("Title #%d", i),
+			fmt.Sprintf("Content #%d", i),
+			fmt.Sprintf("ImageUrl #%d", i),
+			time.Now().UTC())
+		_ = post.Save()
+		_, err := post.AddLabel(fmt.Sprintf("cool topic #%d", i))
+		if err != nil {
+			t.Error("Couldn't create a label to begin with.")
+		}
 	}
 
 	labels, err := pers.FindAllLabels()
@@ -139,8 +163,6 @@ func findAllLabel(t *testing.T, pers *Persister) {
 			t.Errorf("Expected <%d> but was <%d>", idx+1, label.Id())
 		}
 	}
-
-	defer pers.DeletePersistance()
 }
 
 func TestLabelIdIncrements(t *testing.T) {
@@ -149,17 +171,23 @@ func TestLabelIdIncrements(t *testing.T) {
 	// idIncrements(t, setupPGPersist())
 }
 
-func labelIdIncrements(t *testing.T, persist *Persister) {
-	defer persist.DeletePersistance()
+func labelIdIncrements(t *testing.T, pers *Persister) {
+	defer pers.DeletePersistance()
 
-	for i := int64(1); i < 100; i++ {
-		var label = persist.NewLabel(fmt.Sprintf("cool topic #%d", i))
-
-		if label.Id() != -1 {
-			t.Error("Id should be of -1 at this point")
+	for i := int64(1); i < 10; i++ {
+		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
+		var author = pers.NewAuthor("aybabtme", user)
+		_ = author.Save()
+		var post = pers.NewPost(author.Id(),
+			fmt.Sprintf("Title #%d", i),
+			fmt.Sprintf("Content #%d", i),
+			fmt.Sprintf("ImageUrl #%d", i),
+			time.Now().UTC())
+		_ = post.Save()
+		label, err := post.AddLabel(fmt.Sprintf("cool topic #%d", i))
+		if err != nil {
+			t.Error("Couldn't create a label to begin with.")
 		}
-
-		label.Save()
 
 		if label.Id() != i {
 			t.Errorf("Id expected %d but was %d", i, label.Id())

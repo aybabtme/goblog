@@ -8,15 +8,12 @@ import (
 var createLabelTable string = `
 CREATE TABLE IF NOT EXISTS Labels(
    id %s,
-   name VARCHAR(255)
+   name VARCHAR(255) UNIQUE,
+   FOREIGN KEY (id) REFERENCES LabelPosts(labelId) ON DELETE CASCADE
 )`
 
 var dropLabelTable string = `
 DROP TABLE Labels;`
-
-var insertOrReplaceLabelForId string = `
-INSERT OR REPLACE INTO Labels( name )
-VALUES( ? )`
 
 var findLabelById string = `
 SELECT L.name
@@ -30,6 +27,12 @@ WHERE Labels.id = ?`
 var queryForAllLabel string = `
 SELECT L.id, L.name
 FROM Labels AS L`
+
+var renameLabelById string = `
+UPDATE Labels
+SET name = ?
+WHERE id = ?
+`
 
 // Represents a label from the blog
 type Label struct {
@@ -88,15 +91,6 @@ func (persist *Persister) dropLabelTable() {
 	_, err = db.Exec(dropLabelTable)
 	if err != nil {
 		fmt.Println("Error droping table:", err)
-	}
-}
-
-// Creates a new Label
-func (persist *Persister) NewLabel(name string) *Label {
-	return &Label{
-		id:   -1,
-		name: name,
-		db:   persist.databaser,
 	}
 }
 
@@ -180,44 +174,19 @@ func (l *Label) Save() error {
 	}
 	defer db.Close()
 
-	stmt, err := db.Prepare(insertOrReplaceLabelForId)
+	stmt, err := db.Prepare(renameLabelById)
 	if err != nil {
 		fmt.Println("Save 2:", err)
 		return err
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(l.name)
+	res, err := stmt.Exec(l.name, l.id)
 	if err != nil {
 		fmt.Println("Save 3:", err)
 		return err
 	}
 
 	l.id, _ = res.LastInsertId()
-	return nil
-}
-
-// Deletes the label from the database
-func (l *Label) Destroy() error {
-	db, err := sql.Open(l.db.Driver(), l.db.Name())
-	if err != nil {
-		fmt.Println("Destroy:", err)
-		return err
-	}
-	defer db.Close()
-
-	stmt, err := db.Prepare(deleteLabelById)
-	if err != nil {
-		fmt.Println("Destroy:", err)
-		return err
-	}
-	defer stmt.Close()
-
-	_, err = stmt.Exec(l.id)
-	if err != nil {
-		fmt.Println("Destroy:", err)
-		return err
-	}
-
 	return nil
 }

@@ -29,6 +29,7 @@ func NewPersistance(dbaser Databaser) (*Persister, error) {
 	persist.createUserTable()
 	persist.createAuthorTable()
 	persist.createPostTable()
+	persist.createLabelPostRelation()
 	persist.createLabelTable()
 	persist.createCommentTable()
 	return persist, nil
@@ -37,11 +38,14 @@ func NewPersistance(dbaser Databaser) (*Persister, error) {
 func (p *Persister) DeletePersistance() {
 	// Order matters, topologically sorted since tables are
 	// inter dependent
+
 	p.dropCommentTable()
 	p.dropLabelTable()
+	p.dropLabelPostRelation()
 	p.dropPostTable()
 	p.dropAuthorTable()
 	p.dropUserTable()
+
 }
 
 // Interface to abstract between different drivers (SQLite or Postgres)

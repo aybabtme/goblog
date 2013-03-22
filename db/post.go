@@ -47,6 +47,11 @@ SELECT C.id, C.userId, C.postId, C.content, C.date, C.upVote, C.downVote
 FROM Comments as C
 WHERE C.postId = ?`
 
+var queryForAllLabelsOfPostId string = `
+SELECT L.id, L.name
+FROM Labels AS L, LabelPosts AS LP
+WHERE LP.postId = ? AND LP.labelId = P.id`
+
 // Represents a post in the blog
 type Post struct {
 	id       int64
@@ -248,7 +253,10 @@ func (persist *Persister) FindAllPosts() ([]Post, error) {
 		var content string
 		var imageURL string
 		var date time.Time
-		rows.Scan(&id, &authorId, &title, &content, &imageURL, &date)
+		err := rows.Scan(&id, &authorId, &title, &content, &imageURL, &date)
+		if err != nil {
+			return posts, err
+		}
 		p := Post{
 			id:       id,
 			authorId: authorId,
