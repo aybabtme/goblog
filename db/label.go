@@ -7,8 +7,8 @@ import (
 
 var createLabelTable string = `
 CREATE TABLE IF NOT EXISTS Label(
-   label_id 	%s,
-   name 	VARCHAR(255) UNIQUE NOT NULL
+   label_id %s,
+   name VARCHAR(255) UNIQUE NOT NULL
 )`
 
 var dropLabelTable string = `

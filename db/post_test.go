@@ -11,13 +11,11 @@ func TestNewPost(t *testing.T) {
 	//newPost(t, setupPGConnection())
 }
 
-func newPost(t *testing.T, pers *DBConnection) {
-	defer pers.DeleteConnection()
+func newPost(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 
-	var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
-	var author = pers.NewAuthor("aybabtme", user)
-	_ = author.Save()
-	var post = pers.NewPost(author.Id(),
+	var author = generateAuthor(conn, 0)
+	var post = conn.NewPost(author.Id(),
 		"My first post",
 		"Hello World",
 		"fake.url/to/image.jpg",
@@ -32,12 +30,10 @@ func TestSavePost(t *testing.T) {
 	//savePost(t, setupPGConnection())
 }
 
-func savePost(t *testing.T, pers *DBConnection) {
-	defer pers.DeleteConnection()
-	var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
-	var author = pers.NewAuthor("aybabtme", user)
-	_ = author.Save()
-	var post = pers.NewPost(author.Id(),
+func savePost(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
+	var author = generateAuthor(conn, 0)
+	var post = conn.NewPost(author.Id(),
 		"My first post",
 		"Hello World",
 		"fake.url/to/image.jpg",
@@ -65,14 +61,12 @@ func TestDestroyPost(t *testing.T) {
 	// destroyPost(t, setupPGConnection())
 }
 
-func destroyPost(t *testing.T, pers *DBConnection) {
-	defer pers.DeleteConnection()
+func destroyPost(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 
 	for i := int64(1); i < 10; i++ {
-		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
-		var author = pers.NewAuthor("aybabtme", user)
-		_ = author.Save()
-		var expected = pers.NewPost(author.Id(),
+		var author = generateAuthor(conn, i)
+		var expected = conn.NewPost(author.Id(),
 			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
 			fmt.Sprintf("ImageUrl #%d", i),
@@ -82,7 +76,7 @@ func destroyPost(t *testing.T, pers *DBConnection) {
 		expected.Save()
 
 		expected.Destroy()
-		actual, err := pers.FindPostById(id)
+		actual, err := conn.FindPostById(id)
 
 		if actual != nil {
 			t.Error("Post shouldnt exist in DB after destroy")
@@ -101,20 +95,18 @@ func TestFindByIdPost(t *testing.T) {
 	//findByIdPost(t, setupPGConnection())
 }
 
-func findByIdPost(t *testing.T, pers *DBConnection) {
-	defer pers.DeleteConnection()
+func findByIdPost(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 	for i := int64(1); i < 10; i++ {
-		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
-		var author = pers.NewAuthor("aybabtme", user)
-		_ = author.Save()
-		var expected = pers.NewPost(author.Id(),
+		var author = generateAuthor(conn, i)
+		var expected = conn.NewPost(author.Id(),
 			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
 			fmt.Sprintf("ImageUrl #%d", i),
 			time.Now().UTC())
 		expected.Save()
 
-		actual, err := pers.FindPostById(expected.Id())
+		actual, err := conn.FindPostById(expected.Id())
 
 		if err != nil {
 			t.Errorf("Error while querying post %d: %v", i, err)
@@ -131,16 +123,14 @@ func TestFindAllPost(t *testing.T) {
 	//findAllPost(t, setupPGConnection())
 }
 
-func findAllPost(t *testing.T, pers *DBConnection) {
-	defer pers.DeleteConnection()
+func findAllPost(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 
 	var postCount = int64(10)
 
 	for i := int64(1); i <= postCount; i++ {
-		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
-		var author = pers.NewAuthor("aybabtme", user)
-		_ = author.Save()
-		var post = pers.NewPost(author.Id(),
+		var author = generateAuthor(conn, i)
+		var post = conn.NewPost(author.Id(),
 			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
 			fmt.Sprintf("ImageUrl #%d", i),
@@ -148,7 +138,7 @@ func findAllPost(t *testing.T, pers *DBConnection) {
 		post.Save()
 	}
 
-	posts, err := pers.FindAllPosts()
+	posts, err := conn.FindAllPosts()
 	if err != nil {
 		t.Errorf("Couldn't query posts although just saved %d", postCount)
 	}
@@ -175,14 +165,12 @@ func TestIdIncrements(t *testing.T) {
 	// idIncrements(t, setupPGConnection())
 }
 
-func idIncrements(t *testing.T, pers *DBConnection) {
-	defer pers.DeleteConnection()
+func idIncrements(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 
 	for i := int64(1); i < 10; i++ {
-		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
-		var author = pers.NewAuthor("aybabtme", user)
-		_ = author.Save()
-		var post = pers.NewPost(author.Id(),
+		var author = generateAuthor(conn, i)
+		var post = conn.NewPost(author.Id(),
 			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
 			fmt.Sprintf("ImageUrl #%d", i),
@@ -205,14 +193,14 @@ func TestFindAllPostComments(t *testing.T) {
 	//findAllPostComments(t, setupPGConnection())
 }
 
-func findAllPostComments(t *testing.T, persist *DBConnection) {
-	defer persist.DeleteConnection()
+func findAllPostComments(t *testing.T, connist *DBConnection) {
+	defer connist.DeleteConnection()
 	var commentCount = 10
 
-	var user, post = generateUserAndPost(persist, 0)
+	var user, post = generateUserAndPost(connist, 0)
 	var expected []Comment
 	for i := 0; i < commentCount; i++ {
-		var comment = persist.NewComment(user.Id(), post.Id(),
+		var comment = connist.NewComment(user.Id(), post.Id(),
 			fmt.Sprintf("I agree times %d thousand", i),
 			time.Now().UTC())
 		comment.Save()
@@ -238,18 +226,4 @@ func findAllPostComments(t *testing.T, persist *DBConnection) {
 			return
 		}
 	}
-}
-
-//
-// Helpers
-//
-
-func setupSQLiteConnection() *DBConnection {
-	var pers, _ = NewConnection(NewSQLiter("test"))
-	return pers
-}
-
-func setupPGConnection() *DBConnection {
-	var pers, _ = NewConnection(NewPostgreser("test", "antoine"))
-	return pers
 }

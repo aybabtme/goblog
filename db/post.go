@@ -11,12 +11,12 @@ import (
 //
 var createPostTable string = `
 CREATE TABLE IF NOT EXISTS Post(
-   post_id 		%s,
-   author_id 	INTEGER NOT NULL,
-   title 		VARCHAR(255) NOT NULL,
-   content 		TEXT NOT NULL,
-   image_url 	VARCHAR(255) NOT NULL,
-   date 			%s NOT NULL,
+   post_id %s,
+   author_id INTEGER NOT NULL,
+   title VARCHAR(255) NOT NULL,
+   content TEXT NOT NULL,
+   image_url VARCHAR(255) NOT NULL,
+   date %s NOT NULL,
    CONSTRAINT fk_post_authorid
    	FOREIGN KEY (author_id) REFERENCES Author(author_id) ON DELETE SET NULL
 )`

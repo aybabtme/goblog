@@ -13,59 +13,59 @@ import (
  */
 
 var createLabelPostsRelation string = `
-CREATE TABLE IF NOT EXISTS LabelPosts(
-   postId INTEGER,
-   labelId INTEGER,
-   PRIMARY KEY (postId, labelId),
-   CONSTRAINT fk_labelpost_postid
-      FOREIGN KEY (postId) REFERENCES Posts(id) ON DELETE CASCADE,
-   CONSTRAINT fk_labelpost_labelid
-      FOREIGN KEY (labelId) REFERENCES Labels(id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS LabelPost(
+   post_id INTEGER,
+   label_id INTEGER,
+   PRIMARY KEY (post_id, label_id),
+   CONSTRAINT fk_labelpost_post_id
+      FOREIGN KEY (post_id) REFERENCES Post(post_id) ON DELETE CASCADE,
+   CONSTRAINT fk_labelpost_label_id
+      FOREIGN KEY (label_id) REFERENCES Label(label_id) ON DELETE CASCADE
 );`
 
 var dropLabelPostsRelation string = `
-DROP TABLE LabelPosts;`
+DROP TABLE LabelPost;`
 
 // used
 var insertLabelPostRelation string = `
-INSERT INTO LabelPosts( postId, labelId )
+INSERT INTO LabelPost( post_id, label_id )
 VALUES( ?, ? )`
 
 var findPostsByLabelId string = `
-SELECT P.id, P.authorId, P.title, P.content, P.imageURL, P.date
-FROM Posts AS P, LabelPosts AS LP
-WHERE LP.labelId = ? AND LP.postId = P.id`
+SELECT P.post_id, P.author_id, P.title, P.content, P.image_url, P.date
+FROM Post AS P, LabelPost AS LP
+WHERE LP.label_id = ? AND LP.post_id = P.post_id`
 
 // used
 var findLabelsByPostId string = `
-SELECT L.id, L.name
-FROM Labels AS L, LabelPosts AS LP
-WHERE LP.postId = ? AND LP.labelId = L.id`
+SELECT L.label_id, L.name
+FROM Label AS L, LabelPost AS LP
+WHERE LP.post_id = ? AND LP.label_id = L.label_id`
 
 var deleteAllLabelWithIdFromRelation string = `
-DELETE FROM LabelPosts
-WHERE LabelPosts.labelId = ?`
+DELETE FROM LabelPost
+WHERE LabelPost.label_id = ?`
 
 var deleteAllLabelWithIdFromTable string = `
-DELETE FROM Labels
-WHERE Labels.id = ?;`
+DELETE FROM Label
+WHERE Label.label_id = ?;`
 
 // used
 var deleteLabelFromPostId string = `
-DELETE FROM LabelPosts
-WHERE LabelPosts.postId = ?`
+DELETE FROM LabelPost
+WHERE LabelPost.post_id = ?`
 
 /*
  * Labels stuff
  */
 
 var insertLabelForId string = `
-INSERT OR IGNORE INTO Labels( name )
+INSERT OR IGNORE INTO Label( name )
 VALUES( ? )`
 
 var queryLabelForName string = `
-SELECT L.id, L.name
-FROM Labels AS L
+SELECT L.label_id, L.name
+FROM Label AS L
 WHERE L.name = ?`
 
 /*

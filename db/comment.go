@@ -12,15 +12,15 @@ import (
 
 var createCommentTable string = `
 CREATE TABLE IF NOT EXISTS Comment(
-   comment_id 	%s,
-   user_id 		INTEGER NOT NULL,
-   post_id 		INTEGER NOT NULL,
-   content 		TEXT NOT NULL,
-   date 			%s NOT NULL,
-   up_vote 		INTEGER NOT NULL,
-   down_vote	INTEGER NOT NULL,
+   comment_id %s,
+   user_id INTEGER NOT NULL,
+   post_id INTEGER NOT NULL,
+   content TEXT NOT NULL,
+   date %s NOT NULL,
+   up_vote INTEGER NOT NULL,
+   down_vote INTEGER NOT NULL,
    CONSTRAINT fk_comment_user_id
-   	FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE,
+   	FOREIGN KEY (user_id) REFERENCES BlogUser(user_id) ON DELETE CASCADE,
    CONSTRAINT fk_comment_post_id
    	FOREIGN KEY (post_id) REFERENCES Post(post_id) ON DELETE CASCADE
 )`

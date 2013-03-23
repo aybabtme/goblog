@@ -11,10 +11,10 @@ func TestSQLiteDatabaseCreation(t *testing.T) {
 
 	var sqlite = NewSQLiter(dbName)
 
-	var persist, err = NewConnection(sqlite)
+	var conn, err = NewConnection(sqlite)
 
 	if err != nil {
-		t.Error("NewConnection returned nil object, %v", persist, err)
+		t.Error("NewConnection returned nil object, %v", conn, err)
 	}
 
 	if _, err := os.Stat(dbFilename); os.IsNotExist(err) {
@@ -33,12 +33,26 @@ func TestPostgresDatabaseCreation(t *testing.T) {
 
 	var postgres = NewPostgreser(dbName, username)
 
-	var persist, err = NewConnection(postgres)
+	var conn, err = NewConnection(postgres)
 
 	if err != nil {
 		t.Error("NewConnection returned nil object", err)
 	}
 
-	persist.DeleteConnection()
+	conn.DeleteConnection()
 
+}
+
+//
+// Helconn
+//
+
+func setupSQLiteConnection() *DBConnection {
+	var conn, _ = NewConnection(NewSQLiter("test"))
+	return conn
+}
+
+func setupPGConnection() *DBConnection {
+	var conn, _ = NewConnection(NewPostgreser("test", "antoine"))
+	return conn
 }

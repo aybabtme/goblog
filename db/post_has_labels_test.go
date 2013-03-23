@@ -6,18 +6,15 @@ import (
 	"time"
 )
 
-func generatePost(p *DBConnection, i int64) (*Post, error) {
-	var user = p.NewUser("Antoine",
-		time.Now().UTC(),
-		-5,
-		"antoine@grondin.com")
+func generatePost(conn *DBConnection, i int64) (*Post, error) {
+	user := generateUser(conn, i)
 
-	var author = p.NewAuthor("aybabtme", user)
+	var author = conn.NewAuthor("aybabtme", user)
 	err := author.Save()
 	if err != nil {
 		return nil, err
 	}
-	var post = p.NewPost(author.Id(),
+	var post = conn.NewPost(author.Id(),
 		fmt.Sprintf("Title #%d", i),
 		fmt.Sprintf("Content #%d", i),
 		fmt.Sprintf("ImageUrl #%d", i),

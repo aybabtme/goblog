@@ -11,11 +11,11 @@ import (
  */
 var createAuthorTable string = `
 CREATE TABLE IF NOT EXISTS Author(
-   id 		%s,
-   user_id 	INTEGER NOT NULL,
-   twitter 	VARCHAR(255) NOT NULL,
+   author_id %s,
+   user_id INTEGER NOT NULL,
+   twitter VARCHAR(255) NOT NULL,
    CONSTRAINT fk_author_user_id
-   	FOREIGN KEY(user_id) REFERENCES User(user_id) ON DELETE CASCADE
+   	FOREIGN KEY(user_id) REFERENCES BlogUser(user_id) ON DELETE CASCADE
 )`
 
 var dropAuthorTable string = `
@@ -34,7 +34,7 @@ SELECT
    U.registration_date,
    U.timezone,
    U.email
-FROM Author AS A, User AS U
+FROM Author AS A, BlogUser AS U
 WHERE A.author_id = ? AND A.user_id = U.user_id`
 
 var deleteAuthorById string = `
@@ -50,7 +50,7 @@ SELECT
    U.registration_date,
    U.timezone,
    U.email
-FROM Author AS A, User AS U
+FROM Author AS A, BlogUser AS U
 WHERE A.user_id = U.user_id`
 
 // Relations

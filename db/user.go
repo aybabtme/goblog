@@ -10,24 +10,24 @@ import (
 // SQL queries
 //
 var createUserTable string = `
-CREATE TABLE IF NOT EXISTS User(
-   user_id 				%s,
-   username 			VARCHAR(255) NOT NULL,
-   registration_date  %s NOT NULL,
-   timezone 			INTEGER NOT NULL,
-   oauth_provider 	VARCHAR(128) NOT NULL,
+CREATE TABLE IF NOT EXISTS BlogUser(
+   user_id %s,
+   username VARCHAR(255) NOT NULL,
+   registration_date %s NOT NULL,
+   timezone INTEGER NOT NULL,
+   oauth_provider VARCHAR(128) NOT NULL,
    access_token_hash VARCHAR(128) NOT NULL,
-   salt					VARCHAR(128) NOT NULL,
-   email 				VARCHAR(255) NOT NULL,
+   salt VARCHAR(128) NOT NULL,
+   email VARCHAR(255) NOT NULL,
    UNIQUE(email)
 )`
 
 var dropUserTable string = `
-DROP TABLE User;
+DROP TABLE BlogUser;
 `
 
 var insertOrReplaceUserForId string = `
-INSERT OR REPLACE INTO User(
+INSERT OR REPLACE INTO BlogUser(
 	username,
 	registration_date,
 	timezone,
@@ -48,15 +48,15 @@ SELECT
 	U.salt,
 	U.email
 FROM
-	User AS U
+	BlogUser AS U
 WHERE
 	U.user_id = ?`
 
 var deleteUserById string = `
 DELETE FROM
-	User
+	BlogUser
 WHERE
-	User.user_id = ?`
+	BlogUser.user_id = ?`
 
 var queryForAllUser string = `
 SELECT
@@ -69,7 +69,7 @@ SELECT
 	U.salt,
 	U.email
 FROM
-	User AS U`
+	BlogUser AS U`
 
 // Relations
 var queryForAllCommentsOfUserId string = `
@@ -125,6 +125,26 @@ func (u *User) Timezone() int {
 
 func (u *User) SetTimezone(zone int) {
 	u.timezone = zone
+}
+
+func (u *User) OauthProvider() string {
+	return u.oauthProvider
+}
+
+func (u *User) SetOauthProvider(provider string) {
+	u.oauthProvider = provider
+}
+
+func (u *User) Token() string {
+	// return the decoded token
+	return u.tokenHash
+}
+
+func (u *User) SetToken(token string) {
+	// encode the token then save its encoded version
+	// also generate the salt here
+	u.tokenHash = token
+	u.salt = "ycvybunimonbjhgf"
 }
 
 func (u *User) Email() string {
@@ -243,15 +263,18 @@ func (persist *DBConnection) dropUserTable() {
 
 // Creates a new User attached to the Database (but it is not saved).
 func (persist *DBConnection) NewUser(username string, regDate time.Time,
-	timezone int, email string) *User {
-	return &User{
+	timezone int, oauthProvider string, token string, email string) *User {
+	u := &User{
 		id:               -1,
 		username:         username,
 		registrationDate: regDate,
 		timezone:         timezone,
+		oauthProvider:    oauthProvider,
 		email:            email,
 		db:               persist.databaser,
 	}
+	u.SetToken(token)
+	return u
 }
 
 // Finds all the users in the database
@@ -279,13 +302,31 @@ func (persist *DBConnection) FindAllUsers() ([]User, error) {
 		var username string
 		var date time.Time
 		var timezone int
+		var oauthProvider string
+		var tokenHash string
+		var salt string
 		var email string
-		rows.Scan(&id, &username, &date, &timezone, &email)
+		err := rows.Scan(&id,
+			&username,
+			&date,
+			&timezone,
+			&oauthProvider,
+			&tokenHash,
+			&salt,
+			&email)
+
+		if err != nil {
+			return users, err
+		}
+
 		u := User{
 			id:               id,
 			username:         username,
 			registrationDate: date,
 			timezone:         timezone,
+			oauthProvider:    oauthProvider,
+			tokenHash:        tokenHash,
+			salt:             salt,
 			email:            email,
 			db:               dbaser,
 		}
@@ -298,38 +339,49 @@ func (persist *DBConnection) FindAllUsers() ([]User, error) {
 // Finds a user that matches the given id
 func (persist *DBConnection) FindUserById(id int64) (*User, error) {
 
-	var u *User
 	var dbaser = persist.databaser
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
 	if err != nil {
 		fmt.Println("FindUserById 1:", err)
-		return u, err
+		return nil, err
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare(findUserById)
 	if err != nil {
 		fmt.Println("FindUserById 2:", err)
-		return u, err
+		return nil, err
 	}
 	defer stmt.Close()
 
 	var username string
 	var date time.Time
 	var timezone int
+	var oauthProvider string
+	var tokenHash string
+	var salt string
 	var email string
-	err = stmt.QueryRow(id).Scan(&username, &date, &timezone, &email)
+	err = stmt.QueryRow(id).Scan(&username,
+		&date,
+		&timezone,
+		&oauthProvider,
+		&tokenHash,
+		&salt,
+		&email)
 	if err != nil {
 		// normal if the User doesnt exist
-		return u, err
+		return nil, err
 	}
 
-	u = &User{
+	u := &User{
 		id:               id,
 		username:         username,
 		registrationDate: date,
 		timezone:         timezone,
+		oauthProvider:    oauthProvider,
+		tokenHash:        tokenHash,
+		salt:             salt,
 		email:            email,
 		db:               dbaser,
 	}
@@ -359,7 +411,13 @@ func (u *User) Save() error {
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(u.username, u.registrationDate, u.timezone, u.email)
+	res, err := stmt.Exec(u.username,
+		u.registrationDate,
+		u.timezone,
+		u.oauthProvider,
+		u.tokenHash,
+		u.salt,
+		u.email)
 	if err != nil {
 		fmt.Println("Save 3:", err)
 		return err

@@ -6,15 +6,14 @@ import (
 	"time"
 )
 
-func generateUserAndPost(pers *DBConnection, i int64) (*User, *Post) {
-	var user = pers.NewUser("John", time.Now().UTC(), -5, "john@smith.com")
-	_ = user.Save()
-	var authUser = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
-	var author = pers.NewAuthor(
+func generateUserAndPost(conn *DBConnection, i int64) (*User, *Post) {
+	user := generateUser(conn, i*2)
+	authUser := generateUser(conn, i)
+	var author = conn.NewAuthor(
 		fmt.Sprintf("aybabtme#%d", i),
 		authUser)
 	_ = author.Save()
-	var post = pers.NewPost(author.Id(),
+	var post = conn.NewPost(author.Id(),
 		fmt.Sprintf("Title #%d", i),
 		fmt.Sprintf("Content #%d", i),
 		fmt.Sprintf("ImageUrl #%d", i),
@@ -27,11 +26,11 @@ func TestNewComment(t *testing.T) {
 	//newComment(t, setupPGConnection())
 }
 
-func newComment(t *testing.T, pers *DBConnection) {
-	defer pers.DeleteConnection()
+func newComment(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 
-	var user, post = generateUserAndPost(pers, 0)
-	var comment = pers.NewComment(
+	var user, post = generateUserAndPost(conn, 0)
+	var comment = conn.NewComment(
 		user.Id(),
 		post.Id(),
 		"I really love your new pointless post on Justin Bieber",
@@ -47,11 +46,11 @@ func TestSaveComment(t *testing.T) {
 	//saveComment(t, setupPGConnection())
 }
 
-func saveComment(t *testing.T, pers *DBConnection) {
-	defer pers.DeleteConnection()
+func saveComment(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 
-	var user, post = generateUserAndPost(pers, 0)
-	var comment = pers.NewComment(
+	var user, post = generateUserAndPost(conn, 0)
+	var comment = conn.NewComment(
 		user.Id(),
 		post.Id(),
 		"I really love your new pointless post on Justin Bieber",
@@ -80,13 +79,13 @@ func TestDestroyComment(t *testing.T) {
 	// destroyComment(t, setupPGConnection())
 }
 
-func destroyComment(t *testing.T, pers *DBConnection) {
-	defer pers.DeleteConnection()
+func destroyComment(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 
 	for i := int64(1); i < 10; i++ {
 
-		var user, post = generateUserAndPost(pers, 0)
-		var expected = pers.NewComment(
+		var user, post = generateUserAndPost(conn, 0)
+		var expected = conn.NewComment(
 			user.Id(),
 			post.Id(),
 			fmt.Sprintf("I really love your new pointless post #%d", i),
@@ -96,7 +95,7 @@ func destroyComment(t *testing.T, pers *DBConnection) {
 		expected.Save()
 
 		expected.Destroy()
-		actual, err := pers.FindCommentById(id)
+		actual, err := conn.FindCommentById(id)
 
 		if actual != nil {
 			t.Error("Comment shouldnt exist in DB after destroy")
@@ -115,11 +114,11 @@ func TestFindByIdComment(t *testing.T) {
 	//findByIdComment(t, setupPGConnection())
 }
 
-func findByIdComment(t *testing.T, pers *DBConnection) {
-	defer pers.DeleteConnection()
+func findByIdComment(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 	for i := int64(1); i < 10; i++ {
-		var user, post = generateUserAndPost(pers, 0)
-		var expected = pers.NewComment(
+		var user, post = generateUserAndPost(conn, 0)
+		var expected = conn.NewComment(
 			user.Id(),
 			post.Id(),
 			fmt.Sprintf("I really love your new pointless post #%d", i),
@@ -127,7 +126,7 @@ func findByIdComment(t *testing.T, pers *DBConnection) {
 
 		expected.Save()
 
-		actual, err := pers.FindCommentById(expected.Id())
+		actual, err := conn.FindCommentById(expected.Id())
 
 		if err != nil {
 			t.Errorf("Error while querying comment %d: %v", i, err)
@@ -147,13 +146,13 @@ func TestFindAllComment(t *testing.T) {
 	//findAllComment(t, setupPGConnection())
 }
 
-func findAllComment(t *testing.T, pers *DBConnection) {
-	defer pers.DeleteConnection()
+func findAllComment(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 	var commentCount = int64(10)
 
 	for i := int64(1); i <= commentCount; i++ {
-		var user, post = generateUserAndPost(pers, 0)
-		var comment = pers.NewComment(
+		var user, post = generateUserAndPost(conn, 0)
+		var comment = conn.NewComment(
 			user.Id(),
 			post.Id(),
 			fmt.Sprintf("I really love your new pointless post #%d", i),
@@ -162,7 +161,7 @@ func findAllComment(t *testing.T, pers *DBConnection) {
 		comment.Save()
 	}
 
-	comments, err := pers.FindAllComments()
+	comments, err := conn.FindAllComments()
 	if err != nil {
 		t.Errorf("Couldn't query comments although just saved %d",
 			commentCount)
@@ -191,12 +190,12 @@ func TestCommentIdIncrements(t *testing.T) {
 	// idIncrements(t, setupPGConnection())
 }
 
-func commentIdIncrements(t *testing.T, pers *DBConnection) {
-	defer pers.DeleteConnection()
+func commentIdIncrements(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 
 	for i := int64(1); i < 10; i++ {
-		var user, post = generateUserAndPost(pers, 0)
-		var comment = pers.NewComment(
+		var user, post = generateUserAndPost(conn, 0)
+		var comment = conn.NewComment(
 			user.Id(),
 			post.Id(),
 			fmt.Sprintf("I really love your new pointless post #%d", i),

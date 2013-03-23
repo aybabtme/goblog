@@ -11,13 +11,13 @@ func TestSaveLabel(t *testing.T) {
 	//saveLabel(t, setupPGConnection())
 }
 
-func saveLabel(t *testing.T, pers *DBConnection) {
-	defer pers.DeleteConnection()
+func saveLabel(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 
-	var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
-	var author = pers.NewAuthor("aybabtme", user)
+	user := generateUser(conn, 0)
+	var author = conn.NewAuthor("aybabtme", user)
 	_ = author.Save()
-	var post = pers.NewPost(author.Id(),
+	var post = conn.NewPost(author.Id(),
 		"My first post",
 		"Hello World",
 		"fake.url/to/image.jpg",
@@ -85,14 +85,14 @@ func TestFindByIdLabel(t *testing.T) {
 	//findByIdLabel(t, setupPGConnection())
 }
 
-func findByIdLabel(t *testing.T, pers *DBConnection) {
-	defer pers.DeleteConnection()
+func findByIdLabel(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 
 	for i := int64(1); i < 10; i++ {
-		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
-		var author = pers.NewAuthor("aybabtme", user)
+		user := generateUser(conn, i)
+		var author = conn.NewAuthor("aybabtme", user)
 		_ = author.Save()
-		var post = pers.NewPost(author.Id(),
+		var post = conn.NewPost(author.Id(),
 			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
 			fmt.Sprintf("ImageUrl #%d", i),
@@ -102,7 +102,7 @@ func findByIdLabel(t *testing.T, pers *DBConnection) {
 		if err != nil {
 			t.Error("Couldn't create a label to begin with.")
 		}
-		actual, err := pers.FindLabelById(expected.Id())
+		actual, err := conn.FindLabelById(expected.Id())
 
 		if err != nil {
 			t.Errorf("Error while querying label %d: %v", i, err)
@@ -122,15 +122,15 @@ func TestFindAllLabel(t *testing.T) {
 	//findAllLabel(t, setupPGConnection())
 }
 
-func findAllLabel(t *testing.T, pers *DBConnection) {
-	defer pers.DeleteConnection()
+func findAllLabel(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 	var labelCount = int64(9)
 
 	for i := int64(1); i <= labelCount; i++ {
-		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
-		var author = pers.NewAuthor("aybabtme", user)
+		user := generateUser(conn, i)
+		var author = conn.NewAuthor("aybabtme", user)
 		_ = author.Save()
-		var post = pers.NewPost(author.Id(),
+		var post = conn.NewPost(author.Id(),
 			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
 			fmt.Sprintf("ImageUrl #%d", i),
@@ -142,7 +142,7 @@ func findAllLabel(t *testing.T, pers *DBConnection) {
 		}
 	}
 
-	labels, err := pers.FindAllLabels()
+	labels, err := conn.FindAllLabels()
 	if err != nil {
 		t.Errorf("Couldn't query labels although just saved %d",
 			labelCount)
@@ -171,14 +171,14 @@ func TestLabelIdIncrements(t *testing.T) {
 	// idIncrements(t, setupPGConnection())
 }
 
-func labelIdIncrements(t *testing.T, pers *DBConnection) {
-	defer pers.DeleteConnection()
+func labelIdIncrements(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 
 	for i := int64(1); i < 10; i++ {
-		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
-		var author = pers.NewAuthor("aybabtme", user)
+		user := generateUser(conn, i)
+		var author = conn.NewAuthor("aybabtme", user)
 		_ = author.Save()
-		var post = pers.NewPost(author.Id(),
+		var post = conn.NewPost(author.Id(),
 			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
 			fmt.Sprintf("ImageUrl #%d", i),

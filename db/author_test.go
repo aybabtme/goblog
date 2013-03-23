@@ -6,6 +6,13 @@ import (
 	"time"
 )
 
+func generateAuthor(conn *DBConnection, i int64) *Author {
+	user := generateUser(conn, i)
+	author := conn.NewAuthor("aybabtme", user)
+	_ = author.Save()
+	return author
+}
+
 func TestNewAuthor(t *testing.T) {
 	newAuthor(t, setupSQLiteConnection())
 	//newAuthor(t, setupPGConnection())
@@ -14,8 +21,7 @@ func TestNewAuthor(t *testing.T) {
 func newAuthor(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 
-	var user = conn.NewUser("Author Antoine",
-		time.Now().UTC(), -5, "a@g.com")
+	user := generateUser(conn, 0)
 
 	var author = conn.NewAuthor(
 		"aybabtme",
@@ -34,8 +40,7 @@ func TestSaveAuthor(t *testing.T) {
 func saveAuthor(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 
-	var user = conn.NewUser("Author Antoine",
-		time.Now().UTC(), -5, "a@g.com")
+	user := generateUser(conn, 0)
 
 	var author = conn.NewAuthor(
 		"aybabtme",
@@ -68,11 +73,7 @@ func destroyAuthor(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 
 	for i := int64(1); i < 10; i++ {
-		var user = conn.NewUser(
-			fmt.Sprintf("Author Antoine #%d", i),
-			time.Now().UTC(),
-			-5,
-			fmt.Sprintf("a%d@b.com", i))
+		user := generateUser(conn, i)
 
 		var expected = conn.NewAuthor(
 			fmt.Sprintf("aybabtme #%d", i),
@@ -104,11 +105,7 @@ func TestFindByIdAuthor(t *testing.T) {
 func findByIdAuthor(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 	for i := int64(1); i < 10; i++ {
-		var user = conn.NewUser(
-			fmt.Sprintf("Author Antoine #%d", i),
-			time.Now().UTC(),
-			-5,
-			fmt.Sprintf("a%d@b.com", i))
+		user := generateUser(conn, i)
 
 		var expected = conn.NewAuthor(
 			fmt.Sprintf("aybabtme #%d", i),
@@ -137,14 +134,11 @@ func TestFindAllAuthor(t *testing.T) {
 
 func findAllAuthor(t *testing.T, conn *DBConnection) {
 
+	defer conn.DeleteConnection()
 	var authorCount = int64(10)
 
 	for i := int64(1); i <= authorCount; i++ {
-		var user = conn.NewUser(
-			fmt.Sprintf("Author Antoine #%d", i),
-			time.Now().UTC(),
-			-5,
-			fmt.Sprintf("a%d@b.com", i))
+		user := generateUser(conn, i)
 
 		var author = conn.NewAuthor(
 			fmt.Sprintf("aybabtme #%d", i),
@@ -176,7 +170,6 @@ func findAllAuthor(t *testing.T, conn *DBConnection) {
 		}
 	}
 
-	defer conn.DeleteConnection()
 }
 
 func TestAuthorIdIncrements(t *testing.T) {
@@ -189,11 +182,7 @@ func authorIdIncrements(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 
 	for i := int64(1); i < 10; i++ {
-		var user = conn.NewUser(
-			fmt.Sprintf("Antoine #%d", i),
-			time.Now().UTC(),
-			-5,
-			fmt.Sprintf("a%d@b.com", i))
+		user := generateUser(conn, i)
 
 		var author = conn.NewAuthor(
 			fmt.Sprintf("aybabtme #%d", i),
@@ -218,7 +207,7 @@ func TestDeleteUserCascadesToAuthor(t *testing.T) {
 
 func deleteUserCascadesToAuthor(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
-	var user = conn.NewUser("Antony", time.Now().UTC(), -5, "antoine@g.com")
+	user := generateUser(conn, 0)
 	var author = conn.NewAuthor("aybabtme", user)
 	_ = author.Save()
 
@@ -250,7 +239,7 @@ func findAllAuthorPosts(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 	var postCount = 10
 
-	var user = conn.NewUser("Antony", time.Now().UTC(), -5, "antoine@g.com")
+	user := generateUser(conn, 0)
 	var author = conn.NewAuthor("aybabtme", user)
 	_ = author.Save()
 

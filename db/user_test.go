@@ -6,18 +6,26 @@ import (
 	"time"
 )
 
+func generateUser(conn *DBConnection, i int64) *User {
+	var user = conn.NewUser(
+		fmt.Sprintf("Antoine #%d", i),
+		time.Now().UTC(),
+		-5,
+		"g+",
+		fmt.Sprintf("anAuthToken#%d", i),
+		fmt.Sprintf("a%d@b.com", i))
+	return user
+}
+
 func TestNewUser(t *testing.T) {
 	newUser(t, setupSQLiteConnection())
 	//newUser(t, setupPGConnection())
 }
 
-func newUser(t *testing.T, persist *DBConnection) {
-	defer persist.DeleteConnection()
+func newUser(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 
-	var user = persist.NewUser("Antoine",
-		time.Now().UTC(),
-		-5,
-		"a@b.com")
+	user := generateUser(conn, 0)
 	if user == nil {
 		t.Error("Receive a nil user")
 	}
@@ -28,12 +36,9 @@ func TestSaveUser(t *testing.T) {
 	//saveUser(t, setupPGConnection())
 }
 
-func saveUser(t *testing.T, persist *DBConnection) {
-	defer persist.DeleteConnection()
-	var user = persist.NewUser("Antoine",
-		time.Now().UTC(),
-		-5,
-		"a@b.com")
+func saveUser(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
+	user := generateUser(conn, 0)
 	if user == nil {
 		t.Error("Receive a nil user")
 	}
@@ -57,21 +62,17 @@ func TestDestroyUser(t *testing.T) {
 	// destroyUser(t, setupPGConnection())
 }
 
-func destroyUser(t *testing.T, pers *DBConnection) {
-	defer pers.DeleteConnection()
+func destroyUser(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 
 	for i := int64(1); i < 10; i++ {
-		var expected = pers.NewUser(
-			fmt.Sprintf("Antoine #%d", i),
-			time.Now().UTC(),
-			-5,
-			fmt.Sprintf("a%d@b.com", i))
+		expected := generateUser(conn, i)
 
 		var id = expected.Id()
 		expected.Save()
 
 		expected.Destroy()
-		actual, err := pers.FindUserById(id)
+		actual, err := conn.FindUserById(id)
 
 		if actual != nil {
 			t.Error("User shouldnt exist in DB after destroy")
@@ -90,18 +91,14 @@ func TestFindByIdUser(t *testing.T) {
 	//findByIdUser(t, setupPGConnection())
 }
 
-func findByIdUser(t *testing.T, persist *DBConnection) {
+func findByIdUser(t *testing.T, conn *DBConnection) {
 
 	for i := int64(1); i < 10; i++ {
-		var expected = persist.NewUser(
-			fmt.Sprintf("Antoine #%d", i),
-			time.Now().UTC(),
-			-5,
-			fmt.Sprintf("a%d@b.com", i))
+		expected := generateUser(conn, i)
 
 		expected.Save()
 
-		actual, err := persist.FindUserById(expected.Id())
+		actual, err := conn.FindUserById(expected.Id())
 
 		if err != nil {
 			t.Errorf("Error while querying User %d, expected <%d> but was: %v", i, expected.Id(), err)
@@ -113,7 +110,7 @@ func findByIdUser(t *testing.T, persist *DBConnection) {
 		}
 	}
 
-	defer persist.DeleteConnection()
+	defer conn.DeleteConnection()
 }
 
 func TestFindAllUser(t *testing.T) {
@@ -121,21 +118,17 @@ func TestFindAllUser(t *testing.T) {
 	//findAllUser(t, setupPGConnection())
 }
 
-func findAllUser(t *testing.T, pers *DBConnection) {
-	defer pers.DeleteConnection()
+func findAllUser(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 
 	var userCount = int64(10)
 
 	for i := int64(1); i <= userCount; i++ {
-		var user = pers.NewUser(
-			fmt.Sprintf("Antoine #%d", i),
-			time.Now().UTC(),
-			-5,
-			fmt.Sprintf("a%d@b.com", i))
+		user := generateUser(conn, i)
 		user.Save()
 	}
 
-	users, err := pers.FindAllUsers()
+	users, err := conn.FindAllUsers()
 	if err != nil {
 		t.Errorf("Couldn't query Users although just saved %d", userCount)
 		return
@@ -165,15 +158,11 @@ func TestUserIdIncrements(t *testing.T) {
 	// idIncrements(t, setupPGConnection())
 }
 
-func userIdIncrements(t *testing.T, persist *DBConnection) {
-	defer persist.DeleteConnection()
+func userIdIncrements(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 
 	for i := int64(1); i < 10; i++ {
-		var user = persist.NewUser(
-			fmt.Sprintf("Antoine #%d", i),
-			time.Now().UTC(),
-			-5,
-			fmt.Sprintf("a%d@b.com", i))
+		user := generateUser(conn, i)
 
 		if user.Id() != -1 {
 			t.Error("Id should be of -1 at this point")
@@ -192,14 +181,14 @@ func TestFindAllUserComments(t *testing.T) {
 	//findAllUsersComments(t, setupPGConnection())
 }
 
-func findAllUserComments(t *testing.T, persist *DBConnection) {
-	defer persist.DeleteConnection()
+func findAllUserComments(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 	var commentCount = 10
 
-	var user, post = generateUserAndPost(persist, 0)
+	var user, post = generateUserAndPost(conn, 0)
 	var expected []Comment
 	for i := 0; i < commentCount; i++ {
-		var comment = persist.NewComment(user.Id(), post.Id(),
+		var comment = conn.NewComment(user.Id(), post.Id(),
 			fmt.Sprintf("I agree * %d", i),
 			time.Now().UTC())
 		comment.Save()
