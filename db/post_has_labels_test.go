@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func generatePost(p *Persister, i int64) (*Post, error) {
+func generatePost(p *DBConnection, i int64) (*Post, error) {
 	var user = p.NewUser("Antoine",
 		time.Now().UTC(),
 		-5,
@@ -29,12 +29,12 @@ func generatePost(p *Persister, i int64) (*Post, error) {
 
 // post.AddLabel(string)
 func TestAddLabelToPost(t *testing.T) {
-	addLabelToPost(t, setupSQLitePersist())
-	//addLabelToPost(t, setupPGPersist())
+	addLabelToPost(t, setupSQLiteConnection())
+	//addLabelToPost(t, setupPGConnection())
 }
 
-func addLabelToPost(t *testing.T, p *Persister) {
-	defer p.DeletePersistance()
+func addLabelToPost(t *testing.T, p *DBConnection) {
+	defer p.DeleteConnection()
 
 	post, err := generatePost(p, 0)
 	if err != nil {
@@ -69,12 +69,12 @@ func addLabelToPost(t *testing.T, p *Persister) {
 
 // post.RemoveLabel(Label)
 func TestRemoveLabelFromPost(t *testing.T) {
-	removeLabelFromPost(t, setupSQLitePersist())
-	//removeLabelFromPost(t, setupPGPersist())
+	removeLabelFromPost(t, setupSQLiteConnection())
+	//removeLabelFromPost(t, setupPGConnection())
 }
 
-func removeLabelFromPost(t *testing.T, p *Persister) {
-	defer p.DeletePersistance()
+func removeLabelFromPost(t *testing.T, p *DBConnection) {
+	defer p.DeleteConnection()
 
 	// Get a post
 	post, err := generatePost(p, 0)
@@ -112,12 +112,12 @@ func removeLabelFromPost(t *testing.T, p *Persister) {
 
 // post.Labels()
 func TestAllLabelsOfPost(t *testing.T) {
-	allLabelsOfPost(t, setupSQLitePersist())
-	//allLabelsOfPost(t, setupPGPersist())
+	allLabelsOfPost(t, setupSQLiteConnection())
+	//allLabelsOfPost(t, setupPGConnection())
 }
 
-func allLabelsOfPost(t *testing.T, p *Persister) {
-	defer p.DeletePersistance()
+func allLabelsOfPost(t *testing.T, p *DBConnection) {
+	defer p.DeleteConnection()
 
 	post, err := generatePost(p, 0)
 	if err != nil {
@@ -149,13 +149,13 @@ func allLabelsOfPost(t *testing.T, p *Persister) {
 
 // label.Destroy()
 func TestDestroyLabel(t *testing.T) {
-	destroyLabel(t, setupSQLitePersist())
+	destroyLabel(t, setupSQLiteConnection())
 	// TODO fix this, it crashes for some reason
-	// destroyLabel(t, setupPGPersist())
+	// destroyLabel(t, setupPGConnection())
 }
 
-func destroyLabel(t *testing.T, p *Persister) {
-	defer p.DeletePersistance()
+func destroyLabel(t *testing.T, p *DBConnection) {
+	defer p.DeleteConnection()
 
 	for i := int64(1); i < 10; i++ {
 		post, err := generatePost(p, 0)
@@ -191,12 +191,12 @@ func destroyLabel(t *testing.T, p *Persister) {
 
 // label.Posts()
 func TestAllPostsOfLabel(t *testing.T) {
-	allPostsOfLabel(t, setupSQLitePersist())
-	//allPostsOfLabel(t, setupPGPersist())
+	allPostsOfLabel(t, setupSQLiteConnection())
+	//allPostsOfLabel(t, setupPGConnection())
 }
 
-func allPostsOfLabel(t *testing.T, p *Persister) {
-	defer p.DeletePersistance()
+func allPostsOfLabel(t *testing.T, p *DBConnection) {
+	defer p.DeleteConnection()
 
 	var expected []Post
 	var labels []Label

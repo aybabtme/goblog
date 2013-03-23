@@ -60,7 +60,7 @@ type Post struct {
 	content  string
 	imageURL string
 	date     time.Time
-	db       Databaser
+	db       DBVendor
 }
 
 func (p *Post) Id() int64 {
@@ -166,11 +166,11 @@ func (p *Post) Comments() ([]Comment, error) {
 //
 
 //
-// Post-specific operations on Persister
+// Post-specific operations on DBConnection
 //
 
 // Create the table Post in the database interface
-func (persist *Persister) createPostTable() {
+func (persist *DBConnection) createPostTable() {
 
 	var dbaser = persist.databaser
 
@@ -195,7 +195,7 @@ func (persist *Persister) createPostTable() {
 	}
 }
 
-func (persist *Persister) dropPostTable() {
+func (persist *DBConnection) dropPostTable() {
 	var dbaser = persist.databaser
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
@@ -213,7 +213,7 @@ func (persist *Persister) dropPostTable() {
 }
 
 // Creates a new Post attached to the Database (but not saved)
-func (persist *Persister) NewPost(authorId int64, title string, content string, imageURL string, date time.Time) *Post {
+func (persist *DBConnection) NewPost(authorId int64, title string, content string, imageURL string, date time.Time) *Post {
 
 	return &Post{
 		id:       -1,
@@ -227,7 +227,7 @@ func (persist *Persister) NewPost(authorId int64, title string, content string, 
 }
 
 // Finds all the posts in the database
-func (persist *Persister) FindAllPosts() ([]Post, error) {
+func (persist *DBConnection) FindAllPosts() ([]Post, error) {
 
 	var posts []Post
 	var dbaser = persist.databaser
@@ -273,7 +273,7 @@ func (persist *Persister) FindAllPosts() ([]Post, error) {
 }
 
 // Finds a post that matches the given id
-func (persist *Persister) FindPostById(id int64) (*Post, error) {
+func (persist *DBConnection) FindPostById(id int64) (*Post, error) {
 
 	var p *Post
 	var dbaser = persist.databaser

@@ -11,10 +11,10 @@ func TestSQLiteDatabaseCreation(t *testing.T) {
 
 	var sqlite = NewSQLiter(dbName)
 
-	var persist, err = NewPersistance(sqlite)
+	var persist, err = NewConnection(sqlite)
 
 	if err != nil {
-		t.Error("NewPersistance returned nil object, %v", persist, err)
+		t.Error("NewConnection returned nil object, %v", persist, err)
 	}
 
 	if _, err := os.Stat(dbFilename); os.IsNotExist(err) {
@@ -33,13 +33,12 @@ func TestPostgresDatabaseCreation(t *testing.T) {
 
 	var postgres = NewPostgreser(dbName, username)
 
-	var persist, err = NewPersistance(postgres)
+	var persist, err = NewConnection(postgres)
 
 	if err != nil {
-		t.Error("NewPersistance returned nil object", err)
+		t.Error("NewConnection returned nil object", err)
 	}
 
-	persist.DeletePersistance()
+	persist.DeleteConnection()
 
 }
-

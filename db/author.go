@@ -6,9 +6,9 @@ import (
 	"time"
 )
 
-//
-// SQL queries
-//
+/*
+ * SQL stuff
+ */
 var createAuthorTable string = `
 CREATE TABLE IF NOT EXISTS Authors(
    id %s,
@@ -65,7 +65,7 @@ type Author struct {
 	userId  int64
 	twitter string
 	user    *User
-	db      Databaser
+	db      DBVendor
 }
 
 func (a *Author) Id() int64 {
@@ -141,10 +141,10 @@ func (a *Author) Posts() ([]Post, error) {
 }
 
 /*
-*  SQL Stuff
+ *  SQL Stuff
  */
 
-func (p *Persister) createAuthorTable() {
+func (p *DBConnection) createAuthorTable() {
 	var dbaser = p.databaser
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
@@ -166,7 +166,7 @@ func (p *Persister) createAuthorTable() {
 	}
 }
 
-func (persist *Persister) dropAuthorTable() {
+func (persist *DBConnection) dropAuthorTable() {
 	var dbaser = persist.databaser
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
@@ -182,7 +182,9 @@ func (persist *Persister) dropAuthorTable() {
 	}
 }
 
-func (persist *Persister) NewAuthor(twitter string, user *User) *Author {
+// Creates an author.  The Author is NOT saved.  To save it, you must call
+// the save method on the returned Author.
+func (persist *DBConnection) NewAuthor(twitter string, user *User) *Author {
 	return &Author{
 		id:      -1,
 		userId:  user.Id(),
@@ -192,7 +194,10 @@ func (persist *Persister) NewAuthor(twitter string, user *User) *Author {
 	}
 }
 
-func (persist *Persister) FindAllAuthors() ([]Author, error) {
+// Finds all the Authors known to this blog.  Returns an empty slice and
+// an error stating no rows matched the request if no authors are known
+// to this blog.
+func (persist *DBConnection) FindAllAuthors() ([]Author, error) {
 
 	var authors []Author
 	var dbaser = persist.databaser
@@ -242,7 +247,9 @@ func (persist *Persister) FindAllAuthors() ([]Author, error) {
 	return authors, nil
 }
 
-func (persist *Persister) FindAuthorById(id int64) (*Author, error) {
+// Returns an author given its id.  If the id is not known to the blog
+// a nil value is returned with an error.
+func (persist *DBConnection) FindAuthorById(id int64) (*Author, error) {
 
 	var a *Author
 	var dbaser = persist.databaser
@@ -344,7 +351,7 @@ func (a *Author) Save() error {
 	return nil
 }
 
-// Removes the user from the author table.  The user
+// Removes the user from the author table.  The user attached to the author
 // is not destroyed.
 func (a *Author) Destroy() error {
 	db, err := sql.Open(a.db.Driver(), a.db.Name())

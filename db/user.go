@@ -53,7 +53,7 @@ type User struct {
 	registrationDate time.Time
 	timezone         int
 	email            string
-	db               Databaser
+	db               DBVendor
 }
 
 func (u *User) Id() int64 {
@@ -152,11 +152,11 @@ func (u *User) Comments() ([]Comment, error) {
 //
 
 //
-// User specific operations on Persister
+// User specific operations on DBConnection
 //
 
 // Create the table Users in the database interface
-func (persist *Persister) createUserTable() {
+func (persist *DBConnection) createUserTable() {
 
 	var dbaser = persist.databaser
 
@@ -182,7 +182,7 @@ func (persist *Persister) createUserTable() {
 }
 
 // Drops the table User and all its data
-func (persist *Persister) dropUserTable() {
+func (persist *DBConnection) dropUserTable() {
 	var dbaser = persist.databaser
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
@@ -199,7 +199,7 @@ func (persist *Persister) dropUserTable() {
 }
 
 // Creates a new User attached to the Database (but it is not saved).
-func (persist *Persister) NewUser(username string, regDate time.Time,
+func (persist *DBConnection) NewUser(username string, regDate time.Time,
 	timezone int, email string) *User {
 	return &User{
 		id:               -1,
@@ -212,7 +212,7 @@ func (persist *Persister) NewUser(username string, regDate time.Time,
 }
 
 // Finds all the users in the database
-func (persist *Persister) FindAllUsers() ([]User, error) {
+func (persist *DBConnection) FindAllUsers() ([]User, error) {
 
 	var users []User
 	var dbaser = persist.databaser
@@ -253,7 +253,7 @@ func (persist *Persister) FindAllUsers() ([]User, error) {
 }
 
 // Finds a user that matches the given id
-func (persist *Persister) FindUserById(id int64) (*User, error) {
+func (persist *DBConnection) FindUserById(id int64) (*User, error) {
 
 	var u *User
 	var dbaser = persist.databaser

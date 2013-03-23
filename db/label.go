@@ -37,7 +37,7 @@ WHERE id = ?
 type Label struct {
 	id   int64
 	name string
-	db   Databaser
+	db   DBVendor
 }
 
 func (l *Label) Id() int64 {
@@ -53,7 +53,7 @@ func (l *Label) SetName(name string) {
 }
 
 // Create the table Label in the database interface
-func (persist *Persister) createLabelTable() {
+func (persist *DBConnection) createLabelTable() {
 	var dbaser = persist.databaser
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
@@ -78,7 +78,7 @@ func (persist *Persister) createLabelTable() {
 }
 
 // Drop the table, pretty self telling
-func (persist *Persister) dropLabelTable() {
+func (persist *DBConnection) dropLabelTable() {
 	var dbaser = persist.databaser
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
@@ -95,7 +95,7 @@ func (persist *Persister) dropLabelTable() {
 }
 
 // Finds all the labels in the database
-func (persist *Persister) FindAllLabels() ([]Label, error) {
+func (persist *DBConnection) FindAllLabels() ([]Label, error) {
 	var labels []Label
 	var dbaser = persist.databaser
 
@@ -127,7 +127,7 @@ func (persist *Persister) FindAllLabels() ([]Label, error) {
 	return labels, nil
 }
 
-func (persist *Persister) FindLabelById(id int64) (*Label, error) {
+func (persist *DBConnection) FindLabelById(id int64) (*Label, error) {
 	var l *Label
 	var dbaser = persist.databaser
 

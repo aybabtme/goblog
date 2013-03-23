@@ -73,11 +73,11 @@ WHERE L.name = ?`
  * -------------------
  */
 
-func openDatabase(d *Databaser) (*sql.DB, error) {
+func openDatabase(d *DBVendor) (*sql.DB, error) {
 	return sql.Open((*d).Driver(), (*d).Name())
 }
 
-func (pers *Persister) createLabelPostRelation() {
+func (pers *DBConnection) createLabelPostRelation() {
 	var dbaser = pers.databaser
 	db, err := openDatabase(&dbaser)
 	if err != nil {
@@ -98,7 +98,7 @@ func (pers *Persister) createLabelPostRelation() {
 	}
 }
 
-func (pers *Persister) dropLabelPostRelation() {
+func (pers *DBConnection) dropLabelPostRelation() {
 	var dbaser = pers.databaser
 	db, err := openDatabase(&dbaser)
 

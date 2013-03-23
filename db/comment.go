@@ -6,6 +6,10 @@ import (
 	"time"
 )
 
+/*
+ * SQL strings
+ */
+
 var createCommentTable string = `
 CREATE TABLE IF NOT EXISTS Comments(
    id %s,
@@ -39,6 +43,7 @@ var queryForAllComment string = `
 SELECT C.id, C.userId, C.postId, C.content, C.date, C.upVote, C.downVote
 FROM Comments AS C`
 
+// Represents a comment on a post.  Comments are made by Users.
 type Comment struct {
 	id       int64
 	userId   int64
@@ -47,7 +52,7 @@ type Comment struct {
 	date     time.Time
 	upVote   int64
 	downVote int64
-	db       Databaser
+	db       DBVendor
 }
 
 func (c *Comment) Id() int64 {
@@ -91,11 +96,11 @@ func (c *Comment) SetDownVote(count int64) {
  */
 
 /*
- * Comment specific operations on Persister
+ * Comment specific operations on DBConnection
  */
 
 // Create the table Comment in the database interface
-func (persist *Persister) createCommentTable() {
+func (persist *DBConnection) createCommentTable() {
 
 	var dbaser = persist.databaser
 
@@ -120,7 +125,7 @@ func (persist *Persister) createCommentTable() {
 	}
 }
 
-func (persist *Persister) dropCommentTable() {
+func (persist *DBConnection) dropCommentTable() {
 	var dbaser = persist.databaser
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
@@ -138,7 +143,9 @@ func (persist *Persister) dropCommentTable() {
 
 }
 
-func (persist *Persister) NewComment(userId int64, postId int64, content string, date time.Time) *Comment {
+// Creates a new Comment attached to the database.  It is NOT saved in the
+// database, you must call "Save" on this comment to have it persisted
+func (persist *DBConnection) NewComment(userId int64, postId int64, content string, date time.Time) *Comment {
 	return &Comment{
 		id:       -1,
 		userId:   userId,
@@ -151,8 +158,9 @@ func (persist *Persister) NewComment(userId int64, postId int64, content string,
 	}
 }
 
-// Finds all the comments in the database
-func (persist *Persister) FindAllComments() ([]Comment, error) {
+// Finds all the comments in the database.  Returns an empty slice with
+// an error if not comments were found.
+func (persist *DBConnection) FindAllComments() ([]Comment, error) {
 
 	var comments []Comment
 	var dbaser = persist.databaser
@@ -196,8 +204,9 @@ func (persist *Persister) FindAllComments() ([]Comment, error) {
 	return comments, nil
 }
 
-// Finds a comment that matches the given id
-func (persist *Persister) FindCommentById(id int64) (*Comment, error) {
+// Finds a comment that matches the given id.  Returns nil and an error
+// if the id didn't match any comment.
+func (persist *DBConnection) FindCommentById(id int64) (*Comment, error) {
 
 	var c *Comment
 	var dbaser = persist.databaser
@@ -247,7 +256,7 @@ func (persist *Persister) FindCommentById(id int64) (*Comment, error) {
  */
 
 // Saves the post (or update it if it already exists)
-// to the database
+// to the database.  Returns an error if something went wrong.
 func (c *Comment) Save() error {
 	db, err := sql.Open(c.db.Driver(), c.db.Name())
 	if err != nil {
@@ -273,7 +282,8 @@ func (c *Comment) Save() error {
 	return nil
 }
 
-// Deletes the comment from the database
+// Deletes the comment from the database.  Returns an error if something
+// went wrong.
 func (c *Comment) Destroy() error {
 
 	db, err := sql.Open(c.db.Driver(), c.db.Name())

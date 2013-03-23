@@ -7,12 +7,12 @@ import (
 )
 
 func TestSaveLabel(t *testing.T) {
-	saveLabel(t, setupSQLitePersist())
-	//saveLabel(t, setupPGPersist())
+	saveLabel(t, setupSQLiteConnection())
+	//saveLabel(t, setupPGConnection())
 }
 
-func saveLabel(t *testing.T, pers *Persister) {
-	defer pers.DeletePersistance()
+func saveLabel(t *testing.T, pers *DBConnection) {
+	defer pers.DeleteConnection()
 
 	var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
 	var author = pers.NewAuthor("aybabtme", user)
@@ -80,13 +80,13 @@ func saveLabel(t *testing.T, pers *Persister) {
 }
 
 func TestFindByIdLabel(t *testing.T) {
-	findByIdLabel(t, setupSQLitePersist())
+	findByIdLabel(t, setupSQLiteConnection())
 	// TODO fix this, it crashes for some reasons
-	//findByIdLabel(t, setupPGPersist())
+	//findByIdLabel(t, setupPGConnection())
 }
 
-func findByIdLabel(t *testing.T, pers *Persister) {
-	defer pers.DeletePersistance()
+func findByIdLabel(t *testing.T, pers *DBConnection) {
+	defer pers.DeleteConnection()
 
 	for i := int64(1); i < 10; i++ {
 		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
@@ -118,12 +118,12 @@ func findByIdLabel(t *testing.T, pers *Persister) {
 }
 
 func TestFindAllLabel(t *testing.T) {
-	findAllLabel(t, setupSQLitePersist())
-	//findAllLabel(t, setupPGPersist())
+	findAllLabel(t, setupSQLiteConnection())
+	//findAllLabel(t, setupPGConnection())
 }
 
-func findAllLabel(t *testing.T, pers *Persister) {
-	defer pers.DeletePersistance()
+func findAllLabel(t *testing.T, pers *DBConnection) {
+	defer pers.DeleteConnection()
 	var labelCount = int64(9)
 
 	for i := int64(1); i <= labelCount; i++ {
@@ -166,13 +166,13 @@ func findAllLabel(t *testing.T, pers *Persister) {
 }
 
 func TestLabelIdIncrements(t *testing.T) {
-	labelIdIncrements(t, setupSQLitePersist())
+	labelIdIncrements(t, setupSQLiteConnection())
 	// TODO PG doesnt work
-	// idIncrements(t, setupPGPersist())
+	// idIncrements(t, setupPGConnection())
 }
 
-func labelIdIncrements(t *testing.T, pers *Persister) {
-	defer pers.DeletePersistance()
+func labelIdIncrements(t *testing.T, pers *DBConnection) {
+	defer pers.DeleteConnection()
 
 	for i := int64(1); i < 10; i++ {
 		var user = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")

@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func generateUserAndPost(pers *Persister, i int64) (*User, *Post) {
+func generateUserAndPost(pers *DBConnection, i int64) (*User, *Post) {
 	var user = pers.NewUser("John", time.Now().UTC(), -5, "john@smith.com")
 	_ = user.Save()
 	var authUser = pers.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
@@ -23,12 +23,12 @@ func generateUserAndPost(pers *Persister, i int64) (*User, *Post) {
 }
 
 func TestNewComment(t *testing.T) {
-	newComment(t, setupSQLitePersist())
-	//newComment(t, setupPGPersist())
+	newComment(t, setupSQLiteConnection())
+	//newComment(t, setupPGConnection())
 }
 
-func newComment(t *testing.T, pers *Persister) {
-	defer pers.DeletePersistance()
+func newComment(t *testing.T, pers *DBConnection) {
+	defer pers.DeleteConnection()
 
 	var user, post = generateUserAndPost(pers, 0)
 	var comment = pers.NewComment(
@@ -43,12 +43,12 @@ func newComment(t *testing.T, pers *Persister) {
 }
 
 func TestSaveComment(t *testing.T) {
-	saveComment(t, setupSQLitePersist())
-	//saveComment(t, setupPGPersist())
+	saveComment(t, setupSQLiteConnection())
+	//saveComment(t, setupPGConnection())
 }
 
-func saveComment(t *testing.T, pers *Persister) {
-	defer pers.DeletePersistance()
+func saveComment(t *testing.T, pers *DBConnection) {
+	defer pers.DeleteConnection()
 
 	var user, post = generateUserAndPost(pers, 0)
 	var comment = pers.NewComment(
@@ -75,13 +75,13 @@ func saveComment(t *testing.T, pers *Persister) {
 }
 
 func TestDestroyComment(t *testing.T) {
-	destroyComment(t, setupSQLitePersist())
+	destroyComment(t, setupSQLiteConnection())
 	// TODO fix this, it crashes for some reason
-	// destroyComment(t, setupPGPersist())
+	// destroyComment(t, setupPGConnection())
 }
 
-func destroyComment(t *testing.T, pers *Persister) {
-	defer pers.DeletePersistance()
+func destroyComment(t *testing.T, pers *DBConnection) {
+	defer pers.DeleteConnection()
 
 	for i := int64(1); i < 10; i++ {
 
@@ -110,13 +110,13 @@ func destroyComment(t *testing.T, pers *Persister) {
 }
 
 func TestFindByIdComment(t *testing.T) {
-	findByIdComment(t, setupSQLitePersist())
+	findByIdComment(t, setupSQLiteConnection())
 	// TODO fix this, it crashes for some reasons
-	//findByIdComment(t, setupPGPersist())
+	//findByIdComment(t, setupPGConnection())
 }
 
-func findByIdComment(t *testing.T, pers *Persister) {
-	defer pers.DeletePersistance()
+func findByIdComment(t *testing.T, pers *DBConnection) {
+	defer pers.DeleteConnection()
 	for i := int64(1); i < 10; i++ {
 		var user, post = generateUserAndPost(pers, 0)
 		var expected = pers.NewComment(
@@ -143,12 +143,12 @@ func findByIdComment(t *testing.T, pers *Persister) {
 }
 
 func TestFindAllComment(t *testing.T) {
-	findAllComment(t, setupSQLitePersist())
-	//findAllComment(t, setupPGPersist())
+	findAllComment(t, setupSQLiteConnection())
+	//findAllComment(t, setupPGConnection())
 }
 
-func findAllComment(t *testing.T, pers *Persister) {
-	defer pers.DeletePersistance()
+func findAllComment(t *testing.T, pers *DBConnection) {
+	defer pers.DeleteConnection()
 	var commentCount = int64(10)
 
 	for i := int64(1); i <= commentCount; i++ {
@@ -186,13 +186,13 @@ func findAllComment(t *testing.T, pers *Persister) {
 }
 
 func TestCommentIdIncrements(t *testing.T) {
-	commentIdIncrements(t, setupSQLitePersist())
+	commentIdIncrements(t, setupSQLiteConnection())
 	// TODO PG doesnt work
-	// idIncrements(t, setupPGPersist())
+	// idIncrements(t, setupPGConnection())
 }
 
-func commentIdIncrements(t *testing.T, pers *Persister) {
-	defer pers.DeletePersistance()
+func commentIdIncrements(t *testing.T, pers *DBConnection) {
+	defer pers.DeleteConnection()
 
 	for i := int64(1); i < 10; i++ {
 		var user, post = generateUserAndPost(pers, 0)

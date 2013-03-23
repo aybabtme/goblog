@@ -7,17 +7,17 @@ import (
 )
 
 func TestNewAuthor(t *testing.T) {
-	newAuthor(t, setupSQLitePersist())
-	//newAuthor(t, setupPGPersist())
+	newAuthor(t, setupSQLiteConnection())
+	//newAuthor(t, setupPGConnection())
 }
 
-func newAuthor(t *testing.T, persist *Persister) {
-	defer persist.DeletePersistance()
+func newAuthor(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 
-	var user = persist.NewUser("Author Antoine",
+	var user = conn.NewUser("Author Antoine",
 		time.Now().UTC(), -5, "a@g.com")
 
-	var author = persist.NewAuthor(
+	var author = conn.NewAuthor(
 		"aybabtme",
 		user)
 
@@ -27,17 +27,17 @@ func newAuthor(t *testing.T, persist *Persister) {
 }
 
 func TestSaveAuthor(t *testing.T) {
-	saveAuthor(t, setupSQLitePersist())
-	//saveAuthor(t, setupPGPersist())
+	saveAuthor(t, setupSQLiteConnection())
+	//saveAuthor(t, setupPGConnection())
 }
 
-func saveAuthor(t *testing.T, persist *Persister) {
-	defer persist.DeletePersistance()
+func saveAuthor(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 
-	var user = persist.NewUser("Author Antoine",
+	var user = conn.NewUser("Author Antoine",
 		time.Now().UTC(), -5, "a@g.com")
 
-	var author = persist.NewAuthor(
+	var author = conn.NewAuthor(
 		"aybabtme",
 		user)
 
@@ -59,22 +59,22 @@ func saveAuthor(t *testing.T, persist *Persister) {
 }
 
 func TestDestroyAuthor(t *testing.T) {
-	destroyAuthor(t, setupSQLitePersist())
+	destroyAuthor(t, setupSQLiteConnection())
 	// TODO fix this, it crashes for some reason
-	// destroyAuthor(t, setupPGPersist())
+	// destroyAuthor(t, setupPGConnection())
 }
 
-func destroyAuthor(t *testing.T, pers *Persister) {
-	defer pers.DeletePersistance()
+func destroyAuthor(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 
 	for i := int64(1); i < 10; i++ {
-		var user = pers.NewUser(
+		var user = conn.NewUser(
 			fmt.Sprintf("Author Antoine #%d", i),
 			time.Now().UTC(),
 			-5,
 			fmt.Sprintf("a%d@b.com", i))
 
-		var expected = pers.NewAuthor(
+		var expected = conn.NewAuthor(
 			fmt.Sprintf("aybabtme #%d", i),
 			user)
 
@@ -82,7 +82,7 @@ func destroyAuthor(t *testing.T, pers *Persister) {
 		expected.Save()
 
 		expected.Destroy()
-		actual, err := pers.FindAuthorById(id)
+		actual, err := conn.FindAuthorById(id)
 
 		if actual != nil {
 			t.Error("Author shouldnt exist in DB after destroy")
@@ -96,26 +96,26 @@ func destroyAuthor(t *testing.T, pers *Persister) {
 }
 
 func TestFindByIdAuthor(t *testing.T) {
-	findByIdAuthor(t, setupSQLitePersist())
+	findByIdAuthor(t, setupSQLiteConnection())
 	// TODO fix this, it crashes for some reasons
-	//findByIdAuthor(t, setupPGPersist())
+	//findByIdAuthor(t, setupPGConnection())
 }
 
-func findByIdAuthor(t *testing.T, persist *Persister) {
-	defer persist.DeletePersistance()
+func findByIdAuthor(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 	for i := int64(1); i < 10; i++ {
-		var user = persist.NewUser(
+		var user = conn.NewUser(
 			fmt.Sprintf("Author Antoine #%d", i),
 			time.Now().UTC(),
 			-5,
 			fmt.Sprintf("a%d@b.com", i))
 
-		var expected = persist.NewAuthor(
+		var expected = conn.NewAuthor(
 			fmt.Sprintf("aybabtme #%d", i),
 			user)
 		expected.Save()
 
-		actual, err := persist.FindAuthorById(expected.Id())
+		actual, err := conn.FindAuthorById(expected.Id())
 
 		if err != nil {
 			t.Errorf("Error while querying author %d: %v", i, err)
@@ -131,28 +131,28 @@ func findByIdAuthor(t *testing.T, persist *Persister) {
 }
 
 func TestFindAllAuthor(t *testing.T) {
-	findAllAuthor(t, setupSQLitePersist())
-	//findAllAuthor(t, setupPGPersist())
+	findAllAuthor(t, setupSQLiteConnection())
+	//findAllAuthor(t, setupPGConnection())
 }
 
-func findAllAuthor(t *testing.T, pers *Persister) {
+func findAllAuthor(t *testing.T, conn *DBConnection) {
 
 	var authorCount = int64(10)
 
 	for i := int64(1); i <= authorCount; i++ {
-		var user = pers.NewUser(
+		var user = conn.NewUser(
 			fmt.Sprintf("Author Antoine #%d", i),
 			time.Now().UTC(),
 			-5,
 			fmt.Sprintf("a%d@b.com", i))
 
-		var author = pers.NewAuthor(
+		var author = conn.NewAuthor(
 			fmt.Sprintf("aybabtme #%d", i),
 			user)
 		author.Save()
 	}
 
-	authors, err := pers.FindAllAuthors()
+	authors, err := conn.FindAllAuthors()
 	if err != nil {
 		t.Errorf("Couldn't query authors although just saved %d",
 			authorCount)
@@ -176,26 +176,26 @@ func findAllAuthor(t *testing.T, pers *Persister) {
 		}
 	}
 
-	defer pers.DeletePersistance()
+	defer conn.DeleteConnection()
 }
 
 func TestAuthorIdIncrements(t *testing.T) {
-	authorIdIncrements(t, setupSQLitePersist())
+	authorIdIncrements(t, setupSQLiteConnection())
 	// TODO PG doesnt work
-	// idIncrements(t, setupPGPersist())
+	// idIncrements(t, setupPGConnection())
 }
 
-func authorIdIncrements(t *testing.T, persist *Persister) {
-	defer persist.DeletePersistance()
+func authorIdIncrements(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 
 	for i := int64(1); i < 10; i++ {
-		var user = persist.NewUser(
+		var user = conn.NewUser(
 			fmt.Sprintf("Antoine #%d", i),
 			time.Now().UTC(),
 			-5,
 			fmt.Sprintf("a%d@b.com", i))
 
-		var author = persist.NewAuthor(
+		var author = conn.NewAuthor(
 			fmt.Sprintf("aybabtme #%d", i),
 			user)
 
@@ -212,18 +212,18 @@ func authorIdIncrements(t *testing.T, persist *Persister) {
 }
 
 func TestDeleteUserCascadesToAuthor(t *testing.T) {
-	deleteUserCascadesToAuthor(t, setupSQLitePersist())
-	//deleteUserCascadesToAuthor(t, setupPGPersist())
+	deleteUserCascadesToAuthor(t, setupSQLiteConnection())
+	//deleteUserCascadesToAuthor(t, setupPGConnection())
 }
 
-func deleteUserCascadesToAuthor(t *testing.T, persist *Persister) {
-	defer persist.DeletePersistance()
-	var user = persist.NewUser("Antony", time.Now().UTC(), -5, "antoine@g.com")
-	var author = persist.NewAuthor("aybabtme", user)
+func deleteUserCascadesToAuthor(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
+	var user = conn.NewUser("Antony", time.Now().UTC(), -5, "antoine@g.com")
+	var author = conn.NewAuthor("aybabtme", user)
 	_ = author.Save()
 
-	var copyUser, _ = persist.FindUserById(author.UserId())
-	var copyAuthor, _ = persist.FindAuthorById(author.Id())
+	var copyUser, _ = conn.FindUserById(author.UserId())
+	var copyAuthor, _ = conn.FindAuthorById(author.Id())
 
 	// Tested elsewhere, kind of redundant
 	if author.Twitter() != copyAuthor.Twitter() {
@@ -233,7 +233,7 @@ func deleteUserCascadesToAuthor(t *testing.T, persist *Persister) {
 
 	copyUser.Destroy()
 
-	var _, err = persist.FindAuthorById(author.Id())
+	var _, err = conn.FindAuthorById(author.Id())
 	if err == nil {
 		t.Error("User was deleted but Author could still be found.")
 		return
@@ -242,16 +242,16 @@ func deleteUserCascadesToAuthor(t *testing.T, persist *Persister) {
 }
 
 func TestFindAllAuthorPosts(t *testing.T) {
-	findAllAuthorPosts(t, setupSQLitePersist())
-	//findAllAuthorPosts(t, setupPGPersist())
+	findAllAuthorPosts(t, setupSQLiteConnection())
+	//findAllAuthorPosts(t, setupPGConnection())
 }
 
-func findAllAuthorPosts(t *testing.T, persist *Persister) {
-	defer persist.DeletePersistance()
+func findAllAuthorPosts(t *testing.T, conn *DBConnection) {
+	defer conn.DeleteConnection()
 	var postCount = 10
 
-	var user = persist.NewUser("Antony", time.Now().UTC(), -5, "antoine@g.com")
-	var author = persist.NewAuthor("aybabtme", user)
+	var user = conn.NewUser("Antony", time.Now().UTC(), -5, "antoine@g.com")
+	var author = conn.NewAuthor("aybabtme", user)
 	_ = author.Save()
 
 	var ghostPosts, err = author.Posts()
@@ -263,7 +263,7 @@ func findAllAuthorPosts(t *testing.T, persist *Persister) {
 
 	var expected []Post
 	for i := 0; i < postCount; i++ {
-		var post = persist.NewPost(author.Id(),
+		var post = conn.NewPost(author.Id(),
 			fmt.Sprintf("Great Topic #%d", i),
 			fmt.Sprintf("cool content #%d", i),
 			fmt.Sprint("awesome@email%d.com", i),

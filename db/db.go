@@ -8,21 +8,24 @@ import (
 )
 
 //
-// Persistance abstraction
+// Connection abstraction
 //
 
 // Keeps all info required to save stuff on a persistance
-type Persister struct {
-	databaser Databaser
+type DBConnection struct {
+	databaser DBVendor
 }
 
-func NewPersistance(dbaser Databaser) (*Persister, error) {
+// Creates a connection with the given DBVendor argument.
+// You can then use that connection to create objects on the DB
+// and then use those objects to update the DB.
+func NewConnection(dbaser DBVendor) (*DBConnection, error) {
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
 	if err != nil {
 		return nil, err
 	}
 	db.Close()
-	var persist = &Persister{databaser: dbaser}
+	var persist = &DBConnection{databaser: dbaser}
 
 	// Order matters, topologically sorted since tables are
 	// inter dependent
@@ -35,7 +38,10 @@ func NewPersistance(dbaser Databaser) (*Persister, error) {
 	return persist, nil
 }
 
-func (p *Persister) DeletePersistance() {
+// Drops all the tables held in the database to which this object is
+// linked.  WARNING: all your data will be lost.  You should only do that
+// in a testing environment.
+func (p *DBConnection) DeleteConnection() {
 	// Order matters, topologically sorted since tables are
 	// inter dependent
 
@@ -49,7 +55,7 @@ func (p *Persister) DeletePersistance() {
 }
 
 // Interface to abstract between different drivers (SQLite or Postgres)
-type Databaser interface {
+type DBVendor interface {
 	// not exported because only used within package
 	Name() string
 	Driver() string
@@ -62,7 +68,7 @@ type SQLiter struct {
 	name string
 }
 
-// Prepares a SQLiter for use as Databaser
+// Prepares a SQLiter for use as DBVendor
 func NewSQLiter(dbName string) SQLiter {
 	return SQLiter{name: dbName}
 }
@@ -91,7 +97,7 @@ type Postgreser struct {
 	username string
 }
 
-// Prepares a Postgreser for use as Databaser
+// Prepares a Postgreser for use as DBVendor
 func NewPostgreser(dbName, username string) Postgreser {
 	return Postgreser{name: dbName, username: username}
 }
