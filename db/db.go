@@ -11,7 +11,7 @@ import (
 // Connection abstraction
 //
 
-// Keeps all info required to save stuff on a persistance
+// Keeps all info required to save stuff on a connance
 type DBConnection struct {
 	databaser DBVendor
 }
@@ -25,32 +25,32 @@ func NewConnection(dbaser DBVendor) (*DBConnection, error) {
 		return nil, err
 	}
 	db.Close()
-	var persist = &DBConnection{databaser: dbaser}
+	var conn = &DBConnection{databaser: dbaser}
 
 	// Order matters, topologically sorted since tables are
 	// inter dependent
-	persist.createUserTable()
-	persist.createAuthorTable()
-	persist.createPostTable()
-	persist.createLabelTable()
-	persist.createLabelPostRelation()
-	persist.createCommentTable()
-	return persist, nil
+	conn.createUserTable()
+	conn.createAuthorTable()
+	conn.createPostTable()
+	conn.createLabelTable()
+	conn.createLabelPostRelation()
+	conn.createCommentTable()
+	return conn, nil
 }
 
 // Drops all the tables held in the database to which this object is
 // linked.  WARNING: all your data will be lost.  You should only do that
 // in a testing environment.
-func (p *DBConnection) DeleteConnection() {
+func (conn *DBConnection) DeleteConnection() {
 	// Order matters, topologically sorted since tables are
 	// inter dependent
 
-	p.dropCommentTable()
-	p.dropLabelPostRelation()
-	p.dropLabelTable()
-	p.dropPostTable()
-	p.dropAuthorTable()
-	p.dropUserTable()
+	conn.dropCommentTable()
+	conn.dropLabelPostRelation()
+	conn.dropLabelTable()
+	conn.dropPostTable()
+	conn.dropAuthorTable()
+	conn.dropUserTable()
 
 }
 

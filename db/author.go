@@ -12,8 +12,7 @@ import (
 var createAuthorTable string = `
 CREATE TABLE IF NOT EXISTS Author(
    author_id %s,
-   user_id INTEGER NOT NULL,
-   twitter VARCHAR(255) NOT NULL,
+   user_id INTEGER UNIQUE NOT NULL,
    CONSTRAINT fk_author_user_id
    	FOREIGN KEY(user_id) REFERENCES BlogUser(user_id) ON DELETE CASCADE
 )`
@@ -22,14 +21,14 @@ var dropAuthorTable string = `
 DROP TABLE Author;
 `
 
-var insertOrReplaceAuthorForId string = `
-INSERT OR REPLACE INTO Author(user_id, twitter)
-VALUES(?, ?)`
+var insertAuthorForId string = `
+INSERT INTO
+	Author(user_id)
+VALUES ( ? )`
 
 var findAuthorById string = `
 SELECT
    A.user_id,
-   A.twitter,
    U.username,
    U.registration_date,
    U.timezone,
@@ -45,7 +44,6 @@ var queryForAllAuthor string = `
 SELECT
    A.author_id,
    A.user_id,
-   A.twitter,
    U.username,
    U.registration_date,
    U.timezone,
@@ -62,11 +60,10 @@ WHERE P.author_id = ?
 
 // Represents an author of the blog
 type Author struct {
-	id      int64
-	userId  int64
-	twitter string
-	user    *User
-	db      DBVendor
+	id     int64
+	userId int64
+	user   *User
+	db     DBVendor
 }
 
 func (a *Author) Id() int64 {
@@ -79,14 +76,6 @@ func (a *Author) UserId() int64 {
 
 func (a *Author) User() *User {
 	return a.user
-}
-
-func (a *Author) Twitter() string {
-	return a.twitter
-}
-
-func (a *Author) SetTwitter(twitter string) {
-	a.twitter = twitter
 }
 
 func (a *Author) Posts() ([]Post, error) {
@@ -137,7 +126,6 @@ func (a *Author) Posts() ([]Post, error) {
 		}
 		posts = append(posts, p)
 	}
-
 	return posts, nil
 }
 
@@ -146,9 +134,9 @@ func (a *Author) Posts() ([]Post, error) {
  */
 
 func (p *DBConnection) createAuthorTable() {
-	var dbaser = p.databaser
+	var dbvendor = p.databaser
 
-	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
+	db, err := sql.Open(dbvendor.Driver(), dbvendor.Name())
 	if err != nil {
 		fmt.Println("Error on open of database", err)
 		return
@@ -156,21 +144,21 @@ func (p *DBConnection) createAuthorTable() {
 
 	var query = fmt.Sprintf(
 		createAuthorTable,
-		dbaser.IncrementPrimaryKey())
+		dbvendor.IncrementPrimaryKey())
 
 	_, err = db.Exec(query)
 	if err != nil {
 		fmt.Printf("Error creating Author table, driver \"%s\", dbname \"%s\", query = %s\n",
-			dbaser.Driver(), dbaser.Name(), query)
+			dbvendor.Driver(), dbvendor.Name(), query)
 		fmt.Println(err)
 		return
 	}
 }
 
-func (persist *DBConnection) dropAuthorTable() {
-	var dbaser = persist.databaser
+func (conn *DBConnection) dropAuthorTable() {
+	var dbvendor = conn.databaser
 
-	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
+	db, err := sql.Open(dbvendor.Driver(), dbvendor.Name())
 	if err != nil {
 		fmt.Println("Error on open of database", err)
 		return
@@ -185,25 +173,24 @@ func (persist *DBConnection) dropAuthorTable() {
 
 // Creates an author.  The Author is NOT saved.  To save it, you must call
 // the save method on the returned Author.
-func (persist *DBConnection) NewAuthor(twitter string, user *User) *Author {
+func (conn *DBConnection) NewAuthor(user *User) *Author {
 	return &Author{
-		id:      -1,
-		userId:  user.Id(),
-		twitter: twitter,
-		user:    user,
-		db:      persist.databaser,
+		id:     -1,
+		userId: user.Id(),
+		user:   user,
+		db:     conn.databaser,
 	}
 }
 
 // Finds all the Authors known to this blog.  Returns an empty slice and
 // an error stating no rows matched the request if no authors are known
 // to this blog.
-func (persist *DBConnection) FindAllAuthors() ([]Author, error) {
+func (conn *DBConnection) FindAllAuthors() ([]Author, error) {
 
 	var authors []Author
-	var dbaser = persist.databaser
+	var dbvendor = conn.databaser
 
-	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
+	db, err := sql.Open(dbvendor.Driver(), dbvendor.Name())
 	if err != nil {
 		fmt.Println("FindAllAuthors 1:", err)
 		return authors, err
@@ -219,28 +206,26 @@ func (persist *DBConnection) FindAllAuthors() ([]Author, error) {
 
 	for rows.Next() {
 		var id int64
-		var twitter string
 		var userId int64
 		var username string
 		var date time.Time
 		var timezone int
 		var email string
-		rows.Scan(&id, &twitter, &userId, &username, &date, &timezone, &email)
+		rows.Scan(&id, &userId, &username, &date, &timezone, &email)
 		u := &User{
 			id:               userId,
 			username:         username,
 			registrationDate: date,
 			timezone:         timezone,
 			email:            email,
-			db:               dbaser,
+			db:               dbvendor,
 		}
 
 		a := Author{
-			id:      id,
-			userId:  userId,
-			twitter: twitter,
-			user:    u,
-			db:      dbaser,
+			id:     id,
+			userId: userId,
+			user:   u,
+			db:     dbvendor,
 		}
 		authors = append(authors, a)
 	}
@@ -250,12 +235,12 @@ func (persist *DBConnection) FindAllAuthors() ([]Author, error) {
 
 // Returns an author given its id.  If the id is not known to the blog
 // a nil value is returned with an error.
-func (persist *DBConnection) FindAuthorById(id int64) (*Author, error) {
+func (conn *DBConnection) FindAuthorById(id int64) (*Author, error) {
 
 	var a *Author
-	var dbaser = persist.databaser
+	var dbvendor = conn.databaser
 
-	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
+	db, err := sql.Open(dbvendor.Driver(), dbvendor.Name())
 	if err != nil {
 		fmt.Println("FindAuthorById 1:", err)
 		return a, err
@@ -270,14 +255,12 @@ func (persist *DBConnection) FindAuthorById(id int64) (*Author, error) {
 	defer stmt.Close()
 
 	var userId int64
-	var twitter string
 	var username string
 	var date time.Time
 	var timezone int
 	var email string
 
 	err = stmt.QueryRow(id).Scan(&userId,
-		&twitter,
 		&username,
 		&date,
 		&timezone,
@@ -294,15 +277,14 @@ func (persist *DBConnection) FindAuthorById(id int64) (*Author, error) {
 		registrationDate: date,
 		timezone:         timezone,
 		email:            email,
-		db:               dbaser,
+		db:               dbvendor,
 	}
 
 	a = &Author{
-		id:      id,
-		userId:  userId,
-		twitter: twitter,
-		user:    u,
-		db:      dbaser,
+		id:     id,
+		userId: userId,
+		user:   u,
+		db:     dbvendor,
 	}
 
 	return a, nil
@@ -312,7 +294,7 @@ func (persist *DBConnection) FindAuthorById(id int64) (*Author, error) {
 *  Operations on Author
  */
 
-// Save an author to the persistence.  If the provided
+// Save an author to the connence.  If the provided
 // user didn't exist, it will create it first.
 func (a *Author) Save() error {
 	db, err := sql.Open(a.db.Driver(), a.db.Name())
@@ -322,9 +304,10 @@ func (a *Author) Save() error {
 	}
 	defer db.Close()
 
-	stmt, err := db.Prepare(insertOrReplaceAuthorForId)
+	stmt, err := db.Prepare(insertAuthorForId)
 	if err != nil {
-		fmt.Println("Save 2:", err)
+		fmt.Printf("Save 2 query=%s\n", insertAuthorForId)
+		fmt.Println(err)
 		return err
 	}
 	defer stmt.Close()
@@ -341,7 +324,7 @@ func (a *Author) Save() error {
 		a.userId = a.user.Id()
 	}
 
-	res, err := stmt.Exec(a.userId, a.twitter)
+	res, err := stmt.Exec(a.userId)
 	if err != nil {
 		fmt.Println("Save 4:", err)
 		return err
