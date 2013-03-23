@@ -17,8 +17,11 @@ CREATE TABLE IF NOT EXISTS LabelPosts(
    postId INTEGER,
    labelId INTEGER,
    PRIMARY KEY (postId, labelId),
-   FOREIGN KEY (postId) REFERENCES Posts(id) ON DELETE CASCADE
-)`
+   CONSTRAINT fk_labelpost_postid
+      FOREIGN KEY (postId) REFERENCES Posts(id) ON DELETE CASCADE,
+   CONSTRAINT fk_labelpost_labelid
+      FOREIGN KEY (labelId) REFERENCES Labels(id) ON DELETE CASCADE
+);`
 
 var dropLabelPostsRelation string = `
 DROP TABLE LabelPosts;`
@@ -39,9 +42,13 @@ SELECT L.id, L.name
 FROM Labels AS L, LabelPosts AS LP
 WHERE LP.postId = ? AND LP.labelId = L.id`
 
-var deleteAllLabelsWithId string = `
+var deleteAllLabelWithIdFromRelation string = `
 DELETE FROM LabelPosts
 WHERE LabelPosts.labelId = ?`
+
+var deleteAllLabelWithIdFromTable string = `
+DELETE FROM Labels
+WHERE Labels.id = ?;`
 
 // used
 var deleteLabelFromPostId string = `
@@ -53,8 +60,13 @@ WHERE LabelPosts.postId = ?`
  */
 
 var insertLabelForId string = `
-INSERT INTO Labels( name )
+INSERT OR IGNORE INTO Labels( name )
 VALUES( ? )`
+
+var queryLabelForName string = `
+SELECT L.id, L.name
+FROM Labels AS L
+WHERE L.name = ?`
 
 /*
  * No More SQL Strings
@@ -78,7 +90,8 @@ func (pers *Persister) createLabelPostRelation() {
 
 	_, err = db.Exec(query)
 	if err != nil {
-		fmt.Printf("Error creating LabelPost relation, driver \"%s\", dbname \"%s\", query = \"%s\"\n",
+		fmt.Printf("Error creating LabelPost relation, driver \"%s\","+
+			" dbname \"%s\", query = \"%s\"\n",
 			dbaser.Driver(), dbaser.Name(), query)
 		fmt.Println(err)
 		return
@@ -134,40 +147,31 @@ func (p *Post) AddLabel(name string) (Label, error) {
 	// Create the Label
 	lblStmt, err := tx.Prepare(insertLabelForId)
 	if err != nil {
-		rbErr := tx.Rollback()
-		if rbErr != nil {
-			return lbl, rbErr
-		}
-		return lbl, err
+		return tryRollback(lbl, tx, err)
 	}
 	defer lblStmt.Close()
 
-	lblRes, err := lblStmt.Exec(lbl.Name())
+	_, err = lblStmt.Exec(lbl.Name())
 	if err != nil {
-		rbErr := tx.Rollback()
-		if rbErr != nil {
-			return lbl, rbErr
-		}
-		return lbl, err
+		// error may mean it already exists
+		return tryRollback(lbl, tx, err)
 	}
 
-	lbl.id, err = lblRes.LastInsertId()
+	lblFindBack, err := tx.Prepare(queryLabelForName)
 	if err != nil {
-		rbErr := tx.Rollback()
-		if rbErr != nil {
-			return lbl, rbErr
-		}
-		return lbl, err
+		return tryRollback(lbl, tx, err)
+	}
+	defer lblFindBack.Close()
+
+	err = lblFindBack.QueryRow(lbl.name).Scan(&lbl.id, &lbl.name)
+	if err != nil {
+		return tryRollback(lbl, tx, err)
 	}
 
 	// Then establish the relationship
 	relStmt, err := tx.Prepare(insertLabelPostRelation)
 	if err != nil {
-		rbErr := tx.Rollback()
-		if rbErr != nil {
-			return lbl, rbErr
-		}
-		return lbl, err
+		return tryRollback(lbl, tx, err)
 	}
 	defer relStmt.Close()
 
@@ -176,15 +180,18 @@ func (p *Post) AddLabel(name string) (Label, error) {
 	// All set, try committing
 	err = tx.Commit()
 	if err != nil {
-		// If it didn't commit, try rolling back
-		rbErr := tx.Rollback()
-		if rbErr != nil {
-			return lbl, rbErr
-		}
-		return lbl, err
+		return tryRollback(lbl, tx, err)
 	}
 
 	return lbl, nil
+}
+
+func tryRollback(lbl Label, tx *sql.Tx, err error) (Label, error) {
+	rbErr := tx.Rollback()
+	if rbErr != nil {
+		return lbl, rbErr
+	}
+	return lbl, err
 }
 
 // Removes a label from a post.  If the post if the only post
@@ -265,16 +272,23 @@ func (l *Label) Destroy() error {
 	}
 	defer db.Close()
 
-	// This is not working becauethe constraint on Label is not enforced.
-	// commented out so that it wont compile and force me to find back this very error
-	// next time i open my computer, kthxbai
-	//stmt, err := db.Prepare(deleteAllLabelsWithId)
+	stmtRelation, err := db.Prepare(deleteAllLabelWithIdFromRelation)
 	if err != nil {
 		return err
 	}
-	defer stmt.Close()
+	defer stmtRelation.Close()
 
-	_, err = stmt.Exec(l.Id())
+	_, err = stmtRelation.Exec(l.Id())
+	if err != nil {
+		return err
+	}
+
+	stmtLabel, err := db.Prepare(deleteAllLabelWithIdFromTable)
+	if err != nil {
+		return nil
+	}
+	defer stmtLabel.Close()
+	_, err = stmtLabel.Exec(l.Id())
 
 	return err
 }
@@ -307,7 +321,14 @@ func (l *Label) Posts() ([]Post, error) {
 		var content string
 		var imageURL string
 		var date time.Time
-		err := rows.Scan(&id, &authorId, &title, &content, &imageURL, &date)
+
+		err := rows.Scan(&id,
+			&authorId,
+			&title,
+			&content,
+			&imageURL,
+			&date)
+
 		if err != nil {
 			return posts, err
 		}

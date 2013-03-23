@@ -29,8 +29,8 @@ func NewPersistance(dbaser Databaser) (*Persister, error) {
 	persist.createUserTable()
 	persist.createAuthorTable()
 	persist.createPostTable()
-	persist.createLabelPostRelation()
 	persist.createLabelTable()
+	persist.createLabelPostRelation()
 	persist.createCommentTable()
 	return persist, nil
 }
@@ -40,8 +40,8 @@ func (p *Persister) DeletePersistance() {
 	// inter dependent
 
 	p.dropCommentTable()
-	p.dropLabelTable()
 	p.dropLabelPostRelation()
+	p.dropLabelTable()
 	p.dropPostTable()
 	p.dropAuthorTable()
 	p.dropUserTable()

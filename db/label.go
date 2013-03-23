@@ -8,8 +8,7 @@ import (
 var createLabelTable string = `
 CREATE TABLE IF NOT EXISTS Labels(
    id %s,
-   name VARCHAR(255) UNIQUE,
-   FOREIGN KEY (id) REFERENCES LabelPosts(labelId) ON DELETE CASCADE
+   name VARCHAR(255) UNIQUE
 )`
 
 var dropLabelTable string = `
@@ -70,7 +69,8 @@ func (persist *Persister) createLabelTable() {
 
 	_, err = db.Exec(query)
 	if err != nil {
-		fmt.Printf("Error creating Labels table, driver \"%s\", dbname \"%s\", query = \"%s\"\n",
+		fmt.Printf("Error creating Labels table, driver \"%s\","+
+			"dbname \"%s\", query = \"%s\"\n",
 			dbaser.Driver(), dbaser.Name(), query)
 		fmt.Println(err)
 		return
