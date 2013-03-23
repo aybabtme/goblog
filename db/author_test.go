@@ -8,7 +8,7 @@ import (
 
 func generateAuthor(conn *DBConnection, i int64) *Author {
 	user := generateUser(conn, i)
-	author := conn.NewAuthor("aybabtme", user)
+	author := conn.NewAuthor(user)
 	_ = author.Save()
 	return author
 }
@@ -24,7 +24,6 @@ func newAuthor(t *testing.T, conn *DBConnection) {
 	user := generateUser(conn, 0)
 
 	var author = conn.NewAuthor(
-		"aybabtme",
 		user)
 
 	if author == nil {
@@ -43,7 +42,6 @@ func saveAuthor(t *testing.T, conn *DBConnection) {
 	user := generateUser(conn, 0)
 
 	var author = conn.NewAuthor(
-		"aybabtme",
 		user)
 
 	if author == nil {
@@ -76,7 +74,6 @@ func destroyAuthor(t *testing.T, conn *DBConnection) {
 		user := generateUser(conn, i)
 
 		var expected = conn.NewAuthor(
-			fmt.Sprintf("aybabtme #%d", i),
 			user)
 
 		var id = expected.Id()
@@ -108,7 +105,6 @@ func findByIdAuthor(t *testing.T, conn *DBConnection) {
 		user := generateUser(conn, i)
 
 		var expected = conn.NewAuthor(
-			fmt.Sprintf("aybabtme #%d", i),
 			user)
 		expected.Save()
 
@@ -119,9 +115,9 @@ func findByIdAuthor(t *testing.T, conn *DBConnection) {
 			return
 		}
 
-		if actual.Twitter() != expected.Twitter() {
-			t.Errorf("Expected <%s> but was <%s>\n",
-				expected.Twitter(), actual.Twitter())
+		if actual.Id() != expected.Id() {
+			t.Errorf("Expected <%d> but was <%d>\n",
+				expected.Id(), actual.Id())
 			return
 		}
 	}
@@ -140,9 +136,7 @@ func findAllAuthor(t *testing.T, conn *DBConnection) {
 	for i := int64(1); i <= authorCount; i++ {
 		user := generateUser(conn, i)
 
-		var author = conn.NewAuthor(
-			fmt.Sprintf("aybabtme #%d", i),
-			user)
+		var author = conn.NewAuthor(user)
 		author.Save()
 	}
 
@@ -165,8 +159,6 @@ func findAllAuthor(t *testing.T, conn *DBConnection) {
 	for idx, author := range authors {
 		if author.Id() != int64(idx)+int64(1) {
 			t.Errorf("Expected <%d> but was <%d>", idx+1, author.Id())
-			fmt.Printf("UserID(%d) Twitter(%s)\n",
-				author.UserId(), author.Twitter())
 		}
 	}
 
@@ -184,9 +176,7 @@ func authorIdIncrements(t *testing.T, conn *DBConnection) {
 	for i := int64(1); i < 10; i++ {
 		user := generateUser(conn, i)
 
-		var author = conn.NewAuthor(
-			fmt.Sprintf("aybabtme #%d", i),
-			user)
+		var author = conn.NewAuthor(user)
 
 		if author.Id() != -1 {
 			t.Error("Id should be of -1 at this point")
@@ -208,15 +198,15 @@ func TestDeleteUserCascadesToAuthor(t *testing.T) {
 func deleteUserCascadesToAuthor(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 	user := generateUser(conn, 0)
-	var author = conn.NewAuthor("aybabtme", user)
+	var author = conn.NewAuthor(user)
 	_ = author.Save()
 
 	var copyUser, _ = conn.FindUserById(author.UserId())
 	var copyAuthor, _ = conn.FindAuthorById(author.Id())
 
 	// Tested elsewhere, kind of redundant
-	if author.Twitter() != copyAuthor.Twitter() {
-		t.Errorf("Expected <%s> but was <%s>", author.Twitter(), copyAuthor.Twitter())
+	if author.Id() != copyAuthor.Id() {
+		t.Errorf("Expected <%d> but was <%d>", author.Id(), copyAuthor.Id())
 		return
 	}
 
@@ -237,10 +227,10 @@ func TestFindAllAuthorPosts(t *testing.T) {
 
 func findAllAuthorPosts(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
-	var postCount = 10
+	var postCount = int64(10)
 
 	user := generateUser(conn, 0)
-	var author = conn.NewAuthor("aybabtme", user)
+	var author = conn.NewAuthor(user)
 	_ = author.Save()
 
 	var ghostPosts, err = author.Posts()
@@ -251,13 +241,14 @@ func findAllAuthorPosts(t *testing.T, conn *DBConnection) {
 	}
 
 	var expected []Post
-	for i := 0; i < postCount; i++ {
+	for i := int64(0); i < postCount; i++ {
 		var post = conn.NewPost(author.Id(),
-			fmt.Sprintf("Great Topic #%d", i),
-			fmt.Sprintf("cool content #%d", i),
-			fmt.Sprint("awesome@email%d.com", i),
+			fmt.Sprintf("Title #%d", i),
+			fmt.Sprintf("Content #%d", i),
+			fmt.Sprintf("ImageUrl #%d", i),
 			time.Now().UTC())
-		post.Save()
+
+		_ = post.Save()
 		expected = append(expected, *post)
 	}
 

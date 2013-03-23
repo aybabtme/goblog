@@ -9,7 +9,7 @@ import (
 func generatePost(conn *DBConnection, i int64) (*Post, error) {
 	user := generateUser(conn, i)
 
-	var author = conn.NewAuthor("aybabtme", user)
+	var author = conn.NewAuthor(user)
 	err := author.Save()
 	if err != nil {
 		return nil, err

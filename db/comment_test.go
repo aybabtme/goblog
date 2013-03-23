@@ -9,9 +9,7 @@ import (
 func generateUserAndPost(conn *DBConnection, i int64) (*User, *Post) {
 	user := generateUser(conn, i*2)
 	authUser := generateUser(conn, i)
-	var author = conn.NewAuthor(
-		fmt.Sprintf("aybabtme#%d", i),
-		authUser)
+	var author = conn.NewAuthor(authUser)
 	_ = author.Save()
 	var post = conn.NewPost(author.Id(),
 		fmt.Sprintf("Title #%d", i),

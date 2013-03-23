@@ -3,7 +3,6 @@ package db
 import (
 	"fmt"
 	"testing"
-	"time"
 )
 
 func TestSaveLabel(t *testing.T) {
@@ -14,15 +13,7 @@ func TestSaveLabel(t *testing.T) {
 func saveLabel(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 
-	user := generateUser(conn, 0)
-	var author = conn.NewAuthor("aybabtme", user)
-	_ = author.Save()
-	var post = conn.NewPost(author.Id(),
-		"My first post",
-		"Hello World",
-		"fake.url/to/image.jpg",
-		time.Now().UTC())
-	_ = post.Save()
+	post, _ := generatePost(conn, 0)
 
 	expected, err := post.AddLabel("food")
 	if err != nil {
@@ -89,15 +80,7 @@ func findByIdLabel(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 
 	for i := int64(1); i < 10; i++ {
-		user := generateUser(conn, i)
-		var author = conn.NewAuthor("aybabtme", user)
-		_ = author.Save()
-		var post = conn.NewPost(author.Id(),
-			fmt.Sprintf("Title #%d", i),
-			fmt.Sprintf("Content #%d", i),
-			fmt.Sprintf("ImageUrl #%d", i),
-			time.Now().UTC())
-		_ = post.Save()
+		post, _ := generatePost(conn, 0)
 		expected, err := post.AddLabel(fmt.Sprintf("cool topic #%d", i))
 		if err != nil {
 			t.Error("Couldn't create a label to begin with.")
@@ -127,15 +110,7 @@ func findAllLabel(t *testing.T, conn *DBConnection) {
 	var labelCount = int64(9)
 
 	for i := int64(1); i <= labelCount; i++ {
-		user := generateUser(conn, i)
-		var author = conn.NewAuthor("aybabtme", user)
-		_ = author.Save()
-		var post = conn.NewPost(author.Id(),
-			fmt.Sprintf("Title #%d", i),
-			fmt.Sprintf("Content #%d", i),
-			fmt.Sprintf("ImageUrl #%d", i),
-			time.Now().UTC())
-		_ = post.Save()
+		post, _ := generatePost(conn, 0)
 		_, err := post.AddLabel(fmt.Sprintf("cool topic #%d", i))
 		if err != nil {
 			t.Error("Couldn't create a label to begin with.")
@@ -175,15 +150,7 @@ func labelIdIncrements(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 
 	for i := int64(1); i < 10; i++ {
-		user := generateUser(conn, i)
-		var author = conn.NewAuthor("aybabtme", user)
-		_ = author.Save()
-		var post = conn.NewPost(author.Id(),
-			fmt.Sprintf("Title #%d", i),
-			fmt.Sprintf("Content #%d", i),
-			fmt.Sprintf("ImageUrl #%d", i),
-			time.Now().UTC())
-		_ = post.Save()
+		post, _ := generatePost(conn, 0)
 		label, err := post.AddLabel(fmt.Sprintf("cool topic #%d", i))
 		if err != nil {
 			t.Error("Couldn't create a label to begin with.")
