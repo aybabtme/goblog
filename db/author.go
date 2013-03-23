@@ -10,53 +10,54 @@ import (
  * SQL stuff
  */
 var createAuthorTable string = `
-CREATE TABLE IF NOT EXISTS Authors(
-   id %s,
-   userId INTEGER,
-   twitter VARCHAR(255),
-   FOREIGN KEY(userId) REFERENCES Users(id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS Author(
+   id 		%s,
+   user_id 	INTEGER NOT NULL,
+   twitter 	VARCHAR(255) NOT NULL,
+   CONSTRAINT fk_author_user_id
+   	FOREIGN KEY(user_id) REFERENCES User(user_id) ON DELETE CASCADE
 )`
 
 var dropAuthorTable string = `
-DROP TABLE Authors;
+DROP TABLE Author;
 `
 
 var insertOrReplaceAuthorForId string = `
-INSERT OR REPLACE INTO Authors(userId, twitter)
+INSERT OR REPLACE INTO Author(user_id, twitter)
 VALUES(?, ?)`
 
 var findAuthorById string = `
 SELECT
-   A.userId,
+   A.user_id,
    A.twitter,
    U.username,
-   U.registrationDate,
+   U.registration_date,
    U.timezone,
    U.email
-FROM Authors AS A, Users AS U
-WHERE A.id = ? AND A.userID = U.id`
+FROM Author AS A, User AS U
+WHERE A.author_id = ? AND A.user_id = U.user_id`
 
 var deleteAuthorById string = `
-DELETE FROM Authors
-WHERE Authors.id = ?`
+DELETE FROM Author
+WHERE Author.author_id = ?`
 
 var queryForAllAuthor string = `
 SELECT
-   A.id,
-   A.userId,
+   A.author_id,
+   A.user_id,
    A.twitter,
    U.username,
-   U.registrationDate,
+   U.registration_date,
    U.timezone,
    U.email
-FROM Authors AS A, Users AS U
-WHERE A.userId = U.id`
+FROM Author AS A, User AS U
+WHERE A.user_id = U.user_id`
 
 // Relations
 var queryForAllPostsOfAuthorId string = `
-SELECT P.id, P.authorId, P.title, P.content, P.imageURL, P.date
-FROM Posts AS P
-WHERE P.authorId = ?
+SELECT P.post_id, P.author_id, P.title, P.content, P.image_url, P.date
+FROM Post AS P
+WHERE P.author_id = ?
 `
 
 // Represents an author of the blog

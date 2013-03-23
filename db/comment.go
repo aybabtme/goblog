@@ -11,37 +11,39 @@ import (
  */
 
 var createCommentTable string = `
-CREATE TABLE IF NOT EXISTS Comments(
-   id %s,
-   userId INTEGER,
-   postId INTEGER,
-   content TEXT,
-   date %s,
-   upVote INTEGER,
-   downVote INTEGER,
-   FOREIGN KEY (userId) REFERENCES Users(id) ON DELETE CASCADE,
-   FOREIGN KEY (postId) REFERENCES Posts(id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS Comment(
+   comment_id 	%s,
+   user_id 		INTEGER NOT NULL,
+   post_id 		INTEGER NOT NULL,
+   content 		TEXT NOT NULL,
+   date 			%s NOT NULL,
+   up_vote 		INTEGER NOT NULL,
+   down_vote	INTEGER NOT NULL,
+   CONSTRAINT fk_comment_user_id
+   	FOREIGN KEY (user_id) REFERENCES User(user_id) ON DELETE CASCADE,
+   CONSTRAINT fk_comment_post_id
+   	FOREIGN KEY (post_id) REFERENCES Post(post_id) ON DELETE CASCADE
 )`
 
 var dropCommentTable string = `
-DROP TABLE Comments;`
+DROP TABLE Comment;`
 
 var insertOrReplaceCommentForId string = `
-INSERT OR REPLACE INTO Comments( userId, postId, content, date, upVote, downVote )
+INSERT OR REPLACE INTO Comment( user_id, post_id, content, date, up_vote, down_vote )
 VALUES( ?, ?, ?, ?, ?, ? )`
 
 var findCommentById string = `
-SELECT C.userId, C.postId, C.content, C.date, C.upVote, C.downVote
-FROM Comments as C
-WHERE C.id = ?`
+SELECT C.user_id, C.post_id, C.content, C.date, C.up_vote, C.down_vote
+FROM Comment as C
+WHERE C.comment_id = ?`
 
 var deleteCommentById string = `
-DELETE FROM Comments
-WHERE Comments.id = ?`
+DELETE FROM Comment
+WHERE Comment.comment_id = ?`
 
 var queryForAllComment string = `
-SELECT C.id, C.userId, C.postId, C.content, C.date, C.upVote, C.downVote
-FROM Comments AS C`
+SELECT C.comment_id, C.user_id, C.post_id, C.content, C.date, C.up_vote, C.down_vote
+FROM Comment AS C`
 
 // Represents a comment on a post.  Comments are made by Users.
 type Comment struct {

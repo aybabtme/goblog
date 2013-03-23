@@ -10,41 +10,81 @@ import (
 // SQL queries
 //
 var createUserTable string = `
-CREATE TABLE IF NOT EXISTS Users(
-   id %s,
-   username VARCHAR(255) NOT NULL,
-   registrationDate %s NOT NULL,
-   timezone INTEGER NOT NULL,
-   email VARCHAR(255) NOT NULL,
+CREATE TABLE IF NOT EXISTS User(
+   user_id 				%s,
+   username 			VARCHAR(255) NOT NULL,
+   registration_date  %s NOT NULL,
+   timezone 			INTEGER NOT NULL,
+   oauth_provider 	VARCHAR(128) NOT NULL,
+   access_token_hash VARCHAR(128) NOT NULL,
+   salt					VARCHAR(128) NOT NULL,
+   email 				VARCHAR(255) NOT NULL,
    UNIQUE(email)
 )`
 
 var dropUserTable string = `
-DROP TABLE Users;
+DROP TABLE User;
 `
 
 var insertOrReplaceUserForId string = `
-INSERT OR REPLACE INTO Users( username, registrationDate, timezone, email)
-VALUES( ?, ?, ?, ? )`
+INSERT OR REPLACE INTO User(
+	username,
+	registration_date,
+	timezone,
+	oauth_provider,
+	access_token_hash,
+	salt,
+	email
+)
+VALUES( ?, ?, ?, ?, ?, ?, ? )`
 
 var findUserById string = `
-SELECT U.username, U.registrationDate, U.timezone, U.email
-FROM Users AS U
-WHERE U.id = ?`
+SELECT
+	U.username,
+	U.registration_date,
+	U.timezone,
+	U.oauth_provider,
+	U.access_token_hash,
+	U.salt,
+	U.email
+FROM
+	User AS U
+WHERE
+	U.user_id = ?`
 
 var deleteUserById string = `
-DELETE FROM Users
-WHERE Users.id = ?`
+DELETE FROM
+	User
+WHERE
+	User.user_id = ?`
 
 var queryForAllUser string = `
-SELECT U.id, U.username, U.registrationDate, U.timezone, U.email
-FROM Users AS U`
+SELECT
+	U.user_id,
+	U.username,
+	U.registration_date,
+	U.timezone,
+	U.oauth_provider,
+	U.access_token_hash,
+	U.salt,
+	U.email
+FROM
+	User AS U`
 
 // Relations
 var queryForAllCommentsOfUserId string = `
-SELECT C.id, C.userId, C.postId, C.content, C.date, C.upVote, C.downVote
-FROM Comments as C
-WHERE C.userId = ?`
+SELECT
+	C.comment_id,
+	C.user_id,
+	C.post_id,
+	C.content,
+	C.date,
+	C.up_vote,
+	C.down_vote
+FROM
+	Comment as C
+WHERE
+	C.user_id = ?`
 
 // Represents a User of the blog
 type User struct {
@@ -53,6 +93,9 @@ type User struct {
 	registrationDate time.Time
 	timezone         int
 	email            string
+	oauthProvider    string
+	tokenHash        string
+	salt             string
 	db               DBVendor
 }
 

@@ -6,31 +6,31 @@ import (
 )
 
 var createLabelTable string = `
-CREATE TABLE IF NOT EXISTS Labels(
-   id %s,
-   name VARCHAR(255) UNIQUE
+CREATE TABLE IF NOT EXISTS Label(
+   label_id 	%s,
+   name 	VARCHAR(255) UNIQUE NOT NULL
 )`
 
 var dropLabelTable string = `
-DROP TABLE Labels;`
+DROP TABLE Label;`
 
 var findLabelById string = `
 SELECT L.name
-FROM Labels AS L
-WHERE L.id = ?`
+FROM Label AS L
+WHERE L.label_id = ?`
 
 var deleteLabelById string = `
-DELETE FROM Labels
-WHERE Labels.id = ?`
+DELETE FROM Label
+WHERE Label.label_id = ?`
 
 var queryForAllLabel string = `
-SELECT L.id, L.name
-FROM Labels AS L`
+SELECT L.label_id, L.name
+FROM Label AS L`
 
 var renameLabelById string = `
-UPDATE Labels
+UPDATE Label
 SET name = ?
-WHERE id = ?
+WHERE label_id = ?
 `
 
 // Represents a label from the blog

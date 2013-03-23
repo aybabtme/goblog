@@ -10,47 +10,48 @@ import (
 // SQL queries
 //
 var createPostTable string = `
-CREATE TABLE IF NOT EXISTS Posts(
-   id %s,
-   authorId INTEGER,
-   title VARCHAR(255),
-   content TEXT,
-   imageURL VARCHAR(255),
-   date %s,
-   FOREIGN KEY (authorId) REFERENCES Authors(id) ON DELETE SET NULL
+CREATE TABLE IF NOT EXISTS Post(
+   post_id 		%s,
+   author_id 	INTEGER NOT NULL,
+   title 		VARCHAR(255) NOT NULL,
+   content 		TEXT NOT NULL,
+   image_url 	VARCHAR(255) NOT NULL,
+   date 			%s NOT NULL,
+   CONSTRAINT fk_post_authorid
+   	FOREIGN KEY (author_id) REFERENCES Author(author_id) ON DELETE SET NULL
 )`
 
 var dropPostTable string = `
-DROP TABLE Posts;
+DROP TABLE Post;
 `
 
 var insertOrReplacePostForId string = `
-INSERT OR REPLACE INTO Posts( authorId, title, content, imageURL, date)
+INSERT OR REPLACE INTO Post( author_id, title, content, image_url, date)
 VALUES( ?, ?, ?, ?, ?)`
 
 var findPostById string = `
-SELECT P.authorId, P.title, P.content, P.imageURL, P.date
-FROM Posts AS P
-WHERE P.id = ?`
+SELECT P.author_id, P.title, P.content, P.image_URL, P.date
+FROM Post AS P
+WHERE P.post_id = ?`
 
 var deletePostById string = `
-DELETE FROM Posts
-WHERE Posts.id = ?`
+DELETE FROM Post
+WHERE Post.post_id = ?`
 
 var queryForAllPost string = `
-SELECT P.id, P.authorId, P.title, P.content, P.imageURL, P.date
-FROM Posts AS P`
+SELECT P.post_id, P.author_id, P.title, P.content, P.image_url, P.date
+FROM Post AS P`
 
 // Relations
 var queryForAllCommentsOfPostId string = `
-SELECT C.id, C.userId, C.postId, C.content, C.date, C.upVote, C.downVote
-FROM Comments as C
-WHERE C.postId = ?`
+SELECT C.comment_id, C.user_id, C.post_id, C.content, C.date, C.up_vote, C.down_vote
+FROM Comment as C
+WHERE C.post_id = ?`
 
 var queryForAllLabelsOfPostId string = `
-SELECT L.id, L.name
-FROM Labels AS L, LabelPosts AS LP
-WHERE LP.postId = ? AND LP.labelId = P.id`
+SELECT L.label_id, L.name
+FROM Label AS L, LabelPost AS LP
+WHERE LP.post_id = ? AND LP.label_id = P.id`
 
 // Represents a post in the blog
 type Post struct {
