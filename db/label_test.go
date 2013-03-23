@@ -6,8 +6,7 @@ import (
 )
 
 func TestSaveLabel(t *testing.T) {
-	saveLabel(t, setupSQLiteConnection())
-	//saveLabel(t, setupPGConnection())
+	saveLabel(t, setupPGConnection())
 }
 
 func saveLabel(t *testing.T, conn *DBConnection) {
@@ -71,9 +70,7 @@ func saveLabel(t *testing.T, conn *DBConnection) {
 }
 
 func TestFindByIdLabel(t *testing.T) {
-	findByIdLabel(t, setupSQLiteConnection())
-	// TODO fix this, it crashes for some reasons
-	//findByIdLabel(t, setupPGConnection())
+	findByIdLabel(t, setupPGConnection())
 }
 
 func findByIdLabel(t *testing.T, conn *DBConnection) {
@@ -101,8 +98,7 @@ func findByIdLabel(t *testing.T, conn *DBConnection) {
 }
 
 func TestFindAllLabel(t *testing.T) {
-	findAllLabel(t, setupSQLiteConnection())
-	//findAllLabel(t, setupPGConnection())
+	findAllLabel(t, setupPGConnection())
 }
 
 func findAllLabel(t *testing.T, conn *DBConnection) {
@@ -141,9 +137,7 @@ func findAllLabel(t *testing.T, conn *DBConnection) {
 }
 
 func TestLabelIdIncrements(t *testing.T) {
-	labelIdIncrements(t, setupSQLiteConnection())
-	// TODO PG doesnt work
-	// idIncrements(t, setupPGConnection())
+	labelIdIncrements(t, setupPGConnection())
 }
 
 func labelIdIncrements(t *testing.T, conn *DBConnection) {

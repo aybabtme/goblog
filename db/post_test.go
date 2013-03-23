@@ -7,8 +7,7 @@ import (
 )
 
 func TestNewPost(t *testing.T) {
-	newPost(t, setupSQLiteConnection())
-	//newPost(t, setupPGConnection())
+	newPost(t, setupPGConnection())
 }
 
 func newPost(t *testing.T, conn *DBConnection) {
@@ -26,8 +25,7 @@ func newPost(t *testing.T, conn *DBConnection) {
 }
 
 func TestSavePost(t *testing.T) {
-	savePost(t, setupSQLiteConnection())
-	//savePost(t, setupPGConnection())
+	savePost(t, setupPGConnection())
 }
 
 func savePost(t *testing.T, conn *DBConnection) {
@@ -56,9 +54,7 @@ func savePost(t *testing.T, conn *DBConnection) {
 }
 
 func TestDestroyPost(t *testing.T) {
-	destroyPost(t, setupSQLiteConnection())
-	// TODO fix this, it crashes for some reason
-	// destroyPost(t, setupPGConnection())
+	destroyPost(t, setupPGConnection())
 }
 
 func destroyPost(t *testing.T, conn *DBConnection) {
@@ -90,9 +86,7 @@ func destroyPost(t *testing.T, conn *DBConnection) {
 }
 
 func TestFindByIdPost(t *testing.T) {
-	findByIdPost(t, setupSQLiteConnection())
-	// TODO fix this, it crashes for some reasons
-	//findByIdPost(t, setupPGConnection())
+	findByIdPost(t, setupPGConnection())
 }
 
 func findByIdPost(t *testing.T, conn *DBConnection) {
@@ -119,8 +113,7 @@ func findByIdPost(t *testing.T, conn *DBConnection) {
 }
 
 func TestFindAllPost(t *testing.T) {
-	findAllPost(t, setupSQLiteConnection())
-	//findAllPost(t, setupPGConnection())
+	findAllPost(t, setupPGConnection())
 }
 
 func findAllPost(t *testing.T, conn *DBConnection) {
@@ -160,12 +153,10 @@ func findAllPost(t *testing.T, conn *DBConnection) {
 }
 
 func TestIdIncrements(t *testing.T) {
-	idIncrements(t, setupSQLiteConnection())
-	// TODO PG doesnt work
-	// idIncrements(t, setupPGConnection())
+	postIdIncrements(t, setupPGConnection())
 }
 
-func idIncrements(t *testing.T, conn *DBConnection) {
+func postIdIncrements(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 
 	for i := int64(1); i < 10; i++ {
@@ -189,8 +180,7 @@ func idIncrements(t *testing.T, conn *DBConnection) {
 }
 
 func TestFindAllPostComments(t *testing.T) {
-	findAllPostComments(t, setupSQLiteConnection())
-	//findAllPostComments(t, setupPGConnection())
+	findAllPostComments(t, setupPGConnection())
 }
 
 func findAllPostComments(t *testing.T, connist *DBConnection) {

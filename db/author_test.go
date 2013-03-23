@@ -14,8 +14,7 @@ func generateAuthor(conn *DBConnection, i int64) *Author {
 }
 
 func TestNewAuthor(t *testing.T) {
-	newAuthor(t, setupSQLiteConnection())
-	//newAuthor(t, setupPGConnection())
+	newAuthor(t, setupPGConnection())
 }
 
 func newAuthor(t *testing.T, conn *DBConnection) {
@@ -32,8 +31,7 @@ func newAuthor(t *testing.T, conn *DBConnection) {
 }
 
 func TestSaveAuthor(t *testing.T) {
-	saveAuthor(t, setupSQLiteConnection())
-	//saveAuthor(t, setupPGConnection())
+	saveAuthor(t, setupPGConnection())
 }
 
 func saveAuthor(t *testing.T, conn *DBConnection) {
@@ -62,9 +60,7 @@ func saveAuthor(t *testing.T, conn *DBConnection) {
 }
 
 func TestDestroyAuthor(t *testing.T) {
-	destroyAuthor(t, setupSQLiteConnection())
-	// TODO fix this, it crashes for some reason
-	// destroyAuthor(t, setupPGConnection())
+	destroyAuthor(t, setupPGConnection())
 }
 
 func destroyAuthor(t *testing.T, conn *DBConnection) {
@@ -94,9 +90,7 @@ func destroyAuthor(t *testing.T, conn *DBConnection) {
 }
 
 func TestFindByIdAuthor(t *testing.T) {
-	findByIdAuthor(t, setupSQLiteConnection())
-	// TODO fix this, it crashes for some reasons
-	//findByIdAuthor(t, setupPGConnection())
+	findByIdAuthor(t, setupPGConnection())
 }
 
 func findByIdAuthor(t *testing.T, conn *DBConnection) {
@@ -124,8 +118,7 @@ func findByIdAuthor(t *testing.T, conn *DBConnection) {
 }
 
 func TestFindAllAuthor(t *testing.T) {
-	findAllAuthor(t, setupSQLiteConnection())
-	//findAllAuthor(t, setupPGConnection())
+	findAllAuthor(t, setupPGConnection())
 }
 
 func findAllAuthor(t *testing.T, conn *DBConnection) {
@@ -165,9 +158,7 @@ func findAllAuthor(t *testing.T, conn *DBConnection) {
 }
 
 func TestAuthorIdIncrements(t *testing.T) {
-	authorIdIncrements(t, setupSQLiteConnection())
-	// TODO PG doesnt work
-	// idIncrements(t, setupPGConnection())
+	authorIdIncrements(t, setupPGConnection())
 }
 
 func authorIdIncrements(t *testing.T, conn *DBConnection) {
@@ -191,8 +182,7 @@ func authorIdIncrements(t *testing.T, conn *DBConnection) {
 }
 
 func TestDeleteUserCascadesToAuthor(t *testing.T) {
-	deleteUserCascadesToAuthor(t, setupSQLiteConnection())
-	//deleteUserCascadesToAuthor(t, setupPGConnection())
+	deleteUserCascadesToAuthor(t, setupPGConnection())
 }
 
 func deleteUserCascadesToAuthor(t *testing.T, conn *DBConnection) {
@@ -221,8 +211,7 @@ func deleteUserCascadesToAuthor(t *testing.T, conn *DBConnection) {
 }
 
 func TestFindAllAuthorPosts(t *testing.T) {
-	findAllAuthorPosts(t, setupSQLiteConnection())
-	//findAllAuthorPosts(t, setupPGConnection())
+	findAllAuthorPosts(t, setupPGConnection())
 }
 
 func findAllAuthorPosts(t *testing.T, conn *DBConnection) {
