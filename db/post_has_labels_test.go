@@ -6,6 +6,27 @@ import (
 	"time"
 )
 
+func generatePost(p *Persister, i int64) (*Post, error) {
+	var user = p.NewUser("Antoine",
+		time.Now().UTC(),
+		-5,
+		"antoine@grondin.com")
+
+	var author = p.NewAuthor("aybabtme", user)
+	err := author.Save()
+	if err != nil {
+		return nil, err
+	}
+	var post = p.NewPost(author.Id(),
+		fmt.Sprintf("Title #%d", i),
+		fmt.Sprintf("Content #%d", i),
+		fmt.Sprintf("ImageUrl #%d", i),
+		time.Now().UTC())
+
+	err = post.Save()
+	return post, err
+}
+
 // post.AddLabel(string)
 func TestAddLabelToPost(t *testing.T) {
 	addLabelToPost(t, setupSQLitePersist())
@@ -23,7 +44,40 @@ func TestRemoveLabelFromPost(t *testing.T) {
 }
 
 func removeLabelFromPost(t *testing.T, p *Persister) {
+	defer p.DeletePersistance()
 
+	// Get a post
+	post, err := generatePost(p, 0)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	// to which we add a label
+	label, err := post.AddLabel("potato stories")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	// we dont need to assert that its been added, this is done elsewhere
+	// so we just remove the label right away
+	err = post.RemoveLabel(&label)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	// now the post should return an empty list for its labels
+	shouldBeEmptyList, err := post.Labels()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	if len(shouldBeEmptyList) != 0 {
+		t.Errorf("Expected len(list)=<%d> but was <%d>",
+			0, len(shouldBeEmptyList))
+		return
+	}
 }
 
 // post.Labels()
@@ -35,15 +89,11 @@ func TestAllLabelsOfPost(t *testing.T) {
 func allLabelsOfPost(t *testing.T, p *Persister) {
 	defer p.DeletePersistance()
 
-	var user = p.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
-	var author = p.NewAuthor("aybabtme", user)
-	_ = author.Save()
-	var post = p.NewPost(author.Id(),
-		"My first post",
-		"Hello World",
-		"fake.url/to/image.jpg",
-		time.Now().UTC())
-	_ = post.Save()
+	post, err := generatePost(p, 0)
+	if err != nil {
+		t.Error(err)
+		return
+	}
 
 	var expected []Label
 	for i := int(1); i < 10; i++ {
@@ -74,22 +124,16 @@ func TestDestroyLabel(t *testing.T) {
 	// destroyLabel(t, setupPGPersist())
 }
 
-func destroyLabel(t *testing.T, pers *Persister) {
-	defer pers.DeletePersistance()
+func destroyLabel(t *testing.T, p *Persister) {
+	defer p.DeletePersistance()
 
 	for i := int64(1); i < 10; i++ {
-		var user = pers.NewUser("Antoine",
-			time.Now().UTC(),
-			-5,
-			"antoine@grondin.com")
+		post, err := generatePost(p, 0)
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
-		var author = pers.NewAuthor("aybabtme", user)
-		_ = author.Save()
-		var post = pers.NewPost(author.Id(),
-			fmt.Sprintf("Title #%d", i),
-			fmt.Sprintf("Content #%d", i),
-			fmt.Sprintf("ImageUrl #%d", i),
-			time.Now().UTC())
 		expected, err := post.AddLabel(fmt.Sprintf("cool topic #%d", i))
 		if err != nil {
 			t.Error("Couldn't create a label to begin with.")
@@ -101,7 +145,7 @@ func destroyLabel(t *testing.T, pers *Persister) {
 		if err != nil {
 			t.Error("Couldn't delete the label", err)
 		}
-		actual, err := pers.FindLabelById(id)
+		actual, err := p.FindLabelById(id)
 
 		if actual != nil {
 			t.Errorf("Label should be destroyed but non-nil and id=%d and name=%s",
@@ -128,15 +172,11 @@ func allPostsOfLabel(t *testing.T, p *Persister) {
 	var labels []Label
 	for i := int(1); i < 10; i++ {
 
-		var user = p.NewUser("Antoine", time.Now().UTC(), -5, "antoine@grondin.com")
-		var author = p.NewAuthor("aybabtme", user)
-		_ = author.Save()
-		var post = p.NewPost(author.Id(),
-			fmt.Sprintf("Title #%d", i),
-			fmt.Sprintf("Content #%d", i),
-			fmt.Sprintf("ImageUrl #%d", i),
-			time.Now().UTC())
-		_ = post.Save()
+		post, err := generatePost(p, 0)
+		if err != nil {
+			t.Error(err)
+			return
+		}
 
 		label, err := post.AddLabel("cat video")
 

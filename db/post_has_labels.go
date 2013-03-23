@@ -201,15 +201,17 @@ func tryRollback(lbl Label, tx *sql.Tx, err error) (Label, error) {
 func (p *Post) RemoveLabel(label *Label) error {
 	db, err := openDatabase(&p.db)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare(deleteLabelFromPostId)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
-	stmt.Close()
+	defer stmt.Close()
 
 	_, err = stmt.Exec(p.Id())
 	return err
