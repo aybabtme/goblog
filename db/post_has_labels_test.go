@@ -34,7 +34,37 @@ func TestAddLabelToPost(t *testing.T) {
 }
 
 func addLabelToPost(t *testing.T, p *Persister) {
+	defer p.DeletePersistance()
 
+	post, err := generatePost(p, 0)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	expected, err := post.AddLabel("potato, cheese curd and gravy")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	lblSlice, err := post.Labels()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	lenght := len(lblSlice)
+	if lenght != 1 {
+		t.Errorf("Lenght expected <%d> but was <%d>", 1, lenght)
+		return
+	}
+
+	actual := lblSlice[0]
+
+	if expected.Id() != actual.Id() {
+		t.Errorf("Id expected <%d> but was <%d>",
+			expected.Id(), actual.Id())
+	}
 }
 
 // post.RemoveLabel(Label)
