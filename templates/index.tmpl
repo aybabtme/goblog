@@ -55,9 +55,14 @@
          <div class="container">
             <div id='content' class='row-fluid'>
                <div class='span9 main'>
-                  <a href="/{{.Id()}}" style="text-decoration:none"><h2>{{.Title()}}</h2></a>
-                  <h6>Published: {{.Date()}} by {{.Author()}}</h6>
-                  <p>{{.Content()}}</p>
+
+                {{range .Recent}}
+
+                  <a href="/{{.Id()}}" style="text-decoration:none"><h2>{{.Title}}</h2></a>
+                  <h6>Published: {{.Date}} by <a href="/{{.Author()}}">{{.Author}}</a></h6>
+                  <p>{{.Content}}</p>
+
+                {{end}}
                   
                </div>
                <div class='span3 sidebar'>
@@ -68,7 +73,9 @@
                   </ul>
                   <h4>Labels</h4>
                   <ul>
-                    {{.getLabels}}
+                    {{range .Labels}}
+                      <li><a href="{{.Id}}" title="{{.Title}}">{{.Title}}</a></li>
+                    {{end}}
                   </ul>
                </div>
             </div>

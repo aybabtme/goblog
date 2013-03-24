@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -31,7 +32,7 @@ body {
             <div class="navbar navbar-inverse navbar-fixed-top">
                 <div class="navbar-inner">
                     <div class="container">
-                        <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse"></button> <a class="brand" href="#">Gogrammers Blog</a>
+                        <a class="brand" href="#">Gogrammers Blog</a>
                         <div class="nav-collapse collapse">
                             <ul class="nav">
                                 <li>
@@ -51,9 +52,13 @@ body {
             <div class="container">
                 <div id='content' class='row-fluid'>
                     <div class='span9 main'>
-
-                      <!-- Enter Moar stuff here -->
-
+                        {{range .Recent}}
+                        <h2>
+                            <a href="/{{.Id()}}" style="text-decoration:none">{{.Title}}</a>
+                        </h2>
+                        <h6>
+                            Published: {{.Date}} by <a href="/{{.Id()}}">{{.Author}}</a>
+                        </h6>{{end}}
                     </div>
                     <div class='span3 sidebar'>
                         <h2>
