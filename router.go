@@ -15,7 +15,8 @@ func (r Router) Start(port string, conn *db.DBConnection) error {
 		ctlr.NewIndexController(),
 		ctlr.NewAuthorController(),
 		ctlr.NewLabelController(),
-		ctlr.NewPostController()}
+		ctlr.NewPostController(),
+		ctlr.NewPostIdController()}
 
 	muxer := mux.NewRouter()
 	for _, ctlr := range controllers {
