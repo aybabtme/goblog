@@ -1,0 +1,28 @@
+#customBtn {
+       display: inline-block;
+       background: #cc3732;
+       color: white;
+       width: 175px;
+       border-radius: 5px;
+}
+#customBtn:hover {
+       background: #e74b37;
+       cursor: hand;
+}
+span.google_label {
+       font-weight: bold;
+}
+span.google_icon {
+       background: url('https://developers.google.com/+/images/branding/btn_red_32.png') transparent 10px 50% no-repeat;
+       display: inline-block;
+       vertical-align: middle;
+       width: 40px;
+       height: 40px;
+       }
+span.google_buttonText {
+       display: inline-block;
+       vertical-align: middle;
+       padding-left: 40px;
+       padding-right: 40px;
+       font-family: 
+}

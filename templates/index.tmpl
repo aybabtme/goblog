@@ -1,112 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>Go Blog Home</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="author" content="">
-
-    <!-- Le styles -->
-    <link href="http://twitter.github.com/bootstrap/assets/css/bootstrap.css" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="css/footer.css">
-    <style>
-      body {
-       /*padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
-      }
-    </style>
-    <link href="http://twitter.github.com/bootstrap/assets/css/bootstrap-responsive.css" rel="stylesheet">
-
-    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
-    <!--[if lt IE 9]>
-      <script src="../assets/js/html5shiv.js"></script>
-    <![endif]-->
-
-    <!-- Fav and touch icons -->
-    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="http://twitter.github.com/bootstrap/assets/ico/apple-touch-icon-144-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="http://twitter.github.com/bootstrap/assets/ico/apple-touch-icon-114-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="http://twitter.github.com/bootstrap/assets/ico/apple-touch-icon-72-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" href="http://twitter.github.com/bootstrap/assets/ico/apple-touch-icon-57-precomposed.png">
-    <link rel="shortcut icon" href="http://twitter.github.com/bootstrap/assets/ico/favicon.png">
-  </head>
-
-  <body>
-    <div id="wrap">
-         <div class="navbar navbar-inverse navbar-fixed-top">
-            <div class="navbar-inner">
-               <div class="container">
-                  <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-                  <span class="icon-bar"></span>
-                  <span class="icon-bar"></span>
-                  <span class="icon-bar"></span>
-                  </button>
-                  <a class="brand" href="#">Gogrammers Blog</a>
-                  <div class="nav-collapse collapse">
-                     <ul class="nav">
-                        <li><a href="about">About</a></li>
-                        <li><a href="login">Login!</a></li>
-                        <li><a href="https://github.com/aybabtme/goblog-prototype">Source Code</a></li>
-                     </ul>
-                  </div>
-                  <!--/.nav-collapse -->
-               </div>
-            </div>
-         </div>
-         <div class="container">
-            <div id='content' class='row-fluid'>
-               <div class='span9 main'>
-
-                {{range .Recent}}
-
-                  <a href="/{{.Id()}}" style="text-decoration:none"><h2>{{.Title}}</h2></a>
-                  <h6>Published: {{.Date}} by <a href="/{{.Author()}}">{{.Author}}</a></h6>
-                  <p>{{.Content}}</p>
-
-                {{end}}
-                  
-               </div>
-               <div class='span3 sidebar'>
-                  <h2>More Fun</h2>
-                  <h4>Archives</h4>
-                  <ul>
-                     <li><a href= 'Archives'>Archives</a></li>
-                  </ul>
-                  <h4>Labels</h4>
-                  <ul>
-                    {{range .Labels}}
-                      <li><a href="{{.Id}}" title="{{.Title}}">{{.Title}}</a></li>
-                    {{end}}
-                  </ul>
-               </div>
-            </div>
-         </div>
-
-     <!-- container -->
-      <div id="push"></div>
-    </div> <!-- wrap -->
-    <div id="footer">
-      <div class="container">
-        <p class="muted credit">Mmmmh this footer looks tasty.</p>
-      </div>
-    </div>
-
-
-    <!-- Le javascript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="http://twitter.github.com/bootstrap/assets/js/jquery.js"></script>
-    <script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-transition.js"></script>
-    <script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-alert.js"></script>
-    <script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-modal.js"></script>
-    <script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-dropdown.js"></script>
-    <script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-scrollspy.js"></script>
-    <script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-tab.js"></script>
-    <script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-tooltip.js"></script>
-    <script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-popover.js"></script>
-    <script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-button.js"></script>
-    <script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-collapse.js"></script>
-    <script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-carousel.js"></script>
-    <script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-typeahead.js"></script>
-
-  </body>
-</html>
+<div class = "index">
+      {{range .Recent}}
+        <h2>
+            <a href="/{{.Id()}}" style="text-decoration:none">{{.Title}}</a>
+        </h2>
+        <h6>
+            Published: {{.Date}} by <a href="/{{.Author()}}">{{.Author}}</a>
+        </h6>
+        <p>
+            {{.Content}}
+        </p>{{end}}
+</div>
+        
