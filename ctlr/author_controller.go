@@ -1,5 +1,5 @@
 package ctlr
 
-func NewAuthorController() *Controller {
+func NewAuthorController() Controller {
 	return nil
 }

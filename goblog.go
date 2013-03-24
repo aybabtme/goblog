@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/aybabtme/goblog/db"
-	"net/http"
 	"os"
 	"time"
 )
@@ -23,7 +22,7 @@ func main() {
 		return
 	}
 
-	conn, err := db.NewConnection(postgres)
+	conn, err := setupDatabase(dburl)
 	if err != nil {
 		fmt.Println("Couldn't connect to database.")
 		panic(err)

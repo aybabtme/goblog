@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/aybabtme/goblog/ctlr"
 	"github.com/aybabtme/goblog/db"
+	"github.com/gorilla/mux"
 	"net/http"
 )
 
@@ -10,18 +11,16 @@ type Router string
 
 func (r Router) Start(port string, conn *db.DBConnection) error {
 
-	controllers := []Controller{
+	controllers := []ctlr.Controller{
 		ctlr.NewIndexController(),
 		ctlr.NewAuthorController(),
 		ctlr.NewLabelController(),
 		ctlr.NewPostController()}
 
+	muxer := mux.NewRouter()
 	for _, ctlr := range controllers {
-		http.HandleFunc(ctlr.Path(), ctlr.Controller(conn))
+		muxer.HandleFunc(ctlr.Path(), ctlr.Controller(conn))
 	}
-
-	err := http.ListenAndServe(":"+port, nil)
-	if err != nil {
-		return err
-	}
+	http.Handle("/", muxer)
+	return http.ListenAndServe(":"+port, nil)
 }

@@ -1,5 +1,5 @@
 package ctlr
 
-func NewIndexController() *Controller {
+func NewIndexController() Controller {
 	return nil
 }

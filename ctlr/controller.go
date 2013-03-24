@@ -7,5 +7,5 @@ import (
 
 type Controller interface {
 	Path() string
-	Controller(*db.DBConnection) func(*http.ResponseWriter, *http.Request)
+	Controller(*db.DBConnection) func(http.ResponseWriter, *http.Request)
 }

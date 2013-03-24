@@ -1,5 +1,5 @@
 package ctlr
 
-func NewLabelController() *Controller {
+func NewLabelController() Controller {
 	return nil
 }
