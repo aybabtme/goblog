@@ -7,7 +7,9 @@ import (
 )
 
 func generateUserAndPost(conn *DBConnection, i int64) (*User, *Post) {
-	user := generateUser(conn, i*2)
+	// i + 1 to cover when i = 0
+	user := generateUser(conn, (i+1)*100000000)
+	user.Save()
 	authUser := generateUser(conn, i)
 	var author = conn.NewAuthor(authUser)
 	_ = author.Save()
@@ -16,12 +18,12 @@ func generateUserAndPost(conn *DBConnection, i int64) (*User, *Post) {
 		fmt.Sprintf("Content #%d", i),
 		fmt.Sprintf("ImageUrl #%d", i),
 		time.Now().UTC())
+	_ = post.Save()
 	return user, post
 }
 
 func TestNewComment(t *testing.T) {
-	newComment(t, setupSQLiteConnection())
-	//newComment(t, setupPGConnection())
+	newComment(t, setupPGConnection())
 }
 
 func newComment(t *testing.T, conn *DBConnection) {
@@ -40,8 +42,7 @@ func newComment(t *testing.T, conn *DBConnection) {
 }
 
 func TestSaveComment(t *testing.T) {
-	saveComment(t, setupSQLiteConnection())
-	//saveComment(t, setupPGConnection())
+	saveComment(t, setupPGConnection())
 }
 
 func saveComment(t *testing.T, conn *DBConnection) {
@@ -72,17 +73,15 @@ func saveComment(t *testing.T, conn *DBConnection) {
 }
 
 func TestDestroyComment(t *testing.T) {
-	destroyComment(t, setupSQLiteConnection())
-	// TODO fix this, it crashes for some reason
-	// destroyComment(t, setupPGConnection())
+	destroyComment(t, setupPGConnection())
 }
 
 func destroyComment(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 
-	for i := int64(1); i < 10; i++ {
+	for i := int64(1); i < int64(10); i++ {
 
-		var user, post = generateUserAndPost(conn, 0)
+		var user, post = generateUserAndPost(conn, i)
 		var expected = conn.NewComment(
 			user.Id(),
 			post.Id(),
@@ -107,15 +106,13 @@ func destroyComment(t *testing.T, conn *DBConnection) {
 }
 
 func TestFindByIdComment(t *testing.T) {
-	findByIdComment(t, setupSQLiteConnection())
-	// TODO fix this, it crashes for some reasons
-	//findByIdComment(t, setupPGConnection())
+	findByIdComment(t, setupPGConnection())
 }
 
 func findByIdComment(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 	for i := int64(1); i < 10; i++ {
-		var user, post = generateUserAndPost(conn, 0)
+		var user, post = generateUserAndPost(conn, i)
 		var expected = conn.NewComment(
 			user.Id(),
 			post.Id(),
@@ -140,8 +137,7 @@ func findByIdComment(t *testing.T, conn *DBConnection) {
 }
 
 func TestFindAllComment(t *testing.T) {
-	findAllComment(t, setupSQLiteConnection())
-	//findAllComment(t, setupPGConnection())
+	findAllComment(t, setupPGConnection())
 }
 
 func findAllComment(t *testing.T, conn *DBConnection) {
@@ -149,7 +145,7 @@ func findAllComment(t *testing.T, conn *DBConnection) {
 	var commentCount = int64(10)
 
 	for i := int64(1); i <= commentCount; i++ {
-		var user, post = generateUserAndPost(conn, 0)
+		var user, post = generateUserAndPost(conn, i)
 		var comment = conn.NewComment(
 			user.Id(),
 			post.Id(),
@@ -183,16 +179,14 @@ func findAllComment(t *testing.T, conn *DBConnection) {
 }
 
 func TestCommentIdIncrements(t *testing.T) {
-	commentIdIncrements(t, setupSQLiteConnection())
-	// TODO PG doesnt work
-	// idIncrements(t, setupPGConnection())
+	commentIdIncrements(t, setupPGConnection())
 }
 
 func commentIdIncrements(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 
-	for i := int64(1); i < 10; i++ {
-		var user, post = generateUserAndPost(conn, 0)
+	for i := int64(1); i < int64(10); i++ {
+		var user, post = generateUserAndPost(conn, i)
 		var comment = conn.NewComment(
 			user.Id(),
 			post.Id(),

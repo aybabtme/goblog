@@ -7,7 +7,7 @@ import (
 
 var createLabelTable string = `
 CREATE TABLE IF NOT EXISTS Label(
-   label_id %s,
+   label_id SERIAL PRIMARY KEY,
    name VARCHAR(255) UNIQUE NOT NULL
 )`
 
@@ -17,11 +17,11 @@ DROP TABLE Label;`
 var findLabelById string = `
 SELECT L.name
 FROM Label AS L
-WHERE L.label_id = ?`
+WHERE L.label_id = $1`
 
 var deleteLabelById string = `
 DELETE FROM Label
-WHERE Label.label_id = ?`
+WHERE Label.label_id = $1`
 
 var queryForAllLabel string = `
 SELECT L.label_id, L.name
@@ -29,8 +29,8 @@ FROM Label AS L`
 
 var renameLabelById string = `
 UPDATE Label
-SET name = ?
-WHERE label_id = ?
+SET name = $1
+WHERE label_id = $2
 `
 
 // Represents a label from the blog
@@ -63,15 +63,11 @@ func (persist *DBConnection) createLabelTable() {
 	}
 	defer db.Close()
 
-	var query = fmt.Sprintf(
-		createLabelTable,
-		dbaser.IncrementPrimaryKey())
-
-	_, err = db.Exec(query)
+	_, err = db.Exec(createLabelTable)
 	if err != nil {
 		fmt.Printf("Error creating Labels table, driver \"%s\","+
 			"dbname \"%s\", query = \"%s\"\n",
-			dbaser.Driver(), dbaser.Name(), query)
+			dbaser.Driver(), dbaser.Name(), createLabelTable)
 		fmt.Println(err)
 		return
 	}

@@ -29,44 +29,44 @@ DROP TABLE LabelPost;`
 // used
 var insertLabelPostRelation string = `
 INSERT INTO LabelPost( post_id, label_id )
-VALUES( ?, ? )`
+VALUES( $1, $2 )`
 
 var findPostsByLabelId string = `
 SELECT P.post_id, P.author_id, P.title, P.content, P.image_url, P.date
 FROM Post AS P, LabelPost AS LP
-WHERE LP.label_id = ? AND LP.post_id = P.post_id`
+WHERE LP.label_id = $1 AND LP.post_id = P.post_id`
 
 // used
 var findLabelsByPostId string = `
 SELECT L.label_id, L.name
 FROM Label AS L, LabelPost AS LP
-WHERE LP.post_id = ? AND LP.label_id = L.label_id`
+WHERE LP.post_id = $1 AND LP.label_id = L.label_id`
 
 var deleteAllLabelWithIdFromRelation string = `
 DELETE FROM LabelPost
-WHERE LabelPost.label_id = ?`
+WHERE LabelPost.label_id = $1`
 
 var deleteAllLabelWithIdFromTable string = `
 DELETE FROM Label
-WHERE Label.label_id = ?;`
+WHERE Label.label_id = $1;`
 
 // used
 var deleteLabelFromPostId string = `
 DELETE FROM LabelPost
-WHERE LabelPost.post_id = ?`
+WHERE LabelPost.post_id = $1`
 
 /*
  * Labels stuff
  */
 
 var insertLabelForId string = `
-INSERT OR IGNORE INTO Label( name )
-VALUES( ? )`
+INSERT INTO Label( name )
+VALUES( $1 )`
 
 var queryLabelForName string = `
 SELECT L.label_id, L.name
 FROM Label AS L
-WHERE L.name = ?`
+WHERE L.name = $1`
 
 /*
  * No More SQL Strings
@@ -86,13 +86,11 @@ func (pers *DBConnection) createLabelPostRelation() {
 	}
 	defer db.Close()
 
-	var query = fmt.Sprintf(createLabelPostsRelation)
-
-	_, err = db.Exec(query)
+	_, err = db.Exec(createLabelPostsRelation)
 	if err != nil {
 		fmt.Printf("Error creating LabelPost relation, driver \"%s\","+
 			" dbname \"%s\", query = \"%s\"\n",
-			dbaser.Driver(), dbaser.Name(), query)
+			dbaser.Driver(), dbaser.Name(), createLabelPostsRelation)
 		fmt.Println(err)
 		return
 	}
@@ -147,6 +145,7 @@ func (p *Post) AddLabel(name string) (Label, error) {
 	// Create the Label
 	lblStmt, err := tx.Prepare(insertLabelForId)
 	if err != nil {
+		fmt.Println("AddLabel 1. Can't create stmt: ", err)
 		return tryRollback(lbl, tx, err)
 	}
 	defer lblStmt.Close()
@@ -154,32 +153,45 @@ func (p *Post) AddLabel(name string) (Label, error) {
 	_, err = lblStmt.Exec(lbl.Name())
 	if err != nil {
 		// error may mean it already exists
-		return tryRollback(lbl, tx, err)
+		// need to restart transaction
+		_, _ = tryRollback(lbl, tx, err)
+		tx, err = db.Begin()
+		if err != nil {
+			return lbl, err
+		}
 	}
 
 	lblFindBack, err := tx.Prepare(queryLabelForName)
 	if err != nil {
+		fmt.Println("Add Label 3. Can't create stmt: ", err)
 		return tryRollback(lbl, tx, err)
 	}
 	defer lblFindBack.Close()
 
 	err = lblFindBack.QueryRow(lbl.name).Scan(&lbl.id, &lbl.name)
 	if err != nil {
+		fmt.Println("Add Label 4. Can't query id: ", err)
 		return tryRollback(lbl, tx, err)
 	}
 
 	// Then establish the relationship
 	relStmt, err := tx.Prepare(insertLabelPostRelation)
 	if err != nil {
+		fmt.Println("Add Label 5. Can't create stmt: ", err)
 		return tryRollback(lbl, tx, err)
 	}
 	defer relStmt.Close()
 
 	_, err = relStmt.Exec(p.Id(), lbl.Id())
+	if err != nil {
+		fmt.Println("Add Label 6. Can't query ids: ", err)
+		return tryRollback(lbl, tx, err)
+	}
 
 	// All set, try committing
 	err = tx.Commit()
 	if err != nil {
+		fmt.Println("Add Label 7. Can't commit: ", err)
 		return tryRollback(lbl, tx, err)
 	}
 

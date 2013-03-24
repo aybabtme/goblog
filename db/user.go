@@ -11,14 +11,15 @@ import (
 //
 var createUserTable string = `
 CREATE TABLE IF NOT EXISTS BlogUser(
-   user_id %s,
+   user_id SERIAL PRIMARY KEY,
    username VARCHAR(255) NOT NULL,
-   registration_date %s NOT NULL,
+   registration_date TIMESTAMP NOT NULL,
    timezone INTEGER NOT NULL,
    oauth_provider VARCHAR(128) NOT NULL,
    access_token_hash VARCHAR(128) NOT NULL,
    salt VARCHAR(128) NOT NULL,
    email VARCHAR(255) NOT NULL,
+   UNIQUE(username),
    UNIQUE(email)
 )`
 
@@ -27,7 +28,7 @@ DROP TABLE BlogUser;
 `
 
 var insertOrReplaceUserForId string = `
-INSERT OR REPLACE INTO BlogUser(
+INSERT INTO BlogUser(
 	username,
 	registration_date,
 	timezone,
@@ -36,7 +37,7 @@ INSERT OR REPLACE INTO BlogUser(
 	salt,
 	email
 )
-VALUES( ?, ?, ?, ?, ?, ?, ? )`
+VALUES( $1, $2, $3, $4, $5, $6, $7 )`
 
 var findUserById string = `
 SELECT
@@ -50,13 +51,13 @@ SELECT
 FROM
 	BlogUser AS U
 WHERE
-	U.user_id = ?`
+	U.user_id = $1`
 
 var deleteUserById string = `
 DELETE FROM
 	BlogUser
 WHERE
-	BlogUser.user_id = ?`
+	BlogUser.user_id = $1`
 
 var queryForAllUser string = `
 SELECT
@@ -71,6 +72,15 @@ SELECT
 FROM
 	BlogUser AS U`
 
+var queryUserForUsername string = `
+SELECT
+	U.user_id
+FROM
+	BlogUser AS U
+WHERE
+	U.username = $1
+`
+
 // Relations
 var queryForAllCommentsOfUserId string = `
 SELECT
@@ -84,7 +94,7 @@ SELECT
 FROM
 	Comment as C
 WHERE
-	C.user_id = ?`
+	C.user_id = $1`
 
 // Represents a User of the blog
 type User struct {
@@ -219,9 +229,9 @@ func (u *User) Comments() ([]Comment, error) {
 //
 
 // Create the table Users in the database interface
-func (persist *DBConnection) createUserTable() {
+func (conn *DBConnection) createUserTable() {
 
-	var dbaser = persist.databaser
+	var dbaser = conn.databaser
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
 	if err != nil {
@@ -230,23 +240,18 @@ func (persist *DBConnection) createUserTable() {
 	}
 	defer db.Close()
 
-	var query = fmt.Sprintf(
-		createUserTable,
-		dbaser.IncrementPrimaryKey(),
-		dbaser.DateField())
-
-	_, err = db.Exec(query)
+	_, err = db.Exec(createUserTable)
 	if err != nil {
 		fmt.Printf("Error creating Users table, driver \"%s\", dbname \"%s\", query = \"%s\"\n",
-			dbaser.Driver(), dbaser.Name(), query)
+			dbaser.Driver(), dbaser.Name(), createUserTable)
 		fmt.Println(err)
 		return
 	}
 }
 
 // Drops the table User and all its data
-func (persist *DBConnection) dropUserTable() {
-	var dbaser = persist.databaser
+func (conn *DBConnection) dropUserTable() {
+	var dbaser = conn.databaser
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
 	if err != nil {
@@ -262,7 +267,7 @@ func (persist *DBConnection) dropUserTable() {
 }
 
 // Creates a new User attached to the Database (but it is not saved).
-func (persist *DBConnection) NewUser(username string, regDate time.Time,
+func (conn *DBConnection) NewUser(username string, regDate time.Time,
 	timezone int, oauthProvider string, token string, email string) *User {
 	u := &User{
 		id:               -1,
@@ -271,17 +276,17 @@ func (persist *DBConnection) NewUser(username string, regDate time.Time,
 		timezone:         timezone,
 		oauthProvider:    oauthProvider,
 		email:            email,
-		db:               persist.databaser,
+		db:               conn.databaser,
 	}
 	u.SetToken(token)
 	return u
 }
 
 // Finds all the users in the database
-func (persist *DBConnection) FindAllUsers() ([]User, error) {
+func (conn *DBConnection) FindAllUsers() ([]User, error) {
 
 	var users []User
-	var dbaser = persist.databaser
+	var dbaser = conn.databaser
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
 	if err != nil {
@@ -337,9 +342,9 @@ func (persist *DBConnection) FindAllUsers() ([]User, error) {
 }
 
 // Finds a user that matches the given id
-func (persist *DBConnection) FindUserById(id int64) (*User, error) {
+func (conn *DBConnection) FindUserById(id int64) (*User, error) {
 
-	var dbaser = persist.databaser
+	var dbaser = conn.databaser
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
 	if err != nil {
@@ -411,7 +416,7 @@ func (u *User) Save() error {
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(u.username,
+	_, err = stmt.Exec(u.username,
 		u.registrationDate,
 		u.timezone,
 		u.oauthProvider,
@@ -423,12 +428,21 @@ func (u *User) Save() error {
 		return err
 	}
 
-	u.id, _ = res.LastInsertId()
-	return nil
+	// query the ID we inserted
+	idStmt, err := db.Prepare(queryUserForUsername)
+	if err != nil {
+		fmt.Println("Save 5:", err)
+		return err
+	}
+	defer idStmt.Close()
+
+	row := idStmt.QueryRow(u.username)
+
+	return row.Scan(&u.id)
 }
 
 // Deletes the user from the database
-func (u *User) Destroy() error {
+func (u User) Destroy() error {
 
 	db, err := sql.Open(u.db.Driver(), u.db.Name())
 	if err != nil {

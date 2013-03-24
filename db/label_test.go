@@ -6,8 +6,7 @@ import (
 )
 
 func TestSaveLabel(t *testing.T) {
-	saveLabel(t, setupSQLiteConnection())
-	//saveLabel(t, setupPGConnection())
+	saveLabel(t, setupPGConnection())
 }
 
 func saveLabel(t *testing.T, conn *DBConnection) {
@@ -71,16 +70,14 @@ func saveLabel(t *testing.T, conn *DBConnection) {
 }
 
 func TestFindByIdLabel(t *testing.T) {
-	findByIdLabel(t, setupSQLiteConnection())
-	// TODO fix this, it crashes for some reasons
-	//findByIdLabel(t, setupPGConnection())
+	findByIdLabel(t, setupPGConnection())
 }
 
 func findByIdLabel(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 
-	for i := int64(1); i < 10; i++ {
-		post, _ := generatePost(conn, 0)
+	for i := int64(1); i < int64(10); i++ {
+		post, _ := generatePost(conn, i)
 		expected, err := post.AddLabel(fmt.Sprintf("cool topic #%d", i))
 		if err != nil {
 			t.Error("Couldn't create a label to begin with.")
@@ -101,8 +98,7 @@ func findByIdLabel(t *testing.T, conn *DBConnection) {
 }
 
 func TestFindAllLabel(t *testing.T) {
-	findAllLabel(t, setupSQLiteConnection())
-	//findAllLabel(t, setupPGConnection())
+	findAllLabel(t, setupPGConnection())
 }
 
 func findAllLabel(t *testing.T, conn *DBConnection) {
@@ -110,7 +106,7 @@ func findAllLabel(t *testing.T, conn *DBConnection) {
 	var labelCount = int64(9)
 
 	for i := int64(1); i <= labelCount; i++ {
-		post, _ := generatePost(conn, 0)
+		post, _ := generatePost(conn, i)
 		_, err := post.AddLabel(fmt.Sprintf("cool topic #%d", i))
 		if err != nil {
 			t.Error("Couldn't create a label to begin with.")
@@ -141,16 +137,14 @@ func findAllLabel(t *testing.T, conn *DBConnection) {
 }
 
 func TestLabelIdIncrements(t *testing.T) {
-	labelIdIncrements(t, setupSQLiteConnection())
-	// TODO PG doesnt work
-	// idIncrements(t, setupPGConnection())
+	labelIdIncrements(t, setupPGConnection())
 }
 
 func labelIdIncrements(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 
-	for i := int64(1); i < 10; i++ {
-		post, _ := generatePost(conn, 0)
+	for i := int64(1); i < int64(10); i++ {
+		post, _ := generatePost(conn, i)
 		label, err := post.AddLabel(fmt.Sprintf("cool topic #%d", i))
 		if err != nil {
 			t.Error("Couldn't create a label to begin with.")

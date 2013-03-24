@@ -18,8 +18,7 @@ func generateUser(conn *DBConnection, i int64) *User {
 }
 
 func TestNewUser(t *testing.T) {
-	newUser(t, setupSQLiteConnection())
-	//newUser(t, setupPGConnection())
+	newUser(t, setupPGConnection())
 }
 
 func newUser(t *testing.T, conn *DBConnection) {
@@ -32,8 +31,7 @@ func newUser(t *testing.T, conn *DBConnection) {
 }
 
 func TestSaveUser(t *testing.T) {
-	saveUser(t, setupSQLiteConnection())
-	//saveUser(t, setupPGConnection())
+	saveUser(t, setupPGConnection())
 }
 
 func saveUser(t *testing.T, conn *DBConnection) {
@@ -57,9 +55,7 @@ func saveUser(t *testing.T, conn *DBConnection) {
 }
 
 func TestDestroyUser(t *testing.T) {
-	destroyUser(t, setupSQLiteConnection())
-	// TODO fix this, it crashes for some reason
-	// destroyUser(t, setupPGConnection())
+	destroyUser(t, setupPGConnection())
 }
 
 func destroyUser(t *testing.T, conn *DBConnection) {
@@ -86,9 +82,7 @@ func destroyUser(t *testing.T, conn *DBConnection) {
 }
 
 func TestFindByIdUser(t *testing.T) {
-	findByIdUser(t, setupSQLiteConnection())
-	// TODO fix this, it crashes for some reasons
-	//findByIdUser(t, setupPGConnection())
+	findByIdUser(t, setupPGConnection())
 }
 
 func findByIdUser(t *testing.T, conn *DBConnection) {
@@ -114,8 +108,7 @@ func findByIdUser(t *testing.T, conn *DBConnection) {
 }
 
 func TestFindAllUser(t *testing.T) {
-	findAllUser(t, setupSQLiteConnection())
-	//findAllUser(t, setupPGConnection())
+	findAllUser(t, setupPGConnection())
 }
 
 func findAllUser(t *testing.T, conn *DBConnection) {
@@ -153,9 +146,7 @@ func findAllUser(t *testing.T, conn *DBConnection) {
 }
 
 func TestUserIdIncrements(t *testing.T) {
-	userIdIncrements(t, setupSQLiteConnection())
-	// TODO PG doesnt work
-	// idIncrements(t, setupPGConnection())
+	userIdIncrements(t, setupPGConnection())
 }
 
 func userIdIncrements(t *testing.T, conn *DBConnection) {
@@ -177,8 +168,7 @@ func userIdIncrements(t *testing.T, conn *DBConnection) {
 }
 
 func TestFindAllUserComments(t *testing.T) {
-	findAllUserComments(t, setupSQLiteConnection())
-	//findAllUsersComments(t, setupPGConnection())
+	findAllUserComments(t, setupPGConnection())
 }
 
 func findAllUserComments(t *testing.T, conn *DBConnection) {

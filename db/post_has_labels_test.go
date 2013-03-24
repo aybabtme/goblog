@@ -24,10 +24,8 @@ func generatePost(conn *DBConnection, i int64) (*Post, error) {
 	return post, err
 }
 
-// post.AddLabel(string)
 func TestAddLabelToPost(t *testing.T) {
-	addLabelToPost(t, setupSQLiteConnection())
-	//addLabelToPost(t, setupPGConnection())
+	addLabelToPost(t, setupPGConnection())
 }
 
 func addLabelToPost(t *testing.T, p *DBConnection) {
@@ -64,10 +62,8 @@ func addLabelToPost(t *testing.T, p *DBConnection) {
 	}
 }
 
-// post.RemoveLabel(Label)
 func TestRemoveLabelFromPost(t *testing.T) {
-	removeLabelFromPost(t, setupSQLiteConnection())
-	//removeLabelFromPost(t, setupPGConnection())
+	removeLabelFromPost(t, setupPGConnection())
 }
 
 func removeLabelFromPost(t *testing.T, p *DBConnection) {
@@ -107,10 +103,8 @@ func removeLabelFromPost(t *testing.T, p *DBConnection) {
 	}
 }
 
-// post.Labels()
 func TestAllLabelsOfPost(t *testing.T) {
-	allLabelsOfPost(t, setupSQLiteConnection())
-	//allLabelsOfPost(t, setupPGConnection())
+	allLabelsOfPost(t, setupPGConnection())
 }
 
 func allLabelsOfPost(t *testing.T, p *DBConnection) {
@@ -144,18 +138,15 @@ func allLabelsOfPost(t *testing.T, p *DBConnection) {
 	}
 }
 
-// label.Destroy()
 func TestDestroyLabel(t *testing.T) {
-	destroyLabel(t, setupSQLiteConnection())
-	// TODO fix this, it crashes for some reason
-	// destroyLabel(t, setupPGConnection())
+	destroyLabel(t, setupPGConnection())
 }
 
 func destroyLabel(t *testing.T, p *DBConnection) {
 	defer p.DeleteConnection()
 
 	for i := int64(1); i < 10; i++ {
-		post, err := generatePost(p, 0)
+		post, err := generatePost(p, i)
 		if err != nil {
 			t.Error(err)
 			return
@@ -186,10 +177,8 @@ func destroyLabel(t *testing.T, p *DBConnection) {
 	}
 }
 
-// label.Posts()
 func TestAllPostsOfLabel(t *testing.T) {
-	allPostsOfLabel(t, setupSQLiteConnection())
-	//allPostsOfLabel(t, setupPGConnection())
+	allPostsOfLabel(t, setupPGConnection())
 }
 
 func allPostsOfLabel(t *testing.T, p *DBConnection) {
@@ -197,9 +186,9 @@ func allPostsOfLabel(t *testing.T, p *DBConnection) {
 
 	var expected []Post
 	var labels []Label
-	for i := int(1); i < 10; i++ {
+	for i := int64(1); i < int64(10); i++ {
 
-		post, err := generatePost(p, 0)
+		post, err := generatePost(p, i)
 		if err != nil {
 			t.Error(err)
 			return

@@ -4,14 +4,13 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/bmizerany/pq"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 //
 // Connection abstraction
 //
 
-// Keeps all info required to save stuff on a connance
+// Keeps all info required to save stuff on a database
 type DBConnection struct {
 	databaser DBVendor
 }
@@ -61,34 +60,6 @@ type DBVendor interface {
 	Driver() string
 	IncrementPrimaryKey() string
 	DateField() string
-}
-
-// A connection to a SQLite3 db
-type SQLiter struct {
-	name string
-}
-
-// Prepares a SQLiter for use as DBVendor
-func NewSQLiter(dbName string) SQLiter {
-	return SQLiter{name: dbName}
-}
-
-// The name of the SQLite3 db
-func (db SQLiter) Name() string {
-	return fmt.Sprintf("./%s.db", db.name)
-}
-
-// The name of the driver for the SQLite3 driver
-func (db SQLiter) Driver() string {
-	return "sqlite3"
-}
-
-func (db SQLiter) IncrementPrimaryKey() string {
-	return "INTEGER PRIMARY KEY AUTOINCREMENT"
-}
-
-func (db SQLiter) DateField() string {
-	return "DATETIME"
 }
 
 // A connection to a PostgreSQL db.

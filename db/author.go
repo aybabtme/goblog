@@ -11,7 +11,7 @@ import (
  */
 var createAuthorTable string = `
 CREATE TABLE IF NOT EXISTS Author(
-   author_id %s,
+   author_id SERIAL PRIMARY KEY,
    user_id INTEGER UNIQUE NOT NULL,
    CONSTRAINT fk_author_user_id
    	FOREIGN KEY(user_id) REFERENCES BlogUser(user_id) ON DELETE CASCADE
@@ -22,9 +22,7 @@ DROP TABLE Author;
 `
 
 var insertAuthorForId string = `
-INSERT INTO
-	Author(user_id)
-VALUES ( ? )`
+INSERT INTO Author(user_id) VALUES ( $1 )`
 
 var findAuthorById string = `
 SELECT
@@ -34,11 +32,11 @@ SELECT
    U.timezone,
    U.email
 FROM Author AS A, BlogUser AS U
-WHERE A.author_id = ? AND A.user_id = U.user_id`
+WHERE A.author_id = $1 AND A.user_id = U.user_id`
 
 var deleteAuthorById string = `
 DELETE FROM Author
-WHERE Author.author_id = ?`
+WHERE Author.author_id = $1`
 
 var queryForAllAuthor string = `
 SELECT
@@ -51,11 +49,16 @@ SELECT
 FROM Author AS A, BlogUser AS U
 WHERE A.user_id = U.user_id`
 
+var queryAuthorForUserId string = `
+SELECT A.author_id
+FROM Author AS A
+WHERE A.user_id = $1`
+
 // Relations
 var queryForAllPostsOfAuthorId string = `
 SELECT P.post_id, P.author_id, P.title, P.content, P.image_url, P.date
 FROM Post AS P
-WHERE P.author_id = ?
+WHERE P.author_id = $1
 `
 
 // Represents an author of the blog
@@ -142,14 +145,10 @@ func (p *DBConnection) createAuthorTable() {
 		return
 	}
 
-	var query = fmt.Sprintf(
-		createAuthorTable,
-		dbvendor.IncrementPrimaryKey())
-
-	_, err = db.Exec(query)
+	_, err = db.Exec(createAuthorTable)
 	if err != nil {
 		fmt.Printf("Error creating Author table, driver \"%s\", dbname \"%s\", query = %s\n",
-			dbvendor.Driver(), dbvendor.Name(), query)
+			dbvendor.Driver(), dbvendor.Name(), createAuthorTable)
 		fmt.Println(err)
 		return
 	}
@@ -312,27 +311,31 @@ func (a *Author) Save() error {
 	}
 	defer stmt.Close()
 
-	// If our user doesn't exist, create it first
-	if a.user.Id() == -1 {
-		err := a.user.Save()
-		// Save might fail for User, in which case we do not
-		// want to continue the creation of this author
-		if err != nil {
-			fmt.Println("Save 3:", err)
-			return err
-		}
-		a.userId = a.user.Id()
+	err = a.user.Save()
+	if err != nil {
+		fmt.Println("Save 3:", err)
+		return err
 	}
+	a.userId = a.user.Id()
 
-	res, err := stmt.Exec(a.userId)
+	_, err = stmt.Exec(a.userId)
 	if err != nil {
 		fmt.Println("Save 4:", err)
 		return err
 	}
 
-	a.id, _ = res.LastInsertId()
+	// query the ID we inserted
+	idStmt, err := db.Prepare(queryAuthorForUserId)
+	if err != nil {
+		fmt.Println("Save 5:", err)
+		return err
+	}
+	defer idStmt.Close()
 
-	return nil
+	row := idStmt.QueryRow(a.UserId())
+
+	return row.Scan(&a.id)
+
 }
 
 // Removes the user from the author table.  The user attached to the author

@@ -12,11 +12,11 @@ import (
 
 var createCommentTable string = `
 CREATE TABLE IF NOT EXISTS Comment(
-   comment_id %s,
+   comment_id SERIAL PRIMARY KEY,
    user_id INTEGER NOT NULL,
    post_id INTEGER NOT NULL,
    content TEXT NOT NULL,
-   date %s NOT NULL,
+   date TIMESTAMP NOT NULL,
    up_vote INTEGER NOT NULL,
    down_vote INTEGER NOT NULL,
    CONSTRAINT fk_comment_user_id
@@ -29,21 +29,30 @@ var dropCommentTable string = `
 DROP TABLE Comment;`
 
 var insertOrReplaceCommentForId string = `
-INSERT OR REPLACE INTO Comment( user_id, post_id, content, date, up_vote, down_vote )
-VALUES( ?, ?, ?, ?, ?, ? )`
+INSERT INTO Comment( user_id, post_id, content, date, up_vote, down_vote )
+VALUES( $1, $2, $3, $4, $5, $6 )`
 
 var findCommentById string = `
 SELECT C.user_id, C.post_id, C.content, C.date, C.up_vote, C.down_vote
 FROM Comment as C
-WHERE C.comment_id = ?`
+WHERE C.comment_id = $1`
 
 var deleteCommentById string = `
 DELETE FROM Comment
-WHERE Comment.comment_id = ?`
+WHERE Comment.comment_id = $1`
 
 var queryForAllComment string = `
 SELECT C.comment_id, C.user_id, C.post_id, C.content, C.date, C.up_vote, C.down_vote
 FROM Comment AS C`
+
+var queryCommentIdFromDetails string = `
+SELECT
+	C.comment_id
+FROM
+	Comment AS C
+WHERE
+	C.date = $1
+`
 
 // Represents a comment on a post.  Comments are made by Users.
 type Comment struct {
@@ -113,15 +122,10 @@ func (persist *DBConnection) createCommentTable() {
 	}
 	defer db.Close()
 
-	var query = fmt.Sprintf(
-		createCommentTable,
-		dbaser.IncrementPrimaryKey(),
-		dbaser.DateField())
-
-	_, err = db.Exec(query)
+	_, err = db.Exec(createCommentTable)
 	if err != nil {
 		fmt.Printf("Error creating Comments table, driver \"%s\", dbname \"%s\", query = \"%s\"\n",
-			dbaser.Driver(), dbaser.Name(), query)
+			dbaser.Driver(), dbaser.Name(), createCommentTable)
 		fmt.Println(err)
 		return
 	}
@@ -274,14 +278,23 @@ func (c *Comment) Save() error {
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(c.userId, c.postId, c.content, c.date, c.upVote, c.downVote)
+	_, err = stmt.Exec(c.userId, c.postId, c.content, c.date, c.upVote, c.downVote)
 	if err != nil {
 		fmt.Println("Save 3:", err)
 		return err
 	}
 
-	c.id, _ = res.LastInsertId()
-	return nil
+	// query the ID we inserted
+	idStmt, err := db.Prepare(queryCommentIdFromDetails)
+	if err != nil {
+		fmt.Println("Save 5:", err)
+		return err
+	}
+	defer idStmt.Close()
+
+	row := idStmt.QueryRow(c.date)
+
+	return row.Scan(&c.id)
 }
 
 // Deletes the comment from the database.  Returns an error if something
@@ -290,21 +303,21 @@ func (c *Comment) Destroy() error {
 
 	db, err := sql.Open(c.db.Driver(), c.db.Name())
 	if err != nil {
-		fmt.Println("Destroy:", err)
+		fmt.Println("Comment Destroy 1:", err)
 		return err
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare(deleteCommentById)
 	if err != nil {
-		fmt.Println("Destroy:", err)
+		fmt.Println("Comment Destroy 2:", err)
 		return err
 	}
 	defer stmt.Close()
 
 	_, err = stmt.Exec(c.id)
 	if err != nil {
-		fmt.Println("Destroy:", err)
+		fmt.Println("Comment Destroy 3:", err)
 		return err
 	}
 
