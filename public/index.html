@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -33,56 +32,52 @@
 
   <body>
     <div id="wrap">
-    
-    <div class="navbar navbar-inverse navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="brand" href="#">Gogrammers Blog</a>
-          <div class="nav-collapse collapse">
-            <ul class="nav">
-              <li><a href="#about">About</a></li>
-              <li><a href="https://github.com/aybabtme/goblog-prototype">Source Code</a></li>
-            </ul>
-          </div><!--/.nav-collapse -->
-        </div>
-      </div>
-    </div>
+         <div class="navbar navbar-inverse navbar-fixed-top">
+            <div class="navbar-inner">
+               <div class="container">
+                  <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                  <span class="icon-bar"></span>
+                  <span class="icon-bar"></span>
+                  <span class="icon-bar"></span>
+                  </button>
+                  <a class="brand" href="#">Gogrammers Blog</a>
+                  <div class="nav-collapse collapse">
+                     <ul class="nav">
+                        <li><a href="about">About</a></li>
+                        <li><a href="login">Login!</a></li>
+                        <li><a href="https://github.com/aybabtme/goblog-prototype">Source Code</a></li>
+                     </ul>
+                  </div>
+                  <!--/.nav-collapse -->
+               </div>
+            </div>
+         </div>
+         <div class="container">
+            <div id='content' class='row-fluid'>
+               <div class='span9 main'>
+                  <a href="/{{.Id()}}" style="text-decoration:none"><h2>{{.Title()}}</h2></a>
+                  <h6>Published: {{.Date()}} by {{.Author()}}</h6>
+                  <p>{{.Content()}}</p>
+                  
+               </div>
+               <div class='span3 sidebar'>
+                  <h2>More Fun</h2>
+                  <h4>Archives</h4>
+                  <ul>
+                     <li><a href='current_month'>Current Month ({{.}})</a></li>
+                     <li><a href='second_month'>Last Month (#posts)</a></li>
+                     <li><a href='third_month'>Before Last Month (#posts)</a></li>
+                     <li><a href= 'Archives'>Full Archives</a></li>
+                  </ul>
+                  <h4>Labels</h4>
+                  <ul>
+                    {{.getLabels}}
+                  </ul>
+               </div>
+            </div>
+         </div>
 
-    <div class="container">
-      <div id='content' class='row-fluid'>
-        <div class='span9 main'>
-          <h2>Last Post</h2>
-          <p>Post #1</p>
-          <h2>Post #2</h2>
-          <p>Post #2</p>
-          <h2>Post #3</h2>
-          <p>Post #3</p>
-          <h2>Post #4</h2>
-          <p>Post #4</p>
-          <h2>Post #5</h2>
-          <p>Post #5</p>
-        </div>
-        <div class='span3 sidebar'>
-          <h2>More Fun</h2>
-            <h4>Archives</h4>
-            <ul>
-              <li><a href='current_month'>Current Month (#posts)</a></li>
-              <li><a href='second_month'>Last Month (#posts)</a></li>
-              <li><a href='third_month'>Before Last Month (#posts)</a></li>
-              <li><a href= 'Archives'>Full Archives</a></li>
-            </ul>
-            <h4>Labels</h4>
-            <ul>
-
-            </ul>
-        </div>
-      </div>
-      </div> <!-- container -->
+     <!-- container -->
       <div id="push"></div>
     </div> <!-- wrap -->
     <div id="footer">

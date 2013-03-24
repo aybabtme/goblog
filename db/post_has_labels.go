@@ -29,44 +29,44 @@ DROP TABLE LabelPost;`
 // used
 var insertLabelPostRelation string = `
 INSERT INTO LabelPost( post_id, label_id )
-VALUES( ?, ? )`
+VALUES( $1, $2 )`
 
 var findPostsByLabelId string = `
 SELECT P.post_id, P.author_id, P.title, P.content, P.image_url, P.date
 FROM Post AS P, LabelPost AS LP
-WHERE LP.label_id = ? AND LP.post_id = P.post_id`
+WHERE LP.label_id = $1 AND LP.post_id = P.post_id`
 
 // used
 var findLabelsByPostId string = `
 SELECT L.label_id, L.name
 FROM Label AS L, LabelPost AS LP
-WHERE LP.post_id = ? AND LP.label_id = L.label_id`
+WHERE LP.post_id = $1 AND LP.label_id = L.label_id`
 
 var deleteAllLabelWithIdFromRelation string = `
 DELETE FROM LabelPost
-WHERE LabelPost.label_id = ?`
+WHERE LabelPost.label_id = $1`
 
 var deleteAllLabelWithIdFromTable string = `
 DELETE FROM Label
-WHERE Label.label_id = ?;`
+WHERE Label.label_id = $1;`
 
 // used
 var deleteLabelFromPostId string = `
 DELETE FROM LabelPost
-WHERE LabelPost.post_id = ?`
+WHERE LabelPost.post_id = $1`
 
 /*
  * Labels stuff
  */
 
 var insertLabelForId string = `
-INSERT OR IGNORE INTO Label( name )
-VALUES( ? )`
+INSERT INTO Label( name )
+VALUES( $1 )`
 
 var queryLabelForName string = `
 SELECT L.label_id, L.name
 FROM Label AS L
-WHERE L.name = ?`
+WHERE L.name = $1`
 
 /*
  * No More SQL Strings

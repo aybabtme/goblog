@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS BlogUser(
    access_token_hash VARCHAR(128) NOT NULL,
    salt VARCHAR(128) NOT NULL,
    email VARCHAR(255) NOT NULL,
+   UNIQUE(username),
    UNIQUE(email)
 )`
 
@@ -27,7 +28,7 @@ DROP TABLE BlogUser;
 `
 
 var insertOrReplaceUserForId string = `
-INSERT OR REPLACE INTO BlogUser(
+INSERT INTO BlogUser(
 	username,
 	registration_date,
 	timezone,
@@ -36,7 +37,7 @@ INSERT OR REPLACE INTO BlogUser(
 	salt,
 	email
 )
-VALUES( ?, ?, ?, ?, ?, ?, ? )`
+VALUES( $1, $2, $3, $4, $5, $6, $7 )`
 
 var findUserById string = `
 SELECT
@@ -50,13 +51,13 @@ SELECT
 FROM
 	BlogUser AS U
 WHERE
-	U.user_id = ?`
+	U.user_id = $1`
 
 var deleteUserById string = `
 DELETE FROM
 	BlogUser
 WHERE
-	BlogUser.user_id = ?`
+	BlogUser.user_id = $1`
 
 var queryForAllUser string = `
 SELECT
@@ -71,6 +72,15 @@ SELECT
 FROM
 	BlogUser AS U`
 
+var queryUserForUsername string = `
+SELECT
+	U.user_id
+FROM
+	BlogUser AS U
+WHERE
+	U.username = $1
+`
+
 // Relations
 var queryForAllCommentsOfUserId string = `
 SELECT
@@ -84,7 +94,7 @@ SELECT
 FROM
 	Comment as C
 WHERE
-	C.user_id = ?`
+	C.user_id = $1`
 
 // Represents a User of the blog
 type User struct {
@@ -411,7 +421,7 @@ func (u *User) Save() error {
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(u.username,
+	_, err = stmt.Exec(u.username,
 		u.registrationDate,
 		u.timezone,
 		u.oauthProvider,
@@ -423,8 +433,17 @@ func (u *User) Save() error {
 		return err
 	}
 
-	u.id, _ = res.LastInsertId()
-	return nil
+	// query the ID we inserted
+	idStmt, err := db.Prepare(queryUserForUsername)
+	if err != nil {
+		fmt.Println("Save 5:", err)
+		return err
+	}
+	defer idStmt.Close()
+
+	row := idStmt.QueryRow(u.username)
+
+	return row.Scan(&u.id)
 }
 
 // Deletes the user from the database

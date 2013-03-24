@@ -162,6 +162,7 @@ func findAllAuthor(t *testing.T, conn *DBConnection) {
 	for idx, author := range authors {
 		if author.Id() != int64(idx)+int64(1) {
 			t.Errorf("Expected <%d> but was <%d>", idx+1, author.Id())
+
 			return
 		}
 	}

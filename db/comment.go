@@ -29,21 +29,30 @@ var dropCommentTable string = `
 DROP TABLE Comment;`
 
 var insertOrReplaceCommentForId string = `
-INSERT OR REPLACE INTO Comment( user_id, post_id, content, date, up_vote, down_vote )
-VALUES( ?, ?, ?, ?, ?, ? )`
+INSERT INTO Comment( user_id, post_id, content, date, up_vote, down_vote )
+VALUES( $1, $2, $3, $4, $5, $6 )`
 
 var findCommentById string = `
 SELECT C.user_id, C.post_id, C.content, C.date, C.up_vote, C.down_vote
 FROM Comment as C
-WHERE C.comment_id = ?`
+WHERE C.comment_id = $1`
 
 var deleteCommentById string = `
 DELETE FROM Comment
-WHERE Comment.comment_id = ?`
+WHERE Comment.comment_id = $2`
 
 var queryForAllComment string = `
 SELECT C.comment_id, C.user_id, C.post_id, C.content, C.date, C.up_vote, C.down_vote
 FROM Comment AS C`
+
+var queryCommentIdFromDetails string = `
+SELECT
+	C.comment_id
+FROM
+	Comment AS C
+WHERE
+	C.date = $1
+`
 
 // Represents a comment on a post.  Comments are made by Users.
 type Comment struct {
@@ -274,14 +283,23 @@ func (c *Comment) Save() error {
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(c.userId, c.postId, c.content, c.date, c.upVote, c.downVote)
+	_, err = stmt.Exec(c.userId, c.postId, c.content, c.date, c.upVote, c.downVote)
 	if err != nil {
 		fmt.Println("Save 3:", err)
 		return err
 	}
 
-	c.id, _ = res.LastInsertId()
-	return nil
+	// query the ID we inserted
+	idStmt, err := db.Prepare(queryCommentIdFromDetails)
+	if err != nil {
+		fmt.Println("Save 5:", err)
+		return err
+	}
+	defer idStmt.Close()
+
+	row := idStmt.QueryRow(c.date)
+
+	return row.Scan(&c.id)
 }
 
 // Deletes the comment from the database.  Returns an error if something

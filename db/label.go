@@ -17,11 +17,11 @@ DROP TABLE Label;`
 var findLabelById string = `
 SELECT L.name
 FROM Label AS L
-WHERE L.label_id = ?`
+WHERE L.label_id = $1`
 
 var deleteLabelById string = `
 DELETE FROM Label
-WHERE Label.label_id = ?`
+WHERE Label.label_id = $1`
 
 var queryForAllLabel string = `
 SELECT L.label_id, L.name
@@ -29,8 +29,8 @@ FROM Label AS L`
 
 var renameLabelById string = `
 UPDATE Label
-SET name = ?
-WHERE label_id = ?
+SET name = $1
+WHERE label_id = $2
 `
 
 // Represents a label from the blog

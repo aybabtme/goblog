@@ -26,17 +26,17 @@ DROP TABLE Post;
 `
 
 var insertOrReplacePostForId string = `
-INSERT OR REPLACE INTO Post( author_id, title, content, image_url, date)
-VALUES( ?, ?, ?, ?, ?)`
+INSERT INTO Post( author_id, title, content, image_url, date)
+VALUES( $1, $2, $3, $4, $5)`
 
 var findPostById string = `
 SELECT P.author_id, P.title, P.content, P.image_URL, P.date
 FROM Post AS P
-WHERE P.post_id = ?`
+WHERE P.post_id = $1`
 
 var deletePostById string = `
 DELETE FROM Post
-WHERE Post.post_id = ?`
+WHERE Post.post_id = $1`
 
 var queryForAllPost string = `
 SELECT P.post_id, P.author_id, P.title, P.content, P.image_url, P.date
@@ -46,12 +46,21 @@ FROM Post AS P`
 var queryForAllCommentsOfPostId string = `
 SELECT C.comment_id, C.user_id, C.post_id, C.content, C.date, C.up_vote, C.down_vote
 FROM Comment as C
-WHERE C.post_id = ?`
+WHERE C.post_id = $1`
 
 var queryForAllLabelsOfPostId string = `
 SELECT L.label_id, L.name
 FROM Label AS L, LabelPost AS LP
-WHERE LP.post_id = ? AND LP.label_id = P.id`
+WHERE LP.post_id = $1 AND LP.label_id = P.id`
+
+var queryPostIdFromDate string = `
+SELECT
+	P.post_id
+FROM
+	Post AS P
+WHERE
+	P.date = $1
+`
 
 // Represents a post in the blog
 type Post struct {
@@ -171,9 +180,9 @@ func (p *Post) Comments() ([]Comment, error) {
 //
 
 // Create the table Post in the database interface
-func (persist *DBConnection) createPostTable() {
+func (conn *DBConnection) createPostTable() {
 
-	var dbaser = persist.databaser
+	var dbaser = conn.databaser
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
 	if err != nil {
@@ -196,8 +205,8 @@ func (persist *DBConnection) createPostTable() {
 	}
 }
 
-func (persist *DBConnection) dropPostTable() {
-	var dbaser = persist.databaser
+func (conn *DBConnection) dropPostTable() {
+	var dbaser = conn.databaser
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
 	if err != nil {
@@ -214,7 +223,7 @@ func (persist *DBConnection) dropPostTable() {
 }
 
 // Creates a new Post attached to the Database (but not saved)
-func (persist *DBConnection) NewPost(authorId int64, title string, content string, imageURL string, date time.Time) *Post {
+func (conn *DBConnection) NewPost(authorId int64, title string, content string, imageURL string, date time.Time) *Post {
 
 	return &Post{
 		id:       -1,
@@ -223,15 +232,15 @@ func (persist *DBConnection) NewPost(authorId int64, title string, content strin
 		content:  content,
 		imageURL: imageURL,
 		date:     date,
-		db:       persist.databaser,
+		db:       conn.databaser,
 	}
 }
 
 // Finds all the posts in the database
-func (persist *DBConnection) FindAllPosts() ([]Post, error) {
+func (conn *DBConnection) FindAllPosts() ([]Post, error) {
 
 	var posts []Post
-	var dbaser = persist.databaser
+	var dbaser = conn.databaser
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
 	if err != nil {
@@ -274,10 +283,10 @@ func (persist *DBConnection) FindAllPosts() ([]Post, error) {
 }
 
 // Finds a post that matches the given id
-func (persist *DBConnection) FindPostById(id int64) (*Post, error) {
+func (conn *DBConnection) FindPostById(id int64) (*Post, error) {
 
 	var p *Post
-	var dbaser = persist.databaser
+	var dbaser = conn.databaser
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
 	if err != nil {
@@ -338,14 +347,23 @@ func (p *Post) Save() error {
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(p.authorId, p.title, p.content, p.imageURL, p.date)
+	_, err = stmt.Exec(p.authorId, p.title, p.content, p.imageURL, p.date)
 	if err != nil {
 		fmt.Println("Save 3:", err)
 		return err
 	}
 
-	p.id, _ = res.LastInsertId()
-	return nil
+	// query the ID we inserted
+	idStmt, err := db.Prepare(queryPostIdFromDate)
+	if err != nil {
+		fmt.Println("Save 5:", err)
+		return err
+	}
+	defer idStmt.Close()
+
+	row := idStmt.QueryRow(p.Date())
+
+	return row.Scan(&p.id)
 }
 
 // Deletes the post from the database
