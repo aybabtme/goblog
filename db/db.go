@@ -11,7 +11,7 @@ import (
 // Connection abstraction
 //
 
-// Keeps all info required to save stuff on a connance
+// Keeps all info required to save stuff on a database
 type DBConnection struct {
 	databaser DBVendor
 }

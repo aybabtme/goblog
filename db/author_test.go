@@ -27,6 +27,7 @@ func newAuthor(t *testing.T, conn *DBConnection) {
 
 	if author == nil {
 		t.Error("Receive a nil author")
+		return
 	}
 }
 
@@ -44,18 +45,22 @@ func saveAuthor(t *testing.T, conn *DBConnection) {
 
 	if author == nil {
 		t.Error("Receive a nil author")
+		return
 	}
 
 	if author.Id() != -1 {
 		t.Error("Id should be of -1 at this point")
+		return
 	}
 
 	if err := author.Save(); err != nil {
 		t.Error("Save failed", err)
+		return
 	}
 
 	if author.Id() != 1 {
 		t.Error("Id should be 1 at this point")
+		return
 	}
 }
 
@@ -80,10 +85,12 @@ func destroyAuthor(t *testing.T, conn *DBConnection) {
 
 		if actual != nil {
 			t.Error("Author shouldnt exist in DB after destroy")
+			return
 		}
 
 		if err == nil {
 			t.Error("An error should have been raised")
+			return
 		}
 
 	}
@@ -137,21 +144,25 @@ func findAllAuthor(t *testing.T, conn *DBConnection) {
 	if err != nil {
 		t.Errorf("Couldn't query authors although just saved %d",
 			authorCount)
+		return
 	}
 
 	if authors == nil {
 		t.Errorf("Saved %d authors but query returns none",
 			authorCount)
+		return
 	}
 
 	if int64(len(authors)) != authorCount {
 		t.Errorf("Saved and expected <%d> posts, was <%d>",
 			authorCount, len(authors))
+		return
 	}
 
 	for idx, author := range authors {
 		if author.Id() != int64(idx)+int64(1) {
 			t.Errorf("Expected <%d> but was <%d>", idx+1, author.Id())
+			return
 		}
 	}
 
@@ -170,13 +181,16 @@ func authorIdIncrements(t *testing.T, conn *DBConnection) {
 		var author = conn.NewAuthor(user)
 
 		if author.Id() != -1 {
-			t.Error("Id should be of -1 at this point")
+			t.Errorf("Id should be of -1 at this point, but is <%d>",
+				author.Id())
+			return
 		}
 
 		author.Save()
 
 		if author.Id() != i {
 			t.Errorf("Id expected %d but was %d", i, author.Id())
+			return
 		}
 	}
 }
@@ -192,11 +206,9 @@ func deleteUserCascadesToAuthor(t *testing.T, conn *DBConnection) {
 	_ = author.Save()
 
 	var copyUser, _ = conn.FindUserById(author.UserId())
-	var copyAuthor, _ = conn.FindAuthorById(author.Id())
 
-	// Tested elsewhere, kind of redundant
-	if author.Id() != copyAuthor.Id() {
-		t.Errorf("Expected <%d> but was <%d>", author.Id(), copyAuthor.Id())
+	if copyUser == nil {
+		t.Error("Copyuser is nil")
 		return
 	}
 

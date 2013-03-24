@@ -219,9 +219,9 @@ func (u *User) Comments() ([]Comment, error) {
 //
 
 // Create the table Users in the database interface
-func (persist *DBConnection) createUserTable() {
+func (conn *DBConnection) createUserTable() {
 
-	var dbaser = persist.databaser
+	var dbaser = conn.databaser
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
 	if err != nil {
@@ -245,8 +245,8 @@ func (persist *DBConnection) createUserTable() {
 }
 
 // Drops the table User and all its data
-func (persist *DBConnection) dropUserTable() {
-	var dbaser = persist.databaser
+func (conn *DBConnection) dropUserTable() {
+	var dbaser = conn.databaser
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
 	if err != nil {
@@ -262,7 +262,7 @@ func (persist *DBConnection) dropUserTable() {
 }
 
 // Creates a new User attached to the Database (but it is not saved).
-func (persist *DBConnection) NewUser(username string, regDate time.Time,
+func (conn *DBConnection) NewUser(username string, regDate time.Time,
 	timezone int, oauthProvider string, token string, email string) *User {
 	u := &User{
 		id:               -1,
@@ -271,17 +271,17 @@ func (persist *DBConnection) NewUser(username string, regDate time.Time,
 		timezone:         timezone,
 		oauthProvider:    oauthProvider,
 		email:            email,
-		db:               persist.databaser,
+		db:               conn.databaser,
 	}
 	u.SetToken(token)
 	return u
 }
 
 // Finds all the users in the database
-func (persist *DBConnection) FindAllUsers() ([]User, error) {
+func (conn *DBConnection) FindAllUsers() ([]User, error) {
 
 	var users []User
-	var dbaser = persist.databaser
+	var dbaser = conn.databaser
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
 	if err != nil {
@@ -337,9 +337,9 @@ func (persist *DBConnection) FindAllUsers() ([]User, error) {
 }
 
 // Finds a user that matches the given id
-func (persist *DBConnection) FindUserById(id int64) (*User, error) {
+func (conn *DBConnection) FindUserById(id int64) (*User, error) {
 
-	var dbaser = persist.databaser
+	var dbaser = conn.databaser
 
 	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
 	if err != nil {
@@ -428,7 +428,7 @@ func (u *User) Save() error {
 }
 
 // Deletes the user from the database
-func (u *User) Destroy() error {
+func (u User) Destroy() error {
 
 	db, err := sql.Open(u.db.Driver(), u.db.Name())
 	if err != nil {

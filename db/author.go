@@ -21,10 +21,7 @@ var dropAuthorTable string = `
 DROP TABLE Author;
 `
 
-var insertAuthorForId string = `
-INSERT INTO
-	Author(user_id)
-VALUES(?)`
+var insertAuthorForId string = `INSERT INTO Author(user_id) VALUES (?);`
 
 var findAuthorById string = `
 SELECT
