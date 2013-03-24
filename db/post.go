@@ -11,12 +11,12 @@ import (
 //
 var createPostTable string = `
 CREATE TABLE IF NOT EXISTS Post(
-   post_id %s,
+   post_id SERIAL PRIMARY KEY,
    author_id INTEGER NOT NULL,
    title VARCHAR(255) NOT NULL,
    content TEXT NOT NULL,
    image_url VARCHAR(255) NOT NULL,
-   date %s NOT NULL,
+   date TIMESTAMP NOT NULL,
    CONSTRAINT fk_post_authorid
    	FOREIGN KEY (author_id) REFERENCES Author(author_id) ON DELETE SET NULL
 )`
@@ -191,15 +191,10 @@ func (conn *DBConnection) createPostTable() {
 	}
 	defer db.Close()
 
-	var query = fmt.Sprintf(
-		createPostTable,
-		dbaser.IncrementPrimaryKey(),
-		dbaser.DateField())
-
-	_, err = db.Exec(query)
+	_, err = db.Exec(createPostTable)
 	if err != nil {
 		fmt.Printf("Error creating Posts table, driver \"%s\", dbname \"%s\", query = \"%s\"\n",
-			dbaser.Driver(), dbaser.Name(), query)
+			dbaser.Driver(), dbaser.Name(), createPostTable)
 		fmt.Println(err)
 		return
 	}

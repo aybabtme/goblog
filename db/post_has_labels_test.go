@@ -146,7 +146,7 @@ func destroyLabel(t *testing.T, p *DBConnection) {
 	defer p.DeleteConnection()
 
 	for i := int64(1); i < 10; i++ {
-		post, err := generatePost(p, 0)
+		post, err := generatePost(p, i)
 		if err != nil {
 			t.Error(err)
 			return
@@ -186,9 +186,9 @@ func allPostsOfLabel(t *testing.T, p *DBConnection) {
 
 	var expected []Post
 	var labels []Label
-	for i := int(1); i < 10; i++ {
+	for i := int64(1); i < int64(10); i++ {
 
-		post, err := generatePost(p, 0)
+		post, err := generatePost(p, i)
 		if err != nil {
 			t.Error(err)
 			return

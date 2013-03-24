@@ -7,7 +7,8 @@ import (
 )
 
 func generateUserAndPost(conn *DBConnection, i int64) (*User, *Post) {
-	user := generateUser(conn, i*2)
+	// i + 1 to cover when i = 0
+	user := generateUser(conn, (i+1)*100000000)
 	user.Save()
 	authUser := generateUser(conn, i)
 	var author = conn.NewAuthor(authUser)
@@ -17,6 +18,7 @@ func generateUserAndPost(conn *DBConnection, i int64) (*User, *Post) {
 		fmt.Sprintf("Content #%d", i),
 		fmt.Sprintf("ImageUrl #%d", i),
 		time.Now().UTC())
+	_ = post.Save()
 	return user, post
 }
 
@@ -77,9 +79,9 @@ func TestDestroyComment(t *testing.T) {
 func destroyComment(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 
-	for i := int64(1); i < 10; i++ {
+	for i := int64(1); i < int64(10); i++ {
 
-		var user, post = generateUserAndPost(conn, 0)
+		var user, post = generateUserAndPost(conn, i)
 		var expected = conn.NewComment(
 			user.Id(),
 			post.Id(),
@@ -110,7 +112,7 @@ func TestFindByIdComment(t *testing.T) {
 func findByIdComment(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 	for i := int64(1); i < 10; i++ {
-		var user, post = generateUserAndPost(conn, 0)
+		var user, post = generateUserAndPost(conn, i)
 		var expected = conn.NewComment(
 			user.Id(),
 			post.Id(),
@@ -143,7 +145,7 @@ func findAllComment(t *testing.T, conn *DBConnection) {
 	var commentCount = int64(10)
 
 	for i := int64(1); i <= commentCount; i++ {
-		var user, post = generateUserAndPost(conn, 0)
+		var user, post = generateUserAndPost(conn, i)
 		var comment = conn.NewComment(
 			user.Id(),
 			post.Id(),
@@ -183,8 +185,8 @@ func TestCommentIdIncrements(t *testing.T) {
 func commentIdIncrements(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 
-	for i := int64(1); i < 10; i++ {
-		var user, post = generateUserAndPost(conn, 0)
+	for i := int64(1); i < int64(10); i++ {
+		var user, post = generateUserAndPost(conn, i)
 		var comment = conn.NewComment(
 			user.Id(),
 			post.Id(),

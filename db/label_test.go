@@ -76,8 +76,8 @@ func TestFindByIdLabel(t *testing.T) {
 func findByIdLabel(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 
-	for i := int64(1); i < 10; i++ {
-		post, _ := generatePost(conn, 0)
+	for i := int64(1); i < int64(10); i++ {
+		post, _ := generatePost(conn, i)
 		expected, err := post.AddLabel(fmt.Sprintf("cool topic #%d", i))
 		if err != nil {
 			t.Error("Couldn't create a label to begin with.")
@@ -106,7 +106,7 @@ func findAllLabel(t *testing.T, conn *DBConnection) {
 	var labelCount = int64(9)
 
 	for i := int64(1); i <= labelCount; i++ {
-		post, _ := generatePost(conn, 0)
+		post, _ := generatePost(conn, i)
 		_, err := post.AddLabel(fmt.Sprintf("cool topic #%d", i))
 		if err != nil {
 			t.Error("Couldn't create a label to begin with.")
@@ -143,8 +143,8 @@ func TestLabelIdIncrements(t *testing.T) {
 func labelIdIncrements(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 
-	for i := int64(1); i < 10; i++ {
-		post, _ := generatePost(conn, 0)
+	for i := int64(1); i < int64(10); i++ {
+		post, _ := generatePost(conn, i)
 		label, err := post.AddLabel(fmt.Sprintf("cool topic #%d", i))
 		if err != nil {
 			t.Error("Couldn't create a label to begin with.")

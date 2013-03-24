@@ -7,7 +7,7 @@ import (
 
 var createLabelTable string = `
 CREATE TABLE IF NOT EXISTS Label(
-   label_id %s,
+   label_id SERIAL PRIMARY KEY,
    name VARCHAR(255) UNIQUE NOT NULL
 )`
 
@@ -63,15 +63,11 @@ func (persist *DBConnection) createLabelTable() {
 	}
 	defer db.Close()
 
-	var query = fmt.Sprintf(
-		createLabelTable,
-		dbaser.IncrementPrimaryKey())
-
-	_, err = db.Exec(query)
+	_, err = db.Exec(createLabelTable)
 	if err != nil {
 		fmt.Printf("Error creating Labels table, driver \"%s\","+
 			"dbname \"%s\", query = \"%s\"\n",
-			dbaser.Driver(), dbaser.Name(), query)
+			dbaser.Driver(), dbaser.Name(), createLabelTable)
 		fmt.Println(err)
 		return
 	}

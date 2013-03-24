@@ -11,7 +11,7 @@ import (
  */
 var createAuthorTable string = `
 CREATE TABLE IF NOT EXISTS Author(
-   author_id %s,
+   author_id SERIAL PRIMARY KEY,
    user_id INTEGER UNIQUE NOT NULL,
    CONSTRAINT fk_author_user_id
    	FOREIGN KEY(user_id) REFERENCES BlogUser(user_id) ON DELETE CASCADE
@@ -145,14 +145,10 @@ func (p *DBConnection) createAuthorTable() {
 		return
 	}
 
-	var query = fmt.Sprintf(
-		createAuthorTable,
-		dbvendor.IncrementPrimaryKey())
-
-	_, err = db.Exec(query)
+	_, err = db.Exec(createAuthorTable)
 	if err != nil {
 		fmt.Printf("Error creating Author table, driver \"%s\", dbname \"%s\", query = %s\n",
-			dbvendor.Driver(), dbvendor.Name(), query)
+			dbvendor.Driver(), dbvendor.Name(), createAuthorTable)
 		fmt.Println(err)
 		return
 	}

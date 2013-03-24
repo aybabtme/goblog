@@ -11,9 +11,9 @@ import (
 //
 var createUserTable string = `
 CREATE TABLE IF NOT EXISTS BlogUser(
-   user_id %s,
+   user_id SERIAL PRIMARY KEY,
    username VARCHAR(255) NOT NULL,
-   registration_date %s NOT NULL,
+   registration_date TIMESTAMP NOT NULL,
    timezone INTEGER NOT NULL,
    oauth_provider VARCHAR(128) NOT NULL,
    access_token_hash VARCHAR(128) NOT NULL,
@@ -240,15 +240,10 @@ func (conn *DBConnection) createUserTable() {
 	}
 	defer db.Close()
 
-	var query = fmt.Sprintf(
-		createUserTable,
-		dbaser.IncrementPrimaryKey(),
-		dbaser.DateField())
-
-	_, err = db.Exec(query)
+	_, err = db.Exec(createUserTable)
 	if err != nil {
 		fmt.Printf("Error creating Users table, driver \"%s\", dbname \"%s\", query = \"%s\"\n",
-			dbaser.Driver(), dbaser.Name(), query)
+			dbaser.Driver(), dbaser.Name(), createUserTable)
 		fmt.Println(err)
 		return
 	}
