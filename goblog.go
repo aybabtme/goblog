@@ -41,10 +41,16 @@ func main() {
 
 func setupDatabase(dburl string) (*db.DBConnection, error) {
 	postgres := db.NewPostgreser(dburl)
+	conn, err := db.NewConnection(postgres)
+	if err != nil {
+		return nil, err
+	}
+	conn.DeleteConnection()
 	return db.NewConnection(postgres)
 }
 
 func generateData(conn *db.DBConnection) error {
+
 	user := conn.NewUser(
 		"antoine",
 		time.Now().UTC(),
@@ -52,19 +58,25 @@ func generateData(conn *db.DBConnection) error {
 		"google+",
 		"heheveb7673tygvh23",
 		"antoinegrondin@gmail.com")
-	if err := user.Save(); nil != err {
-		return err
-	}
 	author := conn.NewAuthor(user)
 	if err := author.Save(); nil != err {
 		return err
 	}
-	post := conn.NewPost(author.Id(),
+	post1 := conn.NewPost(author.Id(),
 		"Il était une fois",
 		"Lorem ipsum shit chien vache",
-		"/path/to/image.png",
+		"http://media.zoom-cinema.fr/photos/news/2380/il-etait-une-fois-2007-4.jpg",
 		time.Now().UTC())
-	if err := post.Save(); nil != err {
+	if err := post1.Save(); nil != err {
+		return err
+	}
+
+	post2 := conn.NewPost(author.Id(),
+		"Grosse Truie avec un Gros Cul",
+		"XXX gratis, donne nous juste ton carte de crédit pis on te promet de pas l'utiliser",
+		"http://www.blacktowhite.net/wp-content/uploads/2011/05/cock-sucking-bitches-05-590x398.jpg",
+		time.Now().UTC())
+	if err := post2.Save(); nil != err {
 		return err
 	}
 	return nil
