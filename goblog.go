@@ -11,14 +11,18 @@ import (
 func main() {
 
 	dburl := os.Getenv("DATABASE_URL")
-
 	if dburl == "" {
 		fmt.Println("Need a database to connect to!\n" +
 			"export DATABASE_URL=<your db url here>")
 		return
 	}
+	port := os.Getenv("PORT")
+	if port == "" {
+		fmt.Println("No port specified.\n" +
+			"export PORT=<port number here>")
+		return
+	}
 
-	postgres := db.NewPostgreser(dburl)
 	conn, err := db.NewConnection(postgres)
 	if err != nil {
 		fmt.Println("Couldn't connect to database.")
@@ -30,18 +34,15 @@ func main() {
 		fmt.Println("Couldn't generate data")
 	}
 
-	http.HandleFunc("/", indexHandler(conn))
-	fmt.Println("listening...")
-	err = http.ListenAndServe(":"+os.Getenv("PORT"), nil)
-	if err != nil {
+	var r Router
+	if err := r.Start(port, conn); err != nil {
 		panic(err)
 	}
 }
 
-func indexHandler(conn *db.DBConnection) func(http.ResponseWriter, *http.Request) {
-	return func(res http.ResponseWriter, req *http.Request) {
-		fmt.Fprintln(res, "<h1>hello, world</h1>")
-	}
+func setupDatabase(dburl string) (*db.DBConnection, error) {
+	postgres := db.NewPostgreser(dburl)
+	return db.NewConnection(postgres)
 }
 
 func generateData(conn *db.DBConnection) error {
