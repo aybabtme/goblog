@@ -5,10 +5,9 @@ import (
 )
 
 func TestPostgresDatabaseCreation(t *testing.T) {
-	var dbName = "test"
-	var username = "antoine"
+	var dburl = "user=antoine dbname=test sslmode=disable"
 
-	var postgres = NewPostgreser(dbName, username)
+	var postgres = NewPostgreser(dburl)
 
 	var conn, err = NewConnection(postgres)
 
@@ -25,6 +24,7 @@ func TestPostgresDatabaseCreation(t *testing.T) {
 //
 
 func setupPGConnection() *DBConnection {
-	var conn, _ = NewConnection(NewPostgreser("test", "antoine"))
+	dburl := "user=antoine dbname=test sslmode=disable"
+	conn, _ := NewConnection(NewPostgreser(dburl))
 	return conn
 }

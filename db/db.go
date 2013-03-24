@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
 	_ "github.com/bmizerany/pq"
 )
 
@@ -58,25 +57,21 @@ type DBVendor interface {
 	// not exported because only used within package
 	Name() string
 	Driver() string
-	IncrementPrimaryKey() string
-	DateField() string
 }
 
 // A connection to a PostgreSQL db.
 type Postgreser struct {
-	name     string
-	username string
+	dburl string
 }
 
 // Prepares a Postgreser for use as DBVendor
-func NewPostgreser(dbName, username string) Postgreser {
-	return Postgreser{name: dbName, username: username}
+func NewPostgreser(dburl string) Postgreser {
+	return Postgreser{dburl: dburl}
 }
 
 // The name of the PostgreSQL db
 func (db Postgreser) Name() string {
-	return fmt.Sprintf("user=%s dbname=%s host=%s sslmode=disable",
-		db.username, db.name, "localhost")
+	return db.dburl
 }
 
 // The name of the driver for the PostgreSQL driver
