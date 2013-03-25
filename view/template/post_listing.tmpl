@@ -1,18 +1,10 @@
 {{define "content"}}
 <div class="index">
-   {{if .}}
+   {{range .}}
 
       <img src="{{.ImageURL}}" height="100px" width="100px"></img>
       <h1>{{.Title}}</h1>
       <h2>Posted on {{.Date}}</h2>
-      <p>{{.Content}}<p>
-
-      {{range .Comments}}
-         <h4>{{.User.Username}}, on {{.Date}}, said:</h4>
-         <p>{{.Content}}<p>
-      {{else}}
-         <h2>Be the first to comment on this post!<h2>
-      {{end}}
 
    {{else}}
       {{template "404" .}}

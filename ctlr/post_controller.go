@@ -3,27 +3,37 @@ package ctlr
 import (
 	"fmt"
 	"github.com/aybabtme/goblog/model"
+	"github.com/aybabtme/goblog/view"
 	"github.com/gorilla/mux"
+	"html/template"
 	"net/http"
+	"strconv"
 )
 
 type post struct {
 	path string
+	view *template.Template
 }
 
 func NewPostController() Controller {
-	return &post{path: "/post"}
+	var p post
+	p.path = "/post"
+	p.view = view.GetPostListingTemplate()
+	return p
 }
 
 func NewPostIdController() Controller {
-	return &post{path: "/post/{id:[0-9]+}"}
+	var p post
+	p.path = "/post/{id:[0-9]+}"
+	p.view = view.GetPostTemplate()
+	return p
 }
 
-func (p *post) Path() string {
+func (p post) Path() string {
 	return p.path
 }
 
-func (p *post) Controller(conn *model.DBConnection) func(http.ResponseWriter, *http.Request) {
+func (p post) Controller(conn *model.DBConnection) func(http.ResponseWriter, *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		vars := mux.Vars(req)
 		id := vars["id"]
@@ -40,8 +50,16 @@ func (p *post) forListing(conn *model.DBConnection,
 	rw http.ResponseWriter,
 	req *http.Request) {
 
-	// when templates will be there, we'll need to pass them data
-	fmt.Fprintf(rw, "received listing request")
+	posts, err := conn.FindAllPosts()
+	if err != nil {
+		fmt.Println("PostController for listing 1:", err)
+		return
+	}
+	if err := p.view.Execute(rw, posts); nil != err {
+		fmt.Println("PostController for listing 2:", err)
+		return
+	}
+
 }
 
 func (p *post) forId(conn *model.DBConnection,
@@ -49,6 +67,22 @@ func (p *post) forId(conn *model.DBConnection,
 	req *http.Request,
 	id string) {
 
-	// when templates will be there, we'll need to pass them data
-	fmt.Fprintf(rw, "received id %s", id)
+	intId, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		fmt.Println("PostController for id 1:", err)
+		return
+	}
+	post, err := conn.FindPostById(intId)
+	/*
+		if err != nil {
+				fmt.Println("PostController for id 2:", post)
+				fmt.Println("PostController for id 2:", err)
+				return
+		}
+	*/
+	if err := p.view.Execute(rw, post); nil != err {
+		fmt.Println("PostController for id 3:", err)
+		return
+	}
+
 }
