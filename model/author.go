@@ -11,8 +11,8 @@ import (
  */
 var createAuthorTable string = `
 CREATE TABLE IF NOT EXISTS Author(
-   author_id SERIAL PRIMARY KEY,
-   user_id INTEGER UNIQUE NOT NULL,
+   author_id 	SERIAL PRIMARY KEY,
+   user_id 		INTEGER UNIQUE NOT NULL,
    CONSTRAINT fk_author_user_id
    	FOREIGN KEY(user_id) REFERENCES BlogUser(user_id) ON DELETE CASCADE
 )`
@@ -32,7 +32,9 @@ SELECT
    U.timezone,
    U.email
 FROM Author AS A, BlogUser AS U
-WHERE A.author_id = $1 AND A.user_id = U.user_id`
+WHERE
+	A.author_id = $1
+	AND A.user_id = U.user_id`
 
 var deleteAuthorById string = `
 DELETE FROM Author

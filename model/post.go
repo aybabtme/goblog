@@ -11,12 +11,12 @@ import (
 //
 var createPostTable string = `
 CREATE TABLE IF NOT EXISTS Post(
-   post_id SERIAL PRIMARY KEY,
-   author_id INTEGER NOT NULL,
-   title VARCHAR(255) NOT NULL,
-   content TEXT NOT NULL,
-   image_url VARCHAR(255) NOT NULL,
-   date TIMESTAMP NOT NULL,
+   post_id		SERIAL PRIMARY KEY,
+   author_id	INTEGER NOT NULL,
+   title			VARCHAR(255) NOT NULL,
+   content		TEXT NOT NULL,
+   image_url	VARCHAR(255) NOT NULL,
+   date			TIMESTAMP NOT NULL,
    CONSTRAINT fk_post_authorid
    	FOREIGN KEY (author_id) REFERENCES Author(author_id) ON DELETE SET NULL
 )`
@@ -26,7 +26,12 @@ DROP TABLE Post;
 `
 
 var insertOrReplacePostForId string = `
-INSERT INTO Post( author_id, title, content, image_url, date)
+INSERT INTO Post(
+	author_id,
+	title,
+	content,
+	image_url,
+	date)
 VALUES( $1, $2, $3, $4, $5)`
 
 var findPostById string = `
@@ -51,8 +56,10 @@ WHERE
 	AND A.user_id = U.user_id`
 
 var deletePostById string = `
-DELETE FROM Post
-WHERE Post.post_id = $1`
+DELETE FROM
+	Post
+WHERE
+	Post.post_id = $1`
 
 var queryForAllPost string = `
 SELECT
@@ -77,9 +84,18 @@ WHERE
 
 // Relations
 var queryForAllCommentsOfPostId string = `
-SELECT C.comment_id, C.user_id, C.post_id, C.content, C.date, C.up_vote, C.down_vote
-FROM Comment as C
-WHERE C.post_id = $1`
+SELECT
+	C.comment_id,
+	C.user_id,
+	C.post_id,
+	C.content,
+	C.date,
+	C.up_vote,
+	C.down_vote
+FROM
+	Comment as C
+WHERE
+	C.post_id = $1`
 
 var queryForAllLabelsOfPostId string = `
 SELECT L.label_id, L.name

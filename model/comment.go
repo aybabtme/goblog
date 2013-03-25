@@ -12,13 +12,13 @@ import (
 
 var createCommentTable string = `
 CREATE TABLE IF NOT EXISTS Comment(
-   comment_id SERIAL PRIMARY KEY,
-   user_id INTEGER NOT NULL,
-   post_id INTEGER NOT NULL,
-   content TEXT NOT NULL,
-   date TIMESTAMP NOT NULL,
-   up_vote INTEGER NOT NULL,
-   down_vote INTEGER NOT NULL,
+   comment_id	SERIAL PRIMARY KEY,
+   user_id		INTEGER NOT NULL,
+   post_id		INTEGER NOT NULL,
+   content		TEXT NOT NULL,
+   date			TIMESTAMP NOT NULL,
+   up_vote		INTEGER NOT NULL,
+   down_vote	INTEGER NOT NULL,
    CONSTRAINT fk_comment_user_id
    	FOREIGN KEY (user_id) REFERENCES BlogUser(user_id) ON DELETE CASCADE,
    CONSTRAINT fk_comment_post_id
@@ -29,20 +29,41 @@ var dropCommentTable string = `
 DROP TABLE Comment;`
 
 var insertOrReplaceCommentForId string = `
-INSERT INTO Comment( user_id, post_id, content, date, up_vote, down_vote )
+INSERT INTO Comment(
+	user_id,
+	post_id,
+	content,
+	date,
+	up_vote,
+	down_vote )
 VALUES( $1, $2, $3, $4, $5, $6 )`
 
 var findCommentById string = `
-SELECT C.user_id, C.post_id, C.content, C.date, C.up_vote, C.down_vote
-FROM Comment as C
-WHERE C.comment_id = $1`
+SELECT
+	C.user_id,
+	C.post_id,
+	C.content,
+	C.date,
+	C.up_vote,
+	C.down_vote
+FROM
+	Comment as C
+WHERE
+	C.comment_id = $1`
 
 var deleteCommentById string = `
 DELETE FROM Comment
 WHERE Comment.comment_id = $1`
 
 var queryForAllComment string = `
-SELECT C.comment_id, C.user_id, C.post_id, C.content, C.date, C.up_vote, C.down_vote
+SELECT
+	C.comment_id,
+	C.user_id,
+	C.post_id,
+	C.content,
+	C.date,
+	C.up_vote,
+	C.down_vote
 FROM Comment AS C`
 
 var queryCommentIdFromDetails string = `
@@ -63,7 +84,7 @@ type Comment struct {
 	date     time.Time
 	upVote   int64
 	downVote int64
-	model       DBVendor
+	model    DBVendor
 }
 
 func (c *Comment) Id() int64 {
@@ -160,7 +181,7 @@ func (persist *DBConnection) NewComment(userId int64, postId int64, content stri
 		date:     date,
 		upVote:   0,
 		downVote: 0,
-		model:       persist.databaser,
+		model:    persist.databaser,
 	}
 }
 
@@ -202,7 +223,7 @@ func (persist *DBConnection) FindAllComments() ([]Comment, error) {
 			date:     date,
 			upVote:   upVote,
 			downVote: downVote,
-			model:       modelaser,
+			model:    modelaser,
 		}
 		comments = append(comments, c)
 	}
@@ -251,7 +272,7 @@ func (persist *DBConnection) FindCommentById(id int64) (*Comment, error) {
 		date:     date,
 		upVote:   upVote,
 		downVote: downVote,
-		model:       modelaser,
+		model:    modelaser,
 	}
 
 	return c, nil

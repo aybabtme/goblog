@@ -11,14 +11,14 @@ import (
 //
 var createUserTable string = `
 CREATE TABLE IF NOT EXISTS BlogUser(
-   user_id SERIAL PRIMARY KEY,
-   username VARCHAR(255) NOT NULL,
+   user_id 				SERIAL PRIMARY KEY,
+   username 			VARCHAR(255) NOT NULL,
    registration_date TIMESTAMP NOT NULL,
-   timezone INTEGER NOT NULL,
-   oauth_provider VARCHAR(128) NOT NULL,
-   access_token_hash VARCHAR(128) NOT NULL,
-   salt VARCHAR(128) NOT NULL,
-   email VARCHAR(255) NOT NULL,
+   timezone 			INTEGER NOT NULL,
+   oauth_provider		VARCHAR(128) NOT NULL,
+   access_token_hash	VARCHAR(128) NOT NULL,
+   salt 					VARCHAR(128) NOT NULL,
+   email 				VARCHAR(255) NOT NULL,
    UNIQUE(username),
    UNIQUE(email)
 )`
@@ -106,7 +106,7 @@ type User struct {
 	oauthProvider    string
 	tokenHash        string
 	salt             string
-	model               DBVendor
+	model            DBVendor
 }
 
 func (u *User) Id() int64 {
@@ -212,7 +212,7 @@ func (u *User) Comments() ([]Comment, error) {
 			date:     date,
 			upVote:   upVote,
 			downVote: downVote,
-			model:       u.model,
+			model:    u.model,
 		}
 		comments = append(comments, c)
 	}
@@ -276,7 +276,7 @@ func (conn *DBConnection) NewUser(username string, regDate time.Time,
 		timezone:         timezone,
 		oauthProvider:    oauthProvider,
 		email:            email,
-		model:               conn.databaser,
+		model:            conn.databaser,
 	}
 	u.SetToken(token)
 	return u
@@ -333,7 +333,7 @@ func (conn *DBConnection) FindAllUsers() ([]User, error) {
 			tokenHash:        tokenHash,
 			salt:             salt,
 			email:            email,
-			model:               modelaser,
+			model:            modelaser,
 		}
 		users = append(users, u)
 	}
@@ -388,7 +388,7 @@ func (conn *DBConnection) FindUserById(id int64) (*User, error) {
 		tokenHash:        tokenHash,
 		salt:             salt,
 		email:            email,
-		model:               modelaser,
+		model:            modelaser,
 	}
 
 	return u, nil

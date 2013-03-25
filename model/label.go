@@ -7,8 +7,8 @@ import (
 
 var createLabelTable string = `
 CREATE TABLE IF NOT EXISTS Label(
-   label_id SERIAL PRIMARY KEY,
-   name VARCHAR(255) UNIQUE NOT NULL
+   label_id		SERIAL PRIMARY KEY,
+   name			VARCHAR(255) UNIQUE NOT NULL
 )`
 
 var dropLabelTable string = `
@@ -35,9 +35,9 @@ WHERE label_id = $2
 
 // Represents a label from the blog
 type Label struct {
-	id   int64
-	name string
-	model   DBVendor
+	id    int64
+	name  string
+	model DBVendor
 }
 
 func (l *Label) Id() int64 {
