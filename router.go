@@ -22,6 +22,9 @@ func (r Router) Start(port string, conn *model.DBConnection) error {
 	for _, ctlr := range controllers {
 		muxer.HandleFunc(ctlr.Path(), ctlr.Controller(conn))
 	}
+	// serve dynamic resources
 	http.Handle("/", muxer)
+	// serve static resources
+	http.Handle("/res/", http.StripPrefix("/res", http.FileServer(http.Dir("public/"))))
 	return http.ListenAndServe(":"+port, nil)
 }

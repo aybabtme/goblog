@@ -8,13 +8,13 @@ import (
 
 func TestApplicationTemplate(t *testing.T) {
 
-	app, err := template.ParseFiles("application.tmpl")
+	app, err := template.ParseFiles("template/application.tmpl")
 	if nil != err {
 		t.Error("Couldn't load templates.", err)
 		return
 	}
 
-	base, err := app.ParseGlob("base_*.tmpl")
+	base, err := app.ParseGlob("template/base/*.tmpl")
 	if nil != err {
 		t.Error("Couldn't load templates.", err)
 		return
@@ -29,5 +29,4 @@ func TestApplicationTemplate(t *testing.T) {
 	if err := content.Execute(os.Stdout, nil); nil != err {
 		t.Errorf("template execution: %s", err)
 	}
-
 }
