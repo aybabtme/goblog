@@ -98,9 +98,15 @@ WHERE
 	C.post_id = $1`
 
 var queryForAllLabelsOfPostId string = `
-SELECT L.label_id, L.name
-FROM Label AS L, LabelPost AS LP
-WHERE LP.post_id = $1 AND LP.label_id = P.id`
+SELECT
+	L.label_id,
+	L.name
+FROM
+	Label AS L,
+	LabelPost AS LP
+WHERE
+	LP.post_id = $1
+	AND LP.label_id = P.id`
 
 var queryPostIdFromDate string = `
 SELECT

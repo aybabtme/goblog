@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/aybabtme/goblog/model"
+	"github.com/aybabtme/gypsum"
 	"os"
 	"time"
 )
@@ -62,18 +63,18 @@ func generateData(conn *model.DBConnection) error {
 	if err := author.Save(); nil != err {
 		return err
 	}
-	post1 := conn.NewPost(author.Id(),
+	post1 := conn.NewPost(author,
 		"Il était une fois",
-		"Lorem ipsum shit chien vache",
+		gypsum.Lorem(),
 		"http://media.zoom-cinema.fr/photos/news/2380/il-etait-une-fois-2007-4.jpg",
 		time.Now().UTC())
 	if err := post1.Save(); nil != err {
 		return err
 	}
 
-	post2 := conn.NewPost(author.Id(),
+	post2 := conn.NewPost(author,
 		"Parenthood",
-		"XXX gratis, donne nous juste ton carte de crédit pis on te promet de pas l'utiliser",
+		gypsum.Lorem(),
 		"http://www.blessedquietness.com/STUPID01.jpg",
 		time.Now().UTC())
 	if err := post2.Save(); nil != err {

@@ -31,14 +31,18 @@ SELECT
    U.registration_date,
    U.timezone,
    U.email
-FROM Author AS A, BlogUser AS U
+FROM
+	Author AS A,
+	BlogUser AS U
 WHERE
 	A.author_id = $1
 	AND A.user_id = U.user_id`
 
 var deleteAuthorById string = `
-DELETE FROM Author
-WHERE Author.author_id = $1`
+DELETE FROM
+	Author
+WHERE
+	Author.author_id = $1`
 
 var queryForAllAuthor string = `
 SELECT
@@ -48,19 +52,33 @@ SELECT
    U.registration_date,
    U.timezone,
    U.email
-FROM Author AS A, BlogUser AS U
-WHERE A.user_id = U.user_id`
+FROM
+	Author AS A,
+	BlogUser AS U
+WHERE
+	A.user_id = U.user_id`
 
 var queryAuthorForUserId string = `
-SELECT A.author_id
-FROM Author AS A
-WHERE A.user_id = $1`
+SELECT
+	A.author_id
+FROM
+	Author AS A
+WHERE
+	A.user_id = $1`
 
 // Relations
 var queryForAllPostsOfAuthorId string = `
-SELECT P.post_id, P.author_id, P.title, P.content, P.image_url, P.date
-FROM Post AS P
-WHERE P.author_id = $1
+SELECT
+	P.post_id,
+	P.author_id,
+	P.title,
+	P.content,
+	P.image_url,
+	P.date
+FROM
+	Post AS P
+WHERE
+	P.author_id = $1
 `
 
 // Represents an author of the blog

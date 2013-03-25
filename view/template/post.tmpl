@@ -4,7 +4,7 @@
 
       <img src="{{.ImageURL}}" height="100px" width="100px"></img>
       <h1>{{.Title}}</h1>
-      <h2>Posted on {{.Date}}</h2>
+      <h2>By {{.Author.User.Username}}, posted on {{.Date}}</h2>
       <p>{{.Content}}<p>
 
       {{range .Comments}}
