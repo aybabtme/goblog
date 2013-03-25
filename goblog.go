@@ -74,7 +74,7 @@ func generateData(conn *model.DBConnection) error {
 	post2 := conn.NewPost(author.Id(),
 		"Parenthood",
 		"XXX gratis, donne nous juste ton carte de crédit pis on te promet de pas l'utiliser",
-		"http://manipalblog.com/wp-content/uploads/2013/01/I-am-With-Stupid.jpeg",
+		"http://www.blessedquietness.com/STUPID01.jpg",
 		time.Now().UTC())
 	if err := post2.Save(); nil != err {
 		return err

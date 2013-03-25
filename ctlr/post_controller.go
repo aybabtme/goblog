@@ -73,13 +73,6 @@ func (p *post) forId(conn *model.DBConnection,
 		return
 	}
 	post, err := conn.FindPostById(intId)
-	/*
-		if err != nil {
-				fmt.Println("PostController for id 2:", post)
-				fmt.Println("PostController for id 2:", err)
-				return
-		}
-	*/
 	if err := p.view.Execute(rw, post); nil != err {
 		fmt.Println("PostController for id 3:", err)
 		return

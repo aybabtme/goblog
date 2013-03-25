@@ -3,7 +3,9 @@
    {{range .}}
 
       <img src="{{.ImageURL}}" height="100px" width="100px"></img>
-      <h1>{{.Title}}</h1>
+      <a href="/post/{{.Id}}">
+         <h1>{{.Title}}</h1>
+      </a>
       <h2>Posted on {{.Date}}</h2>
 
    {{else}}
