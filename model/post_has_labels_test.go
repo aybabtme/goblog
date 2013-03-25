@@ -14,7 +14,7 @@ func generatePost(conn *DBConnection, i int64) (*Post, error) {
 	if err != nil {
 		return nil, err
 	}
-	var post = conn.NewPost(author.Id(),
+	var post = conn.NewPost(author,
 		fmt.Sprintf("Title #%d", i),
 		fmt.Sprintf("Content #%d", i),
 		fmt.Sprintf("ImageUrl #%d", i),

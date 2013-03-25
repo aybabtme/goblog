@@ -244,7 +244,7 @@ func findAllAuthorPosts(t *testing.T, conn *DBConnection) {
 
 	var expected []Post
 	for i := int64(0); i < postCount; i++ {
-		var post = conn.NewPost(author.Id(),
+		var post = conn.NewPost(author,
 			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
 			fmt.Sprintf("ImageUrl #%d", i),

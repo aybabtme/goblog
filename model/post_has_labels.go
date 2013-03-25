@@ -32,9 +32,28 @@ INSERT INTO LabelPost( post_id, label_id )
 VALUES( $1, $2 )`
 
 var findPostsByLabelId string = `
-SELECT P.post_id, P.author_id, P.title, P.content, P.image_url, P.date
-FROM Post AS P, LabelPost AS LP
-WHERE LP.label_id = $1 AND LP.post_id = P.post_id`
+SELECT
+	P.post_id,
+	P.author_id,
+	P.title,
+	P.content,
+	P.image_url,
+	P.date,
+	A.user_id,
+   U.username,
+   U.registration_date,
+   U.timezone,
+   U.email
+FROM
+	Post AS P,
+	LabelPost AS LP,
+	Author AS A,
+	BlogUser AS U
+WHERE
+	LP.label_id = $1
+	AND LP.post_id = P.post_id
+	AND P.author_id = A.author_id
+	AND A.author_id = U.user_id`
 
 // used
 var findLabelsByPostId string = `
@@ -125,9 +144,9 @@ func (p *Post) AddLabel(name string) (Label, error) {
 	// in the relationship in a single transaction to avoid
 	// integrity restriction problems.
 	var lbl = Label{
-		id:   -1,
-		name: name,
-		model:   p.model,
+		id:    -1,
+		name:  name,
+		model: p.model,
 	}
 
 	model, err := openDatabase(&p.model)
@@ -311,13 +330,13 @@ func (l *Label) Destroy() error {
 func (l *Label) Posts() ([]Post, error) {
 	var posts []Post
 
-	model, err := openDatabase(&l.model)
+	db, err := openDatabase(&l.model)
 	if err != nil {
 		return posts, err
 	}
-	defer model.Close()
+	defer db.Close()
 
-	stmt, err := model.Prepare(findPostsByLabelId)
+	stmt, err := db.Prepare(findPostsByLabelId)
 	if err != nil {
 		return posts, err
 	}
@@ -335,25 +354,50 @@ func (l *Label) Posts() ([]Post, error) {
 		var content string
 		var imageURL string
 		var date time.Time
+		var userId int64
+		var username string
+		var registDate time.Time
+		var timezone int
+		var email string
 
 		err := rows.Scan(&id,
 			&authorId,
 			&title,
 			&content,
 			&imageURL,
-			&date)
+			&date,
+			&userId,
+			&username,
+			&registDate,
+			&timezone,
+			&email)
 
 		if err != nil {
 			return posts, err
 		}
+		u := &User{
+			id:               userId,
+			username:         username,
+			registrationDate: registDate,
+			timezone:         timezone,
+			email:            email,
+			model:            l.model,
+		}
+
+		a := &Author{
+			id:    authorId,
+			user:  u,
+			model: l.model,
+		}
+
 		p := Post{
 			id:       id,
-			authorId: authorId,
+			author:   a,
 			title:    title,
 			content:  content,
 			imageURL: imageURL,
 			date:     date,
-			model:       l.model,
+			model:    l.model,
 		}
 		posts = append(posts, p)
 	}

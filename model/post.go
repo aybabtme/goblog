@@ -30,17 +30,50 @@ INSERT INTO Post( author_id, title, content, image_url, date)
 VALUES( $1, $2, $3, $4, $5)`
 
 var findPostById string = `
-SELECT P.author_id, P.title, P.content, P.image_URL, P.date
-FROM Post AS P
-WHERE P.post_id = $1`
+SELECT
+	P.author_id,
+	P.title,
+	P.content,
+	P.image_URL,
+	P.date,
+   A.user_id,
+   U.username,
+   U.registration_date,
+   U.timezone,
+   U.email
+FROM
+	Post AS P,
+	Author AS A,
+	BlogUser AS U
+WHERE
+	P.post_id = $1
+	AND P.author_id = A.author_id
+	AND A.user_id = U.user_id`
 
 var deletePostById string = `
 DELETE FROM Post
 WHERE Post.post_id = $1`
 
 var queryForAllPost string = `
-SELECT P.post_id, P.author_id, P.title, P.content, P.image_url, P.date
-FROM Post AS P`
+SELECT
+	P.post_id,
+	P.author_id,
+	P.title,
+	P.content,
+	P.image_url,
+	P.date,
+	A.user_id,
+   U.username,
+   U.registration_date,
+   U.timezone,
+   U.email
+FROM
+	Post AS P,
+	Author AS A,
+	BlogUser AS U
+WHERE
+	P.author_id = A.author_id
+	AND A.user_id = U.user_id`
 
 // Relations
 var queryForAllCommentsOfPostId string = `
@@ -65,24 +98,20 @@ WHERE
 // Represents a post in the blog
 type Post struct {
 	id       int64
-	authorId int64
+	author   *Author
 	title    string
 	content  string
 	imageURL string
 	date     time.Time
-	model       DBVendor
+	model    DBVendor
 }
 
 func (p *Post) Id() int64 {
 	return p.id
 }
 
-func (p *Post) AuthorId() int64 {
-	return p.authorId
-}
-
-func (p *Post) SetAuthorId(id int64) {
-	p.authorId = id
+func (p *Post) Author() *Author {
+	return p.author
 }
 
 func (p *Post) Title() string {
@@ -163,7 +192,7 @@ func (p *Post) Comments() ([]Comment, error) {
 			date:     date,
 			upVote:   upVote,
 			downVote: downVote,
-			model:       p.model,
+			model:    p.model,
 		}
 		comments = append(comments, c)
 	}
@@ -182,35 +211,35 @@ func (p *Post) Comments() ([]Comment, error) {
 // Create the table Post in the database interface
 func (conn *DBConnection) createPostTable() {
 
-	var modelaser = conn.databaser
+	var model = conn.databaser
 
-	model, err := sql.Open(modelaser.Driver(), modelaser.Name())
+	db, err := sql.Open(model.Driver(), model.Name())
 	if err != nil {
 		fmt.Println("Error on open of database", err)
 		return
 	}
-	defer model.Close()
+	defer db.Close()
 
-	_, err = model.Exec(createPostTable)
+	_, err = db.Exec(createPostTable)
 	if err != nil {
 		fmt.Printf("Error creating Posts table, driver \"%s\", modelname \"%s\", query = \"%s\"\n",
-			modelaser.Driver(), modelaser.Name(), createPostTable)
+			model.Driver(), model.Name(), createPostTable)
 		fmt.Println(err)
 		return
 	}
 }
 
 func (conn *DBConnection) dropPostTable() {
-	var modelaser = conn.databaser
+	var model = conn.databaser
 
-	model, err := sql.Open(modelaser.Driver(), modelaser.Name())
+	db, err := sql.Open(model.Driver(), model.Name())
 	if err != nil {
 		fmt.Println("Error on open of database", err)
 		return
 	}
-	defer model.Close()
+	defer db.Close()
 
-	_, err = model.Exec(dropPostTable)
+	_, err = db.Exec(dropPostTable)
 	if err != nil {
 		fmt.Println("Error droping table:", err)
 	}
@@ -218,16 +247,16 @@ func (conn *DBConnection) dropPostTable() {
 }
 
 // Creates a new Post attached to the Database (but not saved)
-func (conn *DBConnection) NewPost(authorId int64, title string, content string, imageURL string, date time.Time) *Post {
+func (conn *DBConnection) NewPost(author *Author, title string, content string, imageURL string, date time.Time) *Post {
 
 	return &Post{
 		id:       -1,
-		authorId: authorId,
+		author:   author,
 		title:    title,
 		content:  content,
 		imageURL: imageURL,
 		date:     date,
-		model:       conn.databaser,
+		model:    conn.databaser,
 	}
 }
 
@@ -235,16 +264,16 @@ func (conn *DBConnection) NewPost(authorId int64, title string, content string, 
 func (conn *DBConnection) FindAllPosts() ([]Post, error) {
 
 	var posts []Post
-	var modelaser = conn.databaser
+	var model = conn.databaser
 
-	model, err := sql.Open(modelaser.Driver(), modelaser.Name())
+	db, err := sql.Open(model.Driver(), model.Name())
 	if err != nil {
 		fmt.Println("FindAllPosts 1:", err)
 		return posts, err
 	}
-	defer model.Close()
+	defer db.Close()
 
-	rows, err := model.Query(queryForAllPost)
+	rows, err := db.Query(queryForAllPost)
 	if err != nil {
 		fmt.Println("FindAllPosts 2:", err)
 		return posts, err
@@ -258,18 +287,48 @@ func (conn *DBConnection) FindAllPosts() ([]Post, error) {
 		var content string
 		var imageURL string
 		var date time.Time
-		err := rows.Scan(&id, &authorId, &title, &content, &imageURL, &date)
+		var userId int64
+		var username string
+		var registDate time.Time
+		var timezone int
+		var email string
+		err := rows.Scan(&id,
+			&authorId,
+			&title,
+			&content,
+			&imageURL,
+			&date,
+			&userId,
+			&username,
+			&registDate,
+			&timezone,
+			&email)
 		if err != nil {
 			return posts, err
 		}
+		u := &User{
+			id:               userId,
+			username:         username,
+			registrationDate: registDate,
+			timezone:         timezone,
+			email:            email,
+			model:            model,
+		}
+
+		a := &Author{
+			id:    authorId,
+			user:  u,
+			model: model,
+		}
+
 		p := Post{
 			id:       id,
-			authorId: authorId,
+			author:   a,
 			title:    title,
 			content:  content,
 			imageURL: imageURL,
 			date:     date,
-			model:       modelaser,
+			model:    model,
 		}
 		posts = append(posts, p)
 	}
@@ -281,16 +340,16 @@ func (conn *DBConnection) FindAllPosts() ([]Post, error) {
 func (conn *DBConnection) FindPostById(id int64) (*Post, error) {
 
 	var p *Post
-	var modelaser = conn.databaser
+	var model = conn.databaser
 
-	model, err := sql.Open(modelaser.Driver(), modelaser.Name())
+	db, err := sql.Open(model.Driver(), model.Name())
 	if err != nil {
 		fmt.Println("FindPostById 1:", err)
 		return p, err
 	}
-	defer model.Close()
+	defer db.Close()
 
-	stmt, err := model.Prepare(findPostById)
+	stmt, err := db.Prepare(findPostById)
 	if err != nil {
 		fmt.Println("FindPostById 2:", err)
 		return p, err
@@ -302,20 +361,50 @@ func (conn *DBConnection) FindPostById(id int64) (*Post, error) {
 	var content string
 	var imageURL string
 	var date time.Time
-	err = stmt.QueryRow(id).Scan(&authorId, &title, &content, &imageURL, &date)
+	var userId int64
+	var username string
+	var registDate time.Time
+	var timezone int
+	var email string
+	err = stmt.QueryRow(id).Scan(
+		&authorId,
+		&title,
+		&content,
+		&imageURL,
+		&date,
+		&userId,
+		&username,
+		&registDate,
+		&timezone,
+		&email)
 	if err != nil {
 		// normal if the post doesnt exist
 		return p, err
 	}
 
+	u := &User{
+		id:               userId,
+		username:         username,
+		registrationDate: registDate,
+		timezone:         timezone,
+		email:            email,
+		model:            model,
+	}
+
+	a := &Author{
+		id:    authorId,
+		user:  u,
+		model: model,
+	}
+
 	p = &Post{
 		id:       id,
-		authorId: authorId,
+		author:   a,
 		title:    title,
 		content:  content,
 		imageURL: imageURL,
 		date:     date,
-		model:       modelaser,
+		model:    model,
 	}
 
 	return p, nil
@@ -342,7 +431,7 @@ func (p *Post) Save() error {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(p.authorId, p.title, p.content, p.imageURL, p.date)
+	_, err = stmt.Exec(p.author.Id(), p.title, p.content, p.imageURL, p.date)
 	if err != nil {
 		fmt.Println("Save 3:", err)
 		return err

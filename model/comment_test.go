@@ -13,7 +13,7 @@ func generateUserAndPost(conn *DBConnection, i int64) (*User, *Post) {
 	authUser := generateUser(conn, i)
 	var author = conn.NewAuthor(authUser)
 	_ = author.Save()
-	var post = conn.NewPost(author.Id(),
+	var post = conn.NewPost(author,
 		fmt.Sprintf("Title #%d", i),
 		fmt.Sprintf("Content #%d", i),
 		fmt.Sprintf("ImageUrl #%d", i),

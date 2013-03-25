@@ -115,7 +115,7 @@ func (a *Author) Posts() ([]Post, error) {
 		}
 		p := Post{
 			id:       id,
-			authorId: authorId,
+			author:   a,
 			title:    title,
 			content:  content,
 			imageURL: imageURL,

@@ -14,7 +14,7 @@ func newPost(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 
 	var author = generateAuthor(conn, 0)
-	var post = conn.NewPost(author.Id(),
+	var post = conn.NewPost(author,
 		"My first post",
 		"Hello World",
 		"fake.url/to/image.jpg",
@@ -31,7 +31,7 @@ func TestSavePost(t *testing.T) {
 func savePost(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 	var author = generateAuthor(conn, 0)
-	var post = conn.NewPost(author.Id(),
+	var post = conn.NewPost(author,
 		"My first post",
 		"Hello World",
 		"fake.url/to/image.jpg",
@@ -62,7 +62,7 @@ func destroyPost(t *testing.T, conn *DBConnection) {
 
 	for i := int64(1); i < 10; i++ {
 		var author = generateAuthor(conn, i)
-		var expected = conn.NewPost(author.Id(),
+		var expected = conn.NewPost(author,
 			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
 			fmt.Sprintf("ImageUrl #%d", i),
@@ -93,7 +93,7 @@ func findByIdPost(t *testing.T, conn *DBConnection) {
 	defer conn.DeleteConnection()
 	for i := int64(1); i < 10; i++ {
 		var author = generateAuthor(conn, i)
-		var expected = conn.NewPost(author.Id(),
+		var expected = conn.NewPost(author,
 			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
 			fmt.Sprintf("ImageUrl #%d", i),
@@ -123,7 +123,7 @@ func findAllPost(t *testing.T, conn *DBConnection) {
 
 	for i := int64(1); i <= postCount; i++ {
 		var author = generateAuthor(conn, i)
-		var post = conn.NewPost(author.Id(),
+		var post = conn.NewPost(author,
 			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
 			fmt.Sprintf("ImageUrl #%d", i),
@@ -161,7 +161,7 @@ func postIdIncrements(t *testing.T, conn *DBConnection) {
 
 	for i := int64(1); i < 10; i++ {
 		var author = generateAuthor(conn, i)
-		var post = conn.NewPost(author.Id(),
+		var post = conn.NewPost(author,
 			fmt.Sprintf("Title #%d", i),
 			fmt.Sprintf("Content #%d", i),
 			fmt.Sprintf("ImageUrl #%d", i),
