@@ -1,13 +1,13 @@
-package db
+package model
 
 import (
 	"testing"
 )
 
 func TestPostgresDatabaseCreation(t *testing.T) {
-	var dburl = "user=antoine dbname=test sslmode=disable"
+	var modelurl = "user=antoine dbname=test sslmode=disable"
 
-	var postgres = NewPostgreser(dburl)
+	var postgres = NewPostgreser(modelurl)
 
 	var conn, err = NewConnection(postgres)
 
@@ -24,7 +24,7 @@ func TestPostgresDatabaseCreation(t *testing.T) {
 //
 
 func setupPGConnection() *DBConnection {
-	dburl := "user=antoine dbname=test sslmode=disable"
-	conn, _ := NewConnection(NewPostgreser(dburl))
+	modelurl := "user=antoine dbname=test sslmode=disable"
+	conn, _ := NewConnection(NewPostgreser(modelurl))
 	return conn
 }

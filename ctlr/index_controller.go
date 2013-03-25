@@ -2,7 +2,7 @@ package ctlr
 
 import (
 	"fmt"
-	"github.com/aybabtme/goblog/db"
+	"github.com/aybabtme/goblog/model"
 	"net/http"
 )
 
@@ -16,7 +16,7 @@ func (i *index) Path() string {
 	return "/"
 }
 
-func (i *index) Controller(conn *db.DBConnection) func(http.ResponseWriter,
+func (i *index) Controller(conn *model.DBConnection) func(http.ResponseWriter,
 	*http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 

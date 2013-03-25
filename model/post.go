@@ -1,4 +1,4 @@
-package db
+package model
 
 import (
 	"database/sql"
@@ -70,7 +70,7 @@ type Post struct {
 	content  string
 	imageURL string
 	date     time.Time
-	db       DBVendor
+	model       DBVendor
 }
 
 func (p *Post) Id() int64 {
@@ -118,14 +118,14 @@ func (p *Post) SetDate(time time.Time) {
 }
 
 func (p *Post) Comments() ([]Comment, error) {
-	db, err := sql.Open(p.db.Driver(), p.db.Name())
+	model, err := sql.Open(p.model.Driver(), p.model.Name())
 	if err != nil {
 		fmt.Println("Couldn't open DB:", err)
 		return nil, err
 	}
-	defer db.Close()
+	defer model.Close()
 
-	stmt, err := db.Prepare(queryForAllCommentsOfPostId)
+	stmt, err := model.Prepare(queryForAllCommentsOfPostId)
 	if err != nil {
 		fmt.Printf("Couldn't prepare statement: %s", queryForAllCommentsOfPostId)
 		fmt.Println(err)
@@ -163,7 +163,7 @@ func (p *Post) Comments() ([]Comment, error) {
 			date:     date,
 			upVote:   upVote,
 			downVote: downVote,
-			db:       p.db,
+			model:       p.model,
 		}
 		comments = append(comments, c)
 	}
@@ -182,35 +182,35 @@ func (p *Post) Comments() ([]Comment, error) {
 // Create the table Post in the database interface
 func (conn *DBConnection) createPostTable() {
 
-	var dbaser = conn.databaser
+	var modelaser = conn.databaser
 
-	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
+	model, err := sql.Open(modelaser.Driver(), modelaser.Name())
 	if err != nil {
 		fmt.Println("Error on open of database", err)
 		return
 	}
-	defer db.Close()
+	defer model.Close()
 
-	_, err = db.Exec(createPostTable)
+	_, err = model.Exec(createPostTable)
 	if err != nil {
-		fmt.Printf("Error creating Posts table, driver \"%s\", dbname \"%s\", query = \"%s\"\n",
-			dbaser.Driver(), dbaser.Name(), createPostTable)
+		fmt.Printf("Error creating Posts table, driver \"%s\", modelname \"%s\", query = \"%s\"\n",
+			modelaser.Driver(), modelaser.Name(), createPostTable)
 		fmt.Println(err)
 		return
 	}
 }
 
 func (conn *DBConnection) dropPostTable() {
-	var dbaser = conn.databaser
+	var modelaser = conn.databaser
 
-	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
+	model, err := sql.Open(modelaser.Driver(), modelaser.Name())
 	if err != nil {
 		fmt.Println("Error on open of database", err)
 		return
 	}
-	defer db.Close()
+	defer model.Close()
 
-	_, err = db.Exec(dropPostTable)
+	_, err = model.Exec(dropPostTable)
 	if err != nil {
 		fmt.Println("Error droping table:", err)
 	}
@@ -227,7 +227,7 @@ func (conn *DBConnection) NewPost(authorId int64, title string, content string, 
 		content:  content,
 		imageURL: imageURL,
 		date:     date,
-		db:       conn.databaser,
+		model:       conn.databaser,
 	}
 }
 
@@ -235,16 +235,16 @@ func (conn *DBConnection) NewPost(authorId int64, title string, content string, 
 func (conn *DBConnection) FindAllPosts() ([]Post, error) {
 
 	var posts []Post
-	var dbaser = conn.databaser
+	var modelaser = conn.databaser
 
-	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
+	model, err := sql.Open(modelaser.Driver(), modelaser.Name())
 	if err != nil {
 		fmt.Println("FindAllPosts 1:", err)
 		return posts, err
 	}
-	defer db.Close()
+	defer model.Close()
 
-	rows, err := db.Query(queryForAllPost)
+	rows, err := model.Query(queryForAllPost)
 	if err != nil {
 		fmt.Println("FindAllPosts 2:", err)
 		return posts, err
@@ -269,7 +269,7 @@ func (conn *DBConnection) FindAllPosts() ([]Post, error) {
 			content:  content,
 			imageURL: imageURL,
 			date:     date,
-			db:       dbaser,
+			model:       modelaser,
 		}
 		posts = append(posts, p)
 	}
@@ -281,16 +281,16 @@ func (conn *DBConnection) FindAllPosts() ([]Post, error) {
 func (conn *DBConnection) FindPostById(id int64) (*Post, error) {
 
 	var p *Post
-	var dbaser = conn.databaser
+	var modelaser = conn.databaser
 
-	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
+	model, err := sql.Open(modelaser.Driver(), modelaser.Name())
 	if err != nil {
 		fmt.Println("FindPostById 1:", err)
 		return p, err
 	}
-	defer db.Close()
+	defer model.Close()
 
-	stmt, err := db.Prepare(findPostById)
+	stmt, err := model.Prepare(findPostById)
 	if err != nil {
 		fmt.Println("FindPostById 2:", err)
 		return p, err
@@ -315,7 +315,7 @@ func (conn *DBConnection) FindPostById(id int64) (*Post, error) {
 		content:  content,
 		imageURL: imageURL,
 		date:     date,
-		db:       dbaser,
+		model:       modelaser,
 	}
 
 	return p, nil
@@ -328,14 +328,14 @@ func (conn *DBConnection) FindPostById(id int64) (*Post, error) {
 // Saves the post (or update it if it already exists)
 // to the database
 func (p *Post) Save() error {
-	db, err := sql.Open(p.db.Driver(), p.db.Name())
+	model, err := sql.Open(p.model.Driver(), p.model.Name())
 	if err != nil {
 		fmt.Println("Save 1:", err)
 		return err
 	}
-	defer db.Close()
+	defer model.Close()
 
-	stmt, err := db.Prepare(insertOrReplacePostForId)
+	stmt, err := model.Prepare(insertOrReplacePostForId)
 	if err != nil {
 		fmt.Println("Save 2:", err)
 		return err
@@ -349,7 +349,7 @@ func (p *Post) Save() error {
 	}
 
 	// query the ID we inserted
-	idStmt, err := db.Prepare(queryPostIdFromDate)
+	idStmt, err := model.Prepare(queryPostIdFromDate)
 	if err != nil {
 		fmt.Println("Save 5:", err)
 		return err
@@ -364,14 +364,14 @@ func (p *Post) Save() error {
 // Deletes the post from the database
 func (p *Post) Destroy() error {
 
-	db, err := sql.Open(p.db.Driver(), p.db.Name())
+	model, err := sql.Open(p.model.Driver(), p.model.Name())
 	if err != nil {
 		fmt.Println("Destroy:", err)
 		return err
 	}
-	defer db.Close()
+	defer model.Close()
 
-	stmt, err := db.Prepare(deletePostById)
+	stmt, err := model.Prepare(deletePostById)
 	if err != nil {
 		fmt.Println("Destroy:", err)
 		return err

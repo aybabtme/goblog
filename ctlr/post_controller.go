@@ -2,7 +2,7 @@ package ctlr
 
 import (
 	"fmt"
-	"github.com/aybabtme/goblog/db"
+	"github.com/aybabtme/goblog/model"
 	"github.com/gorilla/mux"
 	"net/http"
 )
@@ -23,7 +23,7 @@ func (p *post) Path() string {
 	return p.path
 }
 
-func (p *post) Controller(conn *db.DBConnection) func(http.ResponseWriter, *http.Request) {
+func (p *post) Controller(conn *model.DBConnection) func(http.ResponseWriter, *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		vars := mux.Vars(req)
 		id := vars["id"]
@@ -36,7 +36,7 @@ func (p *post) Controller(conn *db.DBConnection) func(http.ResponseWriter, *http
 	}
 }
 
-func (p *post) forListing(conn *db.DBConnection,
+func (p *post) forListing(conn *model.DBConnection,
 	rw http.ResponseWriter,
 	req *http.Request) {
 
@@ -44,7 +44,7 @@ func (p *post) forListing(conn *db.DBConnection,
 	fmt.Fprintf(rw, "received listing request")
 }
 
-func (p *post) forId(conn *db.DBConnection,
+func (p *post) forId(conn *model.DBConnection,
 	rw http.ResponseWriter,
 	req *http.Request,
 	id string) {

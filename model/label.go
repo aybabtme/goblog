@@ -1,4 +1,4 @@
-package db
+package model
 
 import (
 	"database/sql"
@@ -37,7 +37,7 @@ WHERE label_id = $2
 type Label struct {
 	id   int64
 	name string
-	db   DBVendor
+	model   DBVendor
 }
 
 func (l *Label) Id() int64 {
@@ -54,20 +54,20 @@ func (l *Label) SetName(name string) {
 
 // Create the table Label in the database interface
 func (persist *DBConnection) createLabelTable() {
-	var dbaser = persist.databaser
+	var modelaser = persist.databaser
 
-	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
+	model, err := sql.Open(modelaser.Driver(), modelaser.Name())
 	if err != nil {
 		fmt.Println("Error on open of database", err)
 		return
 	}
-	defer db.Close()
+	defer model.Close()
 
-	_, err = db.Exec(createLabelTable)
+	_, err = model.Exec(createLabelTable)
 	if err != nil {
 		fmt.Printf("Error creating Labels table, driver \"%s\","+
-			"dbname \"%s\", query = \"%s\"\n",
-			dbaser.Driver(), dbaser.Name(), createLabelTable)
+			"modelname \"%s\", query = \"%s\"\n",
+			modelaser.Driver(), modelaser.Name(), createLabelTable)
 		fmt.Println(err)
 		return
 	}
@@ -75,16 +75,16 @@ func (persist *DBConnection) createLabelTable() {
 
 // Drop the table, pretty self telling
 func (persist *DBConnection) dropLabelTable() {
-	var dbaser = persist.databaser
+	var modelaser = persist.databaser
 
-	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
+	model, err := sql.Open(modelaser.Driver(), modelaser.Name())
 	if err != nil {
 		fmt.Println("Error on open of database", err)
 		return
 	}
-	defer db.Close()
+	defer model.Close()
 
-	_, err = db.Exec(dropLabelTable)
+	_, err = model.Exec(dropLabelTable)
 	if err != nil {
 		fmt.Println("Error droping table:", err)
 	}
@@ -93,16 +93,16 @@ func (persist *DBConnection) dropLabelTable() {
 // Finds all the labels in the database
 func (persist *DBConnection) FindAllLabels() ([]Label, error) {
 	var labels []Label
-	var dbaser = persist.databaser
+	var modelaser = persist.databaser
 
-	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
+	model, err := sql.Open(modelaser.Driver(), modelaser.Name())
 	if err != nil {
 		fmt.Println("FindAllLabels 1:", err)
 		return labels, err
 	}
-	defer db.Close()
+	defer model.Close()
 
-	rows, err := db.Query(queryForAllLabel)
+	rows, err := model.Query(queryForAllLabel)
 	if err != nil {
 		fmt.Println("FindAllLabels 2:", err)
 		return labels, err
@@ -125,16 +125,16 @@ func (persist *DBConnection) FindAllLabels() ([]Label, error) {
 
 func (persist *DBConnection) FindLabelById(id int64) (*Label, error) {
 	var l *Label
-	var dbaser = persist.databaser
+	var modelaser = persist.databaser
 
-	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
+	model, err := sql.Open(modelaser.Driver(), modelaser.Name())
 	if err != nil {
 		fmt.Println("FindLabelById 1:", err)
 		return l, err
 	}
-	defer db.Close()
+	defer model.Close()
 
-	stmt, err := db.Prepare(findLabelById)
+	stmt, err := model.Prepare(findLabelById)
 	if err != nil {
 		fmt.Println("FindLabelById 2:", err)
 		return l, err
@@ -163,14 +163,14 @@ func (persist *DBConnection) FindLabelById(id int64) (*Label, error) {
 // Saves the Label (or update it if it already exists) to the
 // database
 func (l *Label) Save() error {
-	db, err := sql.Open(l.db.Driver(), l.db.Name())
+	model, err := sql.Open(l.model.Driver(), l.model.Name())
 	if err != nil {
 		fmt.Println("Save 1:", err)
 		return err
 	}
-	defer db.Close()
+	defer model.Close()
 
-	stmt, err := db.Prepare(renameLabelById)
+	stmt, err := model.Prepare(renameLabelById)
 	if err != nil {
 		fmt.Println("Save 2:", err)
 		return err

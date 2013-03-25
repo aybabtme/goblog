@@ -2,17 +2,17 @@ package main
 
 import (
 	"fmt"
-	"github.com/aybabtme/goblog/db"
+	"github.com/aybabtme/goblog/model"
 	"os"
 	"time"
 )
 
 func main() {
 
-	dburl := os.Getenv("DATABASE_URL")
-	if dburl == "" {
+	modelurl := os.Getenv("DATABASE_URL")
+	if modelurl == "" {
 		fmt.Println("Need a database to connect to!\n" +
-			"export DATABASE_URL=<your db url here>")
+			"export DATABASE_URL=<your model url here>")
 		return
 	}
 	port := os.Getenv("PORT")
@@ -22,7 +22,7 @@ func main() {
 		return
 	}
 
-	conn, err := setupDatabase(dburl)
+	conn, err := setupDatabase(modelurl)
 	if err != nil {
 		fmt.Println("Couldn't connect to database.")
 		panic(err)
@@ -39,17 +39,17 @@ func main() {
 	}
 }
 
-func setupDatabase(dburl string) (*db.DBConnection, error) {
-	postgres := db.NewPostgreser(dburl)
-	conn, err := db.NewConnection(postgres)
+func setupDatabase(modelurl string) (*model.DBConnection, error) {
+	postgres := model.NewPostgreser(modelurl)
+	conn, err := model.NewConnection(postgres)
 	if err != nil {
 		return nil, err
 	}
 	conn.DeleteConnection()
-	return db.NewConnection(postgres)
+	return model.NewConnection(postgres)
 }
 
-func generateData(conn *db.DBConnection) error {
+func generateData(conn *model.DBConnection) error {
 
 	user := conn.NewUser(
 		"antoine",

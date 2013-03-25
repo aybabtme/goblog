@@ -1,11 +1,11 @@
 package ctlr
 
 import (
-	"github.com/aybabtme/goblog/db"
+	"github.com/aybabtme/goblog/model"
 	"net/http"
 )
 
 type Controller interface {
 	Path() string
-	Controller(*db.DBConnection) func(http.ResponseWriter, *http.Request)
+	Controller(*model.DBConnection) func(http.ResponseWriter, *http.Request)
 }

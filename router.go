@@ -2,14 +2,14 @@ package main
 
 import (
 	"github.com/aybabtme/goblog/ctlr"
-	"github.com/aybabtme/goblog/db"
+	"github.com/aybabtme/goblog/model"
 	"github.com/gorilla/mux"
 	"net/http"
 )
 
 type Router string
 
-func (r Router) Start(port string, conn *db.DBConnection) error {
+func (r Router) Start(port string, conn *model.DBConnection) error {
 
 	controllers := []ctlr.Controller{
 		ctlr.NewIndexController(),

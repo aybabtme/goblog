@@ -1,4 +1,4 @@
-package db
+package model
 
 import (
 	"database/sql"
@@ -17,13 +17,13 @@ type DBConnection struct {
 // Creates a connection with the given DBVendor argument.
 // You can then use that connection to create objects on the DB
 // and then use those objects to update the DB.
-func NewConnection(dbaser DBVendor) (*DBConnection, error) {
-	db, err := sql.Open(dbaser.Driver(), dbaser.Name())
+func NewConnection(modelaser DBVendor) (*DBConnection, error) {
+	model, err := sql.Open(modelaser.Driver(), modelaser.Name())
 	if err != nil {
 		return nil, err
 	}
-	db.Close()
-	var conn = &DBConnection{databaser: dbaser}
+	model.Close()
+	var conn = &DBConnection{databaser: modelaser}
 
 	// Order matters, topologically sorted since tables are
 	// inter dependent
@@ -59,30 +59,30 @@ type DBVendor interface {
 	Driver() string
 }
 
-// A connection to a PostgreSQL db.
+// A connection to a PostgreSQL model.
 type Postgreser struct {
-	dburl string
+	modelurl string
 }
 
 // Prepares a Postgreser for use as DBVendor
-func NewPostgreser(dburl string) Postgreser {
-	return Postgreser{dburl: dburl}
+func NewPostgreser(modelurl string) Postgreser {
+	return Postgreser{modelurl: modelurl}
 }
 
-// The name of the PostgreSQL db
-func (db Postgreser) Name() string {
-	return db.dburl
+// The name of the PostgreSQL model
+func (model Postgreser) Name() string {
+	return model.modelurl
 }
 
 // The name of the driver for the PostgreSQL driver
-func (db Postgreser) Driver() string {
+func (model Postgreser) Driver() string {
 	return "postgres"
 }
 
-func (db Postgreser) IncrementPrimaryKey() string {
+func (model Postgreser) IncrementPrimaryKey() string {
 	return "SERIAL PRIMARY KEY"
 }
 
-func (db Postgreser) DateField() string {
+func (model Postgreser) DateField() string {
 	return "TIMESTAMP"
 }
