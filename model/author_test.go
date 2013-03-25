@@ -206,7 +206,7 @@ func deleteUserCascadesToAuthor(t *testing.T, conn *DBConnection) {
 	var author = conn.NewAuthor(user)
 	_ = author.Save()
 
-	var copyUser, _ = conn.FindUserById(author.UserId())
+	var copyUser, _ = conn.FindUserById(author.User().Id())
 
 	if copyUser == nil {
 		t.Error("Copyuser is nil")

@@ -63,18 +63,13 @@ WHERE P.author_id = $1
 
 // Represents an author of the blog
 type Author struct {
-	id     int64
-	userId int64
-	user   *User
-	model     DBVendor
+	id    int64
+	user  *User
+	model DBVendor
 }
 
 func (a *Author) Id() int64 {
 	return a.id
-}
-
-func (a *Author) UserId() int64 {
-	return a.userId
 }
 
 func (a *Author) User() *User {
@@ -125,7 +120,7 @@ func (a *Author) Posts() ([]Post, error) {
 			content:  content,
 			imageURL: imageURL,
 			date:     date,
-			model:       a.model,
+			model:    a.model,
 		}
 		posts = append(posts, p)
 	}
@@ -174,10 +169,9 @@ func (conn *DBConnection) dropAuthorTable() {
 // the save method on the returned Author.
 func (conn *DBConnection) NewAuthor(user *User) *Author {
 	return &Author{
-		id:     -1,
-		userId: user.Id(),
-		user:   user,
-		model:     conn.databaser,
+		id:    -1,
+		user:  user,
+		model: conn.databaser,
 	}
 }
 
@@ -217,14 +211,13 @@ func (conn *DBConnection) FindAllAuthors() ([]Author, error) {
 			registrationDate: date,
 			timezone:         timezone,
 			email:            email,
-			model:               modelvendor,
+			model:            modelvendor,
 		}
 
 		a := Author{
-			id:     id,
-			userId: userId,
-			user:   u,
-			model:     modelvendor,
+			id:    id,
+			user:  u,
+			model: modelvendor,
 		}
 		authors = append(authors, a)
 	}
@@ -276,14 +269,13 @@ func (conn *DBConnection) FindAuthorById(id int64) (*Author, error) {
 		registrationDate: date,
 		timezone:         timezone,
 		email:            email,
-		model:               modelvendor,
+		model:            modelvendor,
 	}
 
 	a = &Author{
-		id:     id,
-		userId: userId,
-		user:   u,
-		model:     modelvendor,
+		id:    id,
+		user:  u,
+		model: modelvendor,
 	}
 
 	return a, nil
@@ -316,9 +308,8 @@ func (a *Author) Save() error {
 		fmt.Println("Save 3:", err)
 		return err
 	}
-	a.userId = a.user.Id()
 
-	_, err = stmt.Exec(a.userId)
+	_, err = stmt.Exec(a.User().Id())
 	if err != nil {
 		fmt.Println("Save 4:", err)
 		return err
@@ -332,7 +323,7 @@ func (a *Author) Save() error {
 	}
 	defer idStmt.Close()
 
-	row := idStmt.QueryRow(a.UserId())
+	row := idStmt.QueryRow(a.User().Id())
 
 	return row.Scan(&a.id)
 
