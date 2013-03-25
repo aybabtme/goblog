@@ -1,14 +1,5 @@
-{{define "index"}}
+{{define "content"}}
 <div class = "index">
-      {{range .Recent}}
-        <h2>
-            <a href="/{{.Id()}}" style="text-decoration:none">{{.Title}}</a>
-        </h2>
-        <h6>
-            Published: {{.Date}} by <a href="/{{.Author()}}">{{.Author}}</a>
-        </h6>
-        <p>
-            {{.Content}}
-        </p>{{end}}
+
 </div>
 {{end}}

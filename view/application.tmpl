@@ -1,4 +1,3 @@
-{{define "application"}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,28 +6,20 @@
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <meta name="description" content="">
    <meta name="author" content="">
-   {{template "style"}}
+   {{template "style" .}}
 </head>
 <body>
    <div id="wrap">
       <div class="container">
          <div id='content' class='row-fluid'>
             <div class='span9 main'></div>
-            {{template "header"}}
-
-            <!--
-               This "content" is the argument to pass in the Go program:
-                  template.New("content").Parse(<name_of_the_template>)
-            -->
-            {{template "content"}}
-
-
-            {{template "footer"}}
+            {{template "header" .}}
+            {{template "content" .}}
+            {{template "footer" .}}
          </div>
       </div><!-- container -->
       <div id="push"></div>
    </div>
 </body>
-{{template "javascript"}}
+{{template "javascript" .}}
 </html>
-{{end}}
