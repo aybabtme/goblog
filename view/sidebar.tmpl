@@ -1,0 +1,29 @@
+{{define "sidebar"}}
+<div class='span3 sidebar'>
+   <h2>
+      More Fun
+   </h2>
+   <h4>
+      Post History
+   </h4>
+   <ul>
+      <li>
+         <a href='Archives'>Archives</a>
+      </li>
+   </ul>
+   <h4>
+      Labels
+   </h4>
+   <ul>
+      <li style="list-style: none">
+         {{range .Labels}}
+            </li>
+            <li>
+               <a href="{{.Id}}" title="{{.Title}}">{{.Title}}</a>
+            </li>
+            <li style="list-style: none">
+         {{end}}
+      </li>
+   </ul>
+</div>
+{{end}}

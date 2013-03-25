@@ -1,12 +1,14 @@
+{{define "author"}}
 <div class = "author">
-    <h1>All posts by {{.Author}</h1>
+   <h1>All posts by {{.Author}</h1>
 
-    {{range .Author}}
-        <h2>
-            <a href="/{{.Id()}}" style="text-decoration:none">{{.Title}}    </a>
-        </h2>
-        <h6>
-            Published: {{.Date}} by <a href="/{{.Id()}}">{{.Author}}</a>
-        </h6>
-    {{end}}    
+   {{range .Author}}
+      <h2>
+         <a href="/{{.Id()}}" style="text-decoration:none">{{.Title}}</a>
+      </h2>
+      <h6>
+         Published: {{.Date}} by <a href="/{{.Id()}}">{{.Author}}</a>
+      </h6>
+   {{end}}
 </div>
+{{end}}

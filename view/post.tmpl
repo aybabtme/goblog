@@ -1,28 +1,3 @@
-<html>
-    <head>
-        <title></title>
-    </head>
-    <body>
-        <h2>
-            <a href="/{{.Id()}}" style="text-decoration:none">{{.Title}}</a>
-        </h2>
-        <h6>
-            Published: {{.Date}} by <a href="/{{.Id()}}">{{.Author}}</a>
-        </h6>
-        <p>
-            {{.Content}}
-        </p><!-- Comments -->
-        <form action="/save/{{.Title}}" method="post">
-            <div class="hero-unit" style="margin-top:20px">
-                <h3>
-                    Enter Your Comment Here <small>please <a href="/login.tmpl" title="login">login</a> before you post!</small>
-                </h3>
-                <hr>
-                <textarea name="comment" class="textarea" placeholder="Enter comment ..." style="width: 710px; height: 100px"></textarea>
-                <div class="controls">
-                    <button id="contact-submit" type="submit" class="btn btn-primary input-medium pull-right">Send</button>
-                </div>
-            </div>
-        </form>
-    </body>
-</html>
+{{define "post"}}
+<!-- TO BE DONE -->
+{{end}}
