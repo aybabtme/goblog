@@ -72,9 +72,9 @@ func generateData(conn *model.DBConnection) error {
 	}
 
 	post2 := conn.NewPost(author.Id(),
-		"Grosse Truie avec un Gros Cul",
+		"Parenthood",
 		"XXX gratis, donne nous juste ton carte de crédit pis on te promet de pas l'utiliser",
-		"http://www.blacktowhite.net/wp-content/uploads/2011/05/cock-sucking-bitches-05-590x398.jpg",
+		"http://manipalblog.com/wp-content/uploads/2013/01/I-am-With-Stupid.jpeg",
 		time.Now().UTC())
 	if err := post2.Save(); nil != err {
 		return err
