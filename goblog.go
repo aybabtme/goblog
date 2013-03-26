@@ -6,6 +6,7 @@ import (
 	"github.com/aybabtme/gypsum"
 	"math/rand"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -31,11 +32,14 @@ func main() {
 		panic(err)
 	}
 
+	fmt.Printf("Generating data... ")
 	err = generateData(conn)
 	if err != nil {
 		fmt.Println("Couldn't generate data")
 	}
+	fmt.Println("Done.")
 
+	fmt.Println("Starting router")
 	var r Router
 	if err := r.Start(port, conn); err != nil {
 		panic(err)
@@ -52,57 +56,80 @@ func setupDatabase(modelurl string) (*model.DBConnection, error) {
 	return model.NewConnection(postgres)
 }
 
+func serialIntGenerator() func() string {
+	i := 0
+	return func() string {
+		i++
+		return strconv.Itoa(i)
+	}
+}
+
 func generateData(conn *model.DBConnection) error {
 	rand.Seed(time.Now().UTC().UnixNano())
+	generator := serialIntGenerator()
+	postCount := rand.Intn(1000) + 1000
+	fmt.Printf(" post count = %d. \n", postCount)
 
-	postCount := rand.Intn(20) + 4
+	// for rate limiting
+	pool := make(chan int, 8)
 	for i := 0; i < postCount; i++ {
-		user := conn.NewUser(
-			strings.Title(gypsum.WordLorem(2)),
-			time.Now().UTC(),
-			-5,
-			strings.Title(gypsum.WordLorem(1)),
-			strings.Title(gypsum.WordLorem(5)),
-			strings.Title(gypsum.WordLorem(5)))
-		author := conn.NewAuthor(user)
-		if err := author.Save(); nil != err {
-			return err
-		}
-		titleCount := rand.Intn(4) + 3
-		paraCount := rand.Intn(6) + 3
-		post := conn.NewPost(author,
-			strings.Title(gypsum.WordLorem(titleCount)),
-			gypsum.ArticleLorem(paraCount, "\n"),
-			"http://media.zoom-cinema.fr/photos/news/2380/il-etait-une-fois-2007-4.jpg",
-			time.Now().UTC())
-		if err := post.Save(); nil != err {
-			return err
-		}
-		labelCount := rand.Intn(2) + 1
-		for j := 0; j < labelCount; j++ {
-			if _, err := post.AddLabel(gypsum.WordLorem(1)); err != nil {
-				return err
-			}
-		}
 
-		commentCount := rand.Intn(10)
-		for k := 0; k < commentCount; k++ {
-			commenter := conn.NewUser(
-				strings.Title(gypsum.WordLorem(2)),
-				time.Now().UTC(),
-				-5,
-				strings.Title(gypsum.WordLorem(1)),
-				strings.Title(gypsum.WordLorem(5)),
-				strings.Title(gypsum.WordLorem(5)))
-			commenter.Save()
-			conn.NewComment(commenter.Id(),
-				post.Id(),
-				gypsum.Lorem(),
-				time.Now().UTC()).
-				Save()
-		}
+		go doGeneration(pool, conn, i, generator, postCount)
+		pool <- i
 
 	}
 
 	return nil
+}
+
+func doGeneration(pool chan int, conn *model.DBConnection, i int, generator func() string, postCount int) {
+	user := conn.NewUser(
+		strings.Title(gypsum.WordLorem(2)+generator()),
+		time.Now().UTC(),
+		-5,
+		strings.Title(gypsum.WordLorem(1)+generator()),
+		strings.Title(gypsum.WordLorem(5)+generator()),
+		strings.Title(gypsum.WordLorem(5)+generator()))
+	author := conn.NewAuthor(user)
+	if err := author.Save(); nil != err {
+		panic(err)
+	}
+	titleCount := rand.Intn(4) + 3
+	paraCount := rand.Intn(6) + 3
+	post := conn.NewPost(author,
+		strings.Title(gypsum.WordLorem(titleCount)),
+		gypsum.ArticleLorem(paraCount, "\n\n"),
+		"http://media.zoom-cinema.fr/photos/news/2380/il-etait-une-fois-2007-4.jpg",
+		time.Now().UTC())
+	if err := post.Save(); nil != err {
+		panic(err)
+	}
+	labelCount := rand.Intn(2) + 1
+	for j := 0; j < labelCount; j++ {
+		if _, err := post.AddLabel(gypsum.WordLorem(1) + generator()); err != nil {
+			panic(err)
+		}
+	}
+
+	commentCount := rand.Intn(10)
+	for k := 0; k < commentCount; k++ {
+		commenter := conn.NewUser(
+			strings.Title(gypsum.WordLorem(2)+generator()),
+			time.Now().UTC(),
+			-5,
+			strings.Title(gypsum.WordLorem(1)+generator()),
+			strings.Title(gypsum.WordLorem(5)+generator()),
+			strings.Title(gypsum.WordLorem(5)+generator()))
+		commenter.Save()
+		conn.NewComment(commenter.Id(),
+			post.Id(),
+			gypsum.Lorem(),
+			time.Now().UTC()).
+			Save()
+	}
+	<-pool
+	if i%100 == 0 {
+		fmt.Printf("%d done (%d/%d)\n", (i * 100 / postCount), i, postCount)
+	}
+
 }
