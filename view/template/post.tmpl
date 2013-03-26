@@ -5,14 +5,17 @@
 
       <img src="{{.ImageURL}}" height="100px" width="100px"></img>
       <h1>{{.Title}}</h1>
-      <h2>by {{.Author.User.Username}} on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}</h2>
+      <h2>by <a href="/author/{{.Author.Id}}">{{.Author.User.Username}}</a> on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}</h2>
       <p>{{.Content}}<p>
 
       <hr>
 
-      {{range .Comments}}
-         <h4>{{.User.Username}}, at {{.Date.Hour}}{{.Date.Minute}} on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}, said:</h4>
-         <p>{{.Content}}<p>
+      {{if .Comments}}
+         <h4>Comments</h4>
+         {{range .Comments}}
+            <h5><a href="/user/{{.User.Id}}">{{.User.Username}}</a>, at {{.Date.Hour}}h{{.Date.Minute}} on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}, said:</h5>
+            <p>{{.Content}}<p>
+         {{end}}
       {{else}}
          <h4>No comments</h4>
          <p>Be the first to comment on this post!<p>
