@@ -6,6 +6,7 @@ import (
 	"github.com/aybabtme/gypsum"
 	"math/rand"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -65,20 +66,21 @@ func serialIntGenerator() func() string {
 }
 
 func generateData(conn *model.DBConnection) error {
+	start := time.Now().UTC()
 	rand.Seed(time.Now().UTC().UnixNano())
 	generator := serialIntGenerator()
 	postCount := rand.Intn(1000) + 1000
 	fmt.Printf(" post count = %d. \n", postCount)
-
 	// for rate limiting
-	pool := make(chan int, 8)
+	pool := make(chan int, runtime.NumCPU())
 	for i := 0; i < postCount; i++ {
 
 		go doGeneration(pool, conn, i, generator, postCount)
 		pool <- i
 
 	}
-
+	fmt.Printf("Generated %s rows using %d cores in %d ms.\n",
+		generator(), runtime.NumCPU(), time.Now().Sub(start).Nanoseconds()/1000000)
 	return nil
 }
 
