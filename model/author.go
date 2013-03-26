@@ -83,9 +83,9 @@ WHERE
 
 // Represents an author of the blog
 type Author struct {
-	id    int64
-	user  *User
-	model DBVendor
+	id   int64
+	user *User
+	conn *DBConnection
 }
 
 func (a *Author) Id() int64 {
@@ -97,14 +97,15 @@ func (a *Author) User() *User {
 }
 
 func (a *Author) Posts() ([]Post, error) {
-	model, err := sql.Open(a.model.Driver(), a.model.Name())
+	vendor := a.conn.databaser
+	db, err := sql.Open(vendor.Driver(), vendor.Name())
 	if err != nil {
 		fmt.Println("Couldn't open DB:", err)
 		return nil, err
 	}
-	defer model.Close()
+	defer db.Close()
 
-	stmt, err := model.Prepare(queryForAllPostsOfAuthorId)
+	stmt, err := db.Prepare(queryForAllPostsOfAuthorId)
 	if err != nil {
 		fmt.Printf("Couldn't prepare statement: %s", queryForAllPostsOfAuthorId)
 		fmt.Println(err)
@@ -140,7 +141,7 @@ func (a *Author) Posts() ([]Post, error) {
 			content:  content,
 			imageURL: imageURL,
 			date:     date,
-			model:    a.model,
+			conn:     a.conn,
 		}
 		posts = append(posts, p)
 	}
@@ -152,34 +153,34 @@ func (a *Author) Posts() ([]Post, error) {
  */
 
 func (p *DBConnection) createAuthorTable() {
-	var modelvendor = p.databaser
+	var vendor = p.databaser
 
-	model, err := sql.Open(modelvendor.Driver(), modelvendor.Name())
+	db, err := sql.Open(vendor.Driver(), vendor.Name())
 	if err != nil {
 		fmt.Println("Error on open of database", err)
 		return
 	}
 
-	_, err = model.Exec(createAuthorTable)
+	_, err = db.Exec(createAuthorTable)
 	if err != nil {
 		fmt.Printf("Error creating Author table, driver \"%s\", modelname \"%s\", query = %s\n",
-			modelvendor.Driver(), modelvendor.Name(), createAuthorTable)
+			vendor.Driver(), vendor.Name(), createAuthorTable)
 		fmt.Println(err)
 		return
 	}
 }
 
 func (conn *DBConnection) dropAuthorTable() {
-	var modelvendor = conn.databaser
+	var vendor = conn.databaser
 
-	model, err := sql.Open(modelvendor.Driver(), modelvendor.Name())
+	db, err := sql.Open(vendor.Driver(), vendor.Name())
 	if err != nil {
 		fmt.Println("Error on open of database", err)
 		return
 	}
-	defer model.Close()
+	defer db.Close()
 
-	_, err = model.Exec(dropAuthorTable)
+	_, err = db.Exec(dropAuthorTable)
 	if err != nil {
 		fmt.Println("Error droping table:", err)
 	}
@@ -189,9 +190,9 @@ func (conn *DBConnection) dropAuthorTable() {
 // the save method on the returned Author.
 func (conn *DBConnection) NewAuthor(user *User) *Author {
 	return &Author{
-		id:    -1,
-		user:  user,
-		model: conn.databaser,
+		id:   -1,
+		user: user,
+		conn: conn,
 	}
 }
 
@@ -201,9 +202,9 @@ func (conn *DBConnection) NewAuthor(user *User) *Author {
 func (conn *DBConnection) FindAllAuthors() ([]Author, error) {
 
 	var authors []Author
-	var modelvendor = conn.databaser
+	var vendor = conn.databaser
 
-	model, err := sql.Open(modelvendor.Driver(), modelvendor.Name())
+	model, err := sql.Open(vendor.Driver(), vendor.Name())
 	if err != nil {
 		fmt.Println("FindAllAuthors 1:", err)
 		return authors, err
@@ -231,13 +232,13 @@ func (conn *DBConnection) FindAllAuthors() ([]Author, error) {
 			registrationDate: date,
 			timezone:         timezone,
 			email:            email,
-			model:            modelvendor,
+			conn:             conn,
 		}
 
 		a := Author{
-			id:    id,
-			user:  u,
-			model: modelvendor,
+			id:   id,
+			user: u,
+			conn: conn,
 		}
 		authors = append(authors, a)
 	}
@@ -289,13 +290,13 @@ func (conn *DBConnection) FindAuthorById(id int64) (*Author, error) {
 		registrationDate: date,
 		timezone:         timezone,
 		email:            email,
-		model:            modelvendor,
+		conn:             conn,
 	}
 
 	a = &Author{
-		id:    id,
-		user:  u,
-		model: modelvendor,
+		id:   id,
+		user: u,
+		conn: conn,
 	}
 
 	return a, nil
@@ -308,14 +309,15 @@ func (conn *DBConnection) FindAuthorById(id int64) (*Author, error) {
 // Save an author to the connence.  If the provided
 // user didn't exist, it will create it first.
 func (a *Author) Save() error {
-	model, err := sql.Open(a.model.Driver(), a.model.Name())
+	vendor := a.conn.databaser
+	db, err := sql.Open(vendor.Driver(), vendor.Name())
 	if err != nil {
 		fmt.Println("Save 1:", err)
 		return err
 	}
-	defer model.Close()
+	defer db.Close()
 
-	stmt, err := model.Prepare(insertAuthorForId)
+	stmt, err := db.Prepare(insertAuthorForId)
 	if err != nil {
 		fmt.Printf("Save 2 query=%s\n", insertAuthorForId)
 		fmt.Println(err)
@@ -336,7 +338,7 @@ func (a *Author) Save() error {
 	}
 
 	// query the ID we inserted
-	idStmt, err := model.Prepare(queryAuthorForUserId)
+	idStmt, err := db.Prepare(queryAuthorForUserId)
 	if err != nil {
 		fmt.Println("Save 5:", err)
 		return err
@@ -352,14 +354,15 @@ func (a *Author) Save() error {
 // Removes the user from the author table.  The user attached to the author
 // is not destroyed.
 func (a *Author) Destroy() error {
-	model, err := sql.Open(a.model.Driver(), a.model.Name())
+	vendor := a.conn.databaser
+	db, err := sql.Open(vendor.Driver(), vendor.Name())
 	if err != nil {
 		fmt.Println("Destroy 1:", err)
 		return err
 	}
-	defer model.Close()
+	defer db.Close()
 
-	stmt, err := model.Prepare(deleteAuthorById)
+	stmt, err := db.Prepare(deleteAuthorById)
 	if err != nil {
 		fmt.Println("Destroy 2:", err)
 		return err

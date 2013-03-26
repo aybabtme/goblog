@@ -106,7 +106,7 @@ type User struct {
 	oauthProvider    string
 	tokenHash        string
 	salt             string
-	model            DBVendor
+	conn             *DBConnection
 }
 
 func (u *User) Id() int64 {
@@ -166,14 +166,15 @@ func (u *User) SetEmail(email string) {
 }
 
 func (u *User) Comments() ([]Comment, error) {
-	model, err := sql.Open(u.model.Driver(), u.model.Name())
+	vendor := u.conn.databaser
+	db, err := sql.Open(vendor.Driver(), vendor.Name())
 	if err != nil {
 		fmt.Println("Couldn't open DB:", err)
 		return nil, err
 	}
-	defer model.Close()
+	defer db.Close()
 
-	stmt, err := model.Prepare(queryForAllCommentsOfUserId)
+	stmt, err := db.Prepare(queryForAllCommentsOfUserId)
 	if err != nil {
 		fmt.Printf("Couldn't prepare statement: %s", queryForAllCommentsOfUserId)
 		fmt.Println(err)
@@ -212,7 +213,7 @@ func (u *User) Comments() ([]Comment, error) {
 			date:     date,
 			upVote:   upVote,
 			downVote: downVote,
-			model:    u.model,
+			conn:     u.conn,
 		}
 		comments = append(comments, c)
 	}
@@ -276,7 +277,7 @@ func (conn *DBConnection) NewUser(username string, regDate time.Time,
 		timezone:         timezone,
 		oauthProvider:    oauthProvider,
 		email:            email,
-		model:            conn.databaser,
+		conn:             conn,
 	}
 	u.SetToken(token)
 	return u
@@ -333,7 +334,7 @@ func (conn *DBConnection) FindAllUsers() ([]User, error) {
 			tokenHash:        tokenHash,
 			salt:             salt,
 			email:            email,
-			model:            modelaser,
+			conn:             conn,
 		}
 		users = append(users, u)
 	}
@@ -388,7 +389,7 @@ func (conn *DBConnection) FindUserById(id int64) (*User, error) {
 		tokenHash:        tokenHash,
 		salt:             salt,
 		email:            email,
-		model:            modelaser,
+		conn:             conn,
 	}
 
 	return u, nil
@@ -402,14 +403,15 @@ func (conn *DBConnection) FindUserById(id int64) (*User, error) {
 // to the database
 func (u *User) Save() error {
 
-	model, err := sql.Open(u.model.Driver(), u.model.Name())
+	vendor := u.conn.databaser
+	db, err := sql.Open(vendor.Driver(), vendor.Name())
 	if err != nil {
 		fmt.Println("Save 1:", err)
 		return err
 	}
-	defer model.Close()
+	defer db.Close()
 
-	stmt, err := model.Prepare(insertOrReplaceUserForId)
+	stmt, err := db.Prepare(insertOrReplaceUserForId)
 	if err != nil {
 		fmt.Println("Save 2:", err)
 		return err
@@ -429,7 +431,7 @@ func (u *User) Save() error {
 	}
 
 	// query the ID we inserted
-	idStmt, err := model.Prepare(queryUserForUsername)
+	idStmt, err := db.Prepare(queryUserForUsername)
 	if err != nil {
 		fmt.Println("Save 5:", err)
 		return err
@@ -444,14 +446,15 @@ func (u *User) Save() error {
 // Deletes the user from the database
 func (u User) Destroy() error {
 
-	model, err := sql.Open(u.model.Driver(), u.model.Name())
+	vendor := u.conn.databaser
+	db, err := sql.Open(vendor.Driver(), vendor.Name())
 	if err != nil {
 		fmt.Println("Destroy 1:", err)
 		return err
 	}
-	defer model.Close()
+	defer db.Close()
 
-	stmt, err := model.Prepare(deleteUserById)
+	stmt, err := db.Prepare(deleteUserById)
 	if err != nil {
 		fmt.Println("Destroy 2:", err)
 		return err

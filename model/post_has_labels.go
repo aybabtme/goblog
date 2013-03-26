@@ -97,35 +97,35 @@ func openDatabase(d *DBVendor) (*sql.DB, error) {
 }
 
 func (pers *DBConnection) createLabelPostRelation() {
-	var modelaser = pers.databaser
-	model, err := openDatabase(&modelaser)
+	var vendor = pers.databaser
+	db, err := openDatabase(&vendor)
 	if err != nil {
 		fmt.Println("Error on open of database", err)
 		return
 	}
-	defer model.Close()
+	defer db.Close()
 
-	_, err = model.Exec(createLabelPostsRelation)
+	_, err = db.Exec(createLabelPostsRelation)
 	if err != nil {
 		fmt.Printf("Error creating LabelPost relation, driver \"%s\","+
 			" modelname \"%s\", query = \"%s\"\n",
-			modelaser.Driver(), modelaser.Name(), createLabelPostsRelation)
+			vendor.Driver(), vendor.Name(), createLabelPostsRelation)
 		fmt.Println(err)
 		return
 	}
 }
 
 func (pers *DBConnection) dropLabelPostRelation() {
-	var modelaser = pers.databaser
-	model, err := openDatabase(&modelaser)
+	var vendor = pers.databaser
+	db, err := openDatabase(&vendor)
 
 	if err != nil {
 		fmt.Println("Error on open of database", err)
 		return
 	}
-	defer model.Close()
+	defer db.Close()
 
-	_, err = model.Exec(dropLabelPostsRelation)
+	_, err = db.Exec(dropLabelPostsRelation)
 	if err != nil {
 		fmt.Println("Error droping table:", err)
 	}
@@ -144,19 +144,19 @@ func (p *Post) AddLabel(name string) (Label, error) {
 	// in the relationship in a single transaction to avoid
 	// integrity restriction problems.
 	var lbl = Label{
-		id:    -1,
-		name:  name,
-		model: p.model,
+		id:   -1,
+		name: name,
+		conn: p.conn,
 	}
 
-	model, err := openDatabase(&p.model)
+	db, err := openDatabase(&p.conn.databaser)
 	if err != nil {
 		return lbl, err
 	}
-	defer model.Close()
+	defer db.Close()
 
 	// Start the transaction
-	tx, err := model.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		return lbl, err
 	}
@@ -174,7 +174,7 @@ func (p *Post) AddLabel(name string) (Label, error) {
 		// error may mean it already exists
 		// need to restart transaction
 		_, _ = tryRollback(lbl, tx, err)
-		tx, err = model.Begin()
+		tx, err = db.Begin()
 		if err != nil {
 			return lbl, err
 		}
@@ -230,14 +230,14 @@ func tryRollback(lbl Label, tx *sql.Tx, err error) (Label, error) {
 // Otherwise it will remove the label only for that post, leaving
 // other posts unaffected
 func (p *Post) RemoveLabel(label *Label) error {
-	model, err := openDatabase(&p.model)
+	db, err := openDatabase(&p.conn.databaser)
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
-	defer model.Close()
+	defer db.Close()
 
-	stmt, err := model.Prepare(deleteLabelFromPostId)
+	stmt, err := db.Prepare(deleteLabelFromPostId)
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -254,14 +254,14 @@ func (p *Post) Labels() ([]Label, error) {
 	// I prefer returning an empty list than a nil pointer
 	var labels []Label
 
-	model, err := openDatabase(&p.model)
+	db, err := openDatabase(&p.conn.databaser)
 	if err != nil {
 		fmt.Println("PostLabels 1:", err)
 		return labels, err
 	}
-	defer model.Close()
+	defer db.Close()
 
-	stmt, err := model.Prepare(findLabelsByPostId)
+	stmt, err := db.Prepare(findLabelsByPostId)
 	if err != nil {
 		fmt.Println("PostLabels 2:", err)
 		return labels, err
@@ -299,13 +299,14 @@ func (p *Post) Labels() ([]Label, error) {
 // Deletes the label from the database.  If any post is referencing this
 // label, they will not do so anymore
 func (l *Label) Destroy() error {
-	model, err := openDatabase(&l.model)
+	vendor := l.conn.databaser
+	db, err := openDatabase(&vendor)
 	if err != nil {
 		return err
 	}
-	defer model.Close()
+	defer db.Close()
 
-	stmtRelation, err := model.Prepare(deleteAllLabelWithIdFromRelation)
+	stmtRelation, err := db.Prepare(deleteAllLabelWithIdFromRelation)
 	if err != nil {
 		return err
 	}
@@ -316,7 +317,7 @@ func (l *Label) Destroy() error {
 		return err
 	}
 
-	stmtLabel, err := model.Prepare(deleteAllLabelWithIdFromTable)
+	stmtLabel, err := db.Prepare(deleteAllLabelWithIdFromTable)
 	if err != nil {
 		return nil
 	}
@@ -330,7 +331,9 @@ func (l *Label) Destroy() error {
 func (l *Label) Posts() ([]Post, error) {
 	var posts []Post
 
-	db, err := openDatabase(&l.model)
+	vendor := l.conn.databaser
+
+	db, err := openDatabase(&vendor)
 	if err != nil {
 		return posts, err
 	}
@@ -381,13 +384,13 @@ func (l *Label) Posts() ([]Post, error) {
 			registrationDate: registDate,
 			timezone:         timezone,
 			email:            email,
-			model:            l.model,
+			conn:             l.conn,
 		}
 
 		a := &Author{
-			id:    authorId,
-			user:  u,
-			model: l.model,
+			id:   authorId,
+			user: u,
+			conn: l.conn,
 		}
 
 		p := Post{
@@ -397,7 +400,7 @@ func (l *Label) Posts() ([]Post, error) {
 			content:  content,
 			imageURL: imageURL,
 			date:     date,
-			model:    l.model,
+			conn:     l.conn,
 		}
 		posts = append(posts, p)
 	}

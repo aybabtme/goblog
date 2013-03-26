@@ -125,7 +125,7 @@ type Post struct {
 	content  string
 	imageURL string
 	date     time.Time
-	model    DBVendor
+	conn     *DBConnection
 }
 
 func (p *Post) Id() int64 {
@@ -169,14 +169,15 @@ func (p *Post) SetDate(time time.Time) {
 }
 
 func (p *Post) Comments() ([]Comment, error) {
-	model, err := sql.Open(p.model.Driver(), p.model.Name())
+	model := p.conn.databaser
+	db, err := sql.Open(model.Driver(), model.Name())
 	if err != nil {
 		fmt.Println("Couldn't open DB:", err)
 		return nil, err
 	}
-	defer model.Close()
+	defer db.Close()
 
-	stmt, err := model.Prepare(queryForAllCommentsOfPostId)
+	stmt, err := db.Prepare(queryForAllCommentsOfPostId)
 	if err != nil {
 		fmt.Printf("Couldn't prepare statement: %s", queryForAllCommentsOfPostId)
 		fmt.Println(err)
@@ -214,7 +215,7 @@ func (p *Post) Comments() ([]Comment, error) {
 			date:     date,
 			upVote:   upVote,
 			downVote: downVote,
-			model:    p.model,
+			conn:     p.conn,
 		}
 		comments = append(comments, c)
 	}
@@ -278,7 +279,7 @@ func (conn *DBConnection) NewPost(author *Author, title string, content string, 
 		content:  content,
 		imageURL: imageURL,
 		date:     date,
-		model:    conn.databaser,
+		conn:     conn,
 	}
 }
 
@@ -334,13 +335,13 @@ func (conn *DBConnection) FindAllPosts() ([]Post, error) {
 			registrationDate: registDate,
 			timezone:         timezone,
 			email:            email,
-			model:            model,
+			conn:             conn,
 		}
 
 		a := &Author{
-			id:    authorId,
-			user:  u,
-			model: model,
+			id:   authorId,
+			user: u,
+			conn: conn,
 		}
 
 		p := Post{
@@ -350,7 +351,7 @@ func (conn *DBConnection) FindAllPosts() ([]Post, error) {
 			content:  content,
 			imageURL: imageURL,
 			date:     date,
-			model:    model,
+			conn:     conn,
 		}
 		posts = append(posts, p)
 	}
@@ -410,13 +411,13 @@ func (conn *DBConnection) FindPostById(id int64) (*Post, error) {
 		registrationDate: registDate,
 		timezone:         timezone,
 		email:            email,
-		model:            model,
+		conn:             conn,
 	}
 
 	a := &Author{
-		id:    authorId,
-		user:  u,
-		model: model,
+		id:   authorId,
+		user: u,
+		conn: conn,
 	}
 
 	p = &Post{
@@ -426,7 +427,7 @@ func (conn *DBConnection) FindPostById(id int64) (*Post, error) {
 		content:  content,
 		imageURL: imageURL,
 		date:     date,
-		model:    model,
+		conn:     conn,
 	}
 
 	return p, nil
@@ -439,14 +440,15 @@ func (conn *DBConnection) FindPostById(id int64) (*Post, error) {
 // Saves the post (or update it if it already exists)
 // to the database
 func (p *Post) Save() error {
-	model, err := sql.Open(p.model.Driver(), p.model.Name())
+	vendor := p.conn.databaser
+	db, err := sql.Open(vendor.Driver(), vendor.Name())
 	if err != nil {
 		fmt.Println("Save 1:", err)
 		return err
 	}
-	defer model.Close()
+	defer db.Close()
 
-	stmt, err := model.Prepare(insertOrReplacePostForId)
+	stmt, err := db.Prepare(insertOrReplacePostForId)
 	if err != nil {
 		fmt.Println("Save 2:", err)
 		return err
@@ -460,7 +462,7 @@ func (p *Post) Save() error {
 	}
 
 	// query the ID we inserted
-	idStmt, err := model.Prepare(queryPostIdFromDate)
+	idStmt, err := db.Prepare(queryPostIdFromDate)
 	if err != nil {
 		fmt.Println("Save 5:", err)
 		return err
@@ -475,14 +477,15 @@ func (p *Post) Save() error {
 // Deletes the post from the database
 func (p *Post) Destroy() error {
 
-	model, err := sql.Open(p.model.Driver(), p.model.Name())
+	vendor := p.conn.databaser
+	db, err := sql.Open(vendor.Driver(), vendor.Name())
 	if err != nil {
 		fmt.Println("Destroy:", err)
 		return err
 	}
-	defer model.Close()
+	defer db.Close()
 
-	stmt, err := model.Prepare(deletePostById)
+	stmt, err := db.Prepare(deletePostById)
 	if err != nil {
 		fmt.Println("Destroy:", err)
 		return err

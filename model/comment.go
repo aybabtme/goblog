@@ -84,11 +84,19 @@ type Comment struct {
 	date     time.Time
 	upVote   int64
 	downVote int64
-	model    DBVendor
+	conn     *DBConnection
 }
 
 func (c *Comment) Id() int64 {
 	return c.id
+}
+
+func (c *Comment) User() (*User, error) {
+	return c.conn.FindUserById(c.userId)
+}
+
+func (c *Comment) Post() (*Post, error) {
+	return c.conn.FindPostById(c.postId)
 }
 
 func (c *Comment) Content() string {
@@ -172,7 +180,7 @@ func (persist *DBConnection) dropCommentTable() {
 
 // Creates a new Comment attached to the database.  It is NOT saved in the
 // database, you must call "Save" on this comment to have it persisted
-func (persist *DBConnection) NewComment(userId int64, postId int64, content string, date time.Time) *Comment {
+func (conn *DBConnection) NewComment(userId int64, postId int64, content string, date time.Time) *Comment {
 	return &Comment{
 		id:       -1,
 		userId:   userId,
@@ -181,16 +189,16 @@ func (persist *DBConnection) NewComment(userId int64, postId int64, content stri
 		date:     date,
 		upVote:   0,
 		downVote: 0,
-		model:    persist.databaser,
+		conn:     conn,
 	}
 }
 
 // Finds all the comments in the database.  Returns an empty slice with
 // an error if not comments were found.
-func (persist *DBConnection) FindAllComments() ([]Comment, error) {
+func (conn *DBConnection) FindAllComments() ([]Comment, error) {
 
 	var comments []Comment
-	var modelaser = persist.databaser
+	var modelaser = conn.databaser
 
 	model, err := sql.Open(modelaser.Driver(), modelaser.Name())
 	if err != nil {
@@ -223,7 +231,7 @@ func (persist *DBConnection) FindAllComments() ([]Comment, error) {
 			date:     date,
 			upVote:   upVote,
 			downVote: downVote,
-			model:    modelaser,
+			conn:     conn,
 		}
 		comments = append(comments, c)
 	}
@@ -233,10 +241,10 @@ func (persist *DBConnection) FindAllComments() ([]Comment, error) {
 
 // Finds a comment that matches the given id.  Returns nil and an error
 // if the id didn't match any comment.
-func (persist *DBConnection) FindCommentById(id int64) (*Comment, error) {
+func (conn *DBConnection) FindCommentById(id int64) (*Comment, error) {
 
 	var c *Comment
-	var modelaser = persist.databaser
+	var modelaser = conn.databaser
 
 	model, err := sql.Open(modelaser.Driver(), modelaser.Name())
 	if err != nil {
@@ -272,7 +280,7 @@ func (persist *DBConnection) FindCommentById(id int64) (*Comment, error) {
 		date:     date,
 		upVote:   upVote,
 		downVote: downVote,
-		model:    modelaser,
+		conn:     conn,
 	}
 
 	return c, nil
@@ -285,14 +293,15 @@ func (persist *DBConnection) FindCommentById(id int64) (*Comment, error) {
 // Saves the post (or update it if it already exists)
 // to the database.  Returns an error if something went wrong.
 func (c *Comment) Save() error {
-	model, err := sql.Open(c.model.Driver(), c.model.Name())
+	model := c.conn.databaser
+	db, err := sql.Open(model.Driver(), model.Name())
 	if err != nil {
 		fmt.Println("Save 1:", err)
 		return err
 	}
-	defer model.Close()
+	defer db.Close()
 
-	stmt, err := model.Prepare(insertOrReplaceCommentForId)
+	stmt, err := db.Prepare(insertOrReplaceCommentForId)
 	if err != nil {
 		fmt.Println("Save 2:", err)
 		return err
@@ -306,7 +315,7 @@ func (c *Comment) Save() error {
 	}
 
 	// query the ID we inserted
-	idStmt, err := model.Prepare(queryCommentIdFromDetails)
+	idStmt, err := db.Prepare(queryCommentIdFromDetails)
 	if err != nil {
 		fmt.Println("Save 5:", err)
 		return err
@@ -322,14 +331,15 @@ func (c *Comment) Save() error {
 // went wrong.
 func (c *Comment) Destroy() error {
 
-	model, err := sql.Open(c.model.Driver(), c.model.Name())
+	model := c.conn.databaser
+	db, err := sql.Open(model.Driver(), model.Name())
 	if err != nil {
 		fmt.Println("Comment Destroy 1:", err)
 		return err
 	}
-	defer model.Close()
+	defer db.Close()
 
-	stmt, err := model.Prepare(deleteCommentById)
+	stmt, err := db.Prepare(deleteCommentById)
 	if err != nil {
 		fmt.Println("Comment Destroy 2:", err)
 		return err
