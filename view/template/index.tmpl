@@ -1,11 +1,12 @@
 {{define "content"}}
+{{template "sidebar" .AllLabels}}
 <div class="index">
-   {{range .}}
+   {{range .AllPosts}}
    <img src="{{.ImageURL}}" height="100px" width="100px"></img>
    <a href="/post/{{.Id}}">
       <h1>{{.Title}}</h1>
    </a>
-   <h2>Posted on {{.Date}}</h2>
+   <h2>Posted on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}</h2>
    {{else}}
    <h1>There are not post on this blog!</h1>
    {{end}}

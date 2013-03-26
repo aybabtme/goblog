@@ -1,17 +1,21 @@
 {{define "content"}}
+{{template "sidebar" .Labels}}
 <div class="index">
    {{if .}}
 
       <img src="{{.ImageURL}}" height="100px" width="100px"></img>
       <h1>{{.Title}}</h1>
-      <h2>By {{.Author.User.Username}}, posted on {{.Date}}</h2>
+      <h2>by {{.Author.User.Username}} on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}</h2>
       <p>{{.Content}}<p>
 
+      <hr>
+
       {{range .Comments}}
-         <h4>{{.User.Username}}, on {{.Date}}, said:</h4>
+         <h4>{{.User.Username}}, at {{.Date.Hour}}{{.Date.Minute}} on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}, said:</h4>
          <p>{{.Content}}<p>
       {{else}}
-         <h2>Be the first to comment on this post!<h2>
+         <h4>No comments</h4>
+         <p>Be the first to comment on this post!<p>
       {{end}}
 
    {{else}}

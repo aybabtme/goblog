@@ -52,14 +52,14 @@ func setupDatabase(modelurl string) (*model.DBConnection, error) {
 
 func generateData(conn *model.DBConnection) error {
 
-	user := conn.NewUser(
-		"antoine",
+	user1 := conn.NewUser(
+		"Antoine Grondin",
 		time.Now().UTC(),
 		-5,
 		"google+",
 		"heheveb7673tygvh23",
 		"antoinegrondin@gmail.com")
-	author := conn.NewAuthor(user)
+	author := conn.NewAuthor(user1)
 	if err := author.Save(); nil != err {
 		return err
 	}
@@ -71,6 +71,15 @@ func generateData(conn *model.DBConnection) error {
 	if err := post1.Save(); nil != err {
 		return err
 	}
+	if _, err := post1.AddLabel("prince"); err != nil {
+		return err
+	}
+	if _, err := post1.AddLabel("princess"); err != nil {
+		return err
+	}
+	if _, err := post1.AddLabel("drama"); err != nil {
+		return err
+	}
 
 	post2 := conn.NewPost(author,
 		"Parenthood",
@@ -80,5 +89,40 @@ func generateData(conn *model.DBConnection) error {
 	if err := post2.Save(); nil != err {
 		return err
 	}
+
+	if _, err := post2.AddLabel("childhood"); err != nil {
+		return err
+	}
+	if _, err := post2.AddLabel("funny"); err != nil {
+		return err
+	}
+
+	user2 := conn.NewUser(
+		"John Smith",
+		time.Now().UTC(),
+		-5,
+		"google+",
+		"fdvh23",
+		"ajfdsin@gmail.com")
+	user2.Save()
+	user3 := conn.NewUser(
+		"Chris Poirier",
+		time.Now().UTC(),
+		-5,
+		"google+",
+		"fdvh23",
+		"ajf21vbnlkdsin@gmail.com")
+	user3.Save()
+
+	conn.NewComment(user1.Id(), post1.Id(), gypsum.Lorem(), time.Now()).Save()
+	conn.NewComment(user2.Id(), post1.Id(), gypsum.Lorem(), time.Now()).Save()
+	conn.NewComment(user3.Id(), post1.Id(), gypsum.Lorem(), time.Now()).Save()
+	conn.NewComment(user1.Id(), post2.Id(), gypsum.Lorem(), time.Now()).Save()
+	conn.NewComment(user2.Id(), post2.Id(), gypsum.Lorem(), time.Now()).Save()
+	conn.NewComment(user3.Id(), post2.Id(), gypsum.Lorem(), time.Now()).Save()
+	conn.NewComment(user1.Id(), post2.Id(), gypsum.Lorem(), time.Now()).Save()
+	conn.NewComment(user2.Id(), post2.Id(), gypsum.Lorem(), time.Now()).Save()
+	conn.NewComment(user3.Id(), post2.Id(), gypsum.Lorem(), time.Now()).Save()
+
 	return nil
 }

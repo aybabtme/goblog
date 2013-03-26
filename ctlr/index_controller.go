@@ -12,6 +12,11 @@ type index struct {
 	view *template.Template
 }
 
+type data struct {
+	AllLabels []model.Label
+	AllPosts  []model.Post
+}
+
 func NewIndexController() Controller {
 	var i index
 	i.view = view.GetIndexTemplate()
@@ -30,7 +35,18 @@ func (i index) Controller(conn *model.DBConnection) func(http.ResponseWriter,
 			fmt.Println("IndexController: ", err)
 			return
 		}
-		if err := i.view.Execute(rw, posts); nil != err {
+		labels, err := conn.FindAllLabels()
+		if err != nil {
+			fmt.Println("IndexController: ", err)
+			return
+		}
+
+		d := data{
+			AllPosts:  posts,
+			AllLabels: labels,
+		}
+
+		if err := i.view.Execute(rw, d); nil != err {
 			fmt.Println("IndexController: ", err)
 			return
 		}
