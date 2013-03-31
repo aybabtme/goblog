@@ -1,0 +1,17 @@
+{{define "content"}}
+<div class="post-listing span9">
+   {{range .}}
+   <div class="row-fluid">
+      <div class="span10 page-header">
+         <h1>
+            <a href="/author/{{.Id}}">
+               {{.User.Username}}
+            </a>
+         </h1>
+      </div>
+   </div>
+   {{else}}
+   <div class="hero-unit"><h1>There are not post on this blog!</h1></div>
+   {{end}}
+</div>
+{{end}}

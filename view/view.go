@@ -88,3 +88,7 @@ func GetUserTemplate() *template.Template {
 func GetAuthorTemplate() *template.Template {
 	return template.Must(getTemplateByName("author"))
 }
+
+func GetAuthorListTemplate() *template.Template {
+	return template.Must(getTemplateByName("author_listing"))
+}

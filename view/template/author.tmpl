@@ -1,11 +1,11 @@
 {{define "content"}}
-<div class="span9">
-   <div class="page-header">
+<div class="page-header">
       <h1>
-         {{.Name}}
+         {{.User.Username}}
       </h1>
    </div>
-      {{range .AllPosts}}
+<div id="posts" style="float:left;">
+   {{range .AllPosts}}
    <div class="row-fluid">
       <div class="span2">
          <img src="{{.ImageURL}}" height="100px" width="100px"></img>
@@ -19,28 +19,30 @@
          </h1>
       </div>
    </div>
-   <p>{{.Content}}</p>
-
-   <hr></hr>
-
-   {{if .Comments}}
-   <h4>Comments</h4>
-   {{range .Comments}}
-   <h5>
-      <a href="/user/{{.User.Id}}">{{.User.Username}}</a>, at
-      {{.Date.Hour}}h{{.Date.Minute}} on
-      {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}},
-      said:
-   </h5>
-   <p>{{.Content}}</p>
-   {{end}}
-   {{else}}
-   <h4>No comments</h4>
-   <p>Be the first to comment on this post!</p>
-   {{end}}
    {{else}}
    <div class="hero-unit"><h1>There are not post on this blog!</h1></div>
    {{end}}
-
 </div>
+
+<div id="comments" style="float:left;">
+   {{if .User.Comments}}
+   <h4>Comments</h4>
+   {{range .User.Comments}}
+   <blockquote id="{{.Id}}">
+      <p>{{.Content}}</p>
+
+
+      <small><a href="/user/{{.User.Id}}">{{.User.Username}}</a>, at
+         {{.Date.Hour}}h{{.Date.Minute}} on
+         {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}},
+         said:
+      </small>
+
+   </blockquote>
+
+   {{end}}
+   {{else}}
+   <h4>No comments</h4>
+   {{end}}
+
 {{end}}

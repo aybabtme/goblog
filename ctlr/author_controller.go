@@ -12,53 +12,88 @@ import (
 
 func NewAuthorController() Controller {
 	var a author
+	a.path = "/post/{id:[0-9]+}"
 	a.view = view.GetAuthorTemplate()
 	return a
 }
 
+func NewAuthorListController() Controller {
+	var a author
+	a.path = "/post"
+	a.view = view.GetAuthorListTemplate()
+	return a
+}
+
 type author struct {
+	path string
 	view *template.Template
 }
 
 type authorData struct {
-	Name     string
+	User     *model.User
 	AllPosts []model.Post
 }
 
 func (a author) Path() string {
-	return "/author/{id:[0-9]+}"
+	return a.path
 }
 
 func (a author) Controller(conn *model.DBConnection) func(http.ResponseWriter,
 	*http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		vars := mux.Vars(req)
-		id, err := strconv.ParseInt(vars["id"], 10, 64)
-		if err != nil {
-			log.Printf("AuthorController, parse id: ", err)
-			return
-		}
+		id := vars["id"]
 
-		author, err := conn.FindAuthorById(id)
-		if err != nil {
-			log.Printf("AuthorController, author db search: ", err)
-			return
+		if id == "" {
+			a.authorIndex(conn, rw, req)
+		} else {
+			a.authorId(conn, rw, req, id)
 		}
+	}
+}
 
-		posts, err := author.Posts()
-		if err != nil {
-			log.Printf("AuthorController, posts db search: ", err)
-			return
-		}
+func (a author) authorIndex(conn *model.DBConnection,
+	rw http.ResponseWriter,
+	req *http.Request) {
 
-		d := authorData{
-			Name:     author.User().Username(),
-			AllPosts: posts,
-		}
+	authors, err := conn.FindAllAuthors()
+	if err != nil {
+		log.Printf("AuthorController, find all authors: ", err)
+	}
 
-		if err := a.view.Execute(rw, d); nil != err {
-			log.Printf("AuthorController for Posts: ", err)
-			return
-		}
+	if err := a.view.Execute(rw, authors); nil != err {
+		log.Printf("AuthorController for Listing", err)
+	}
+}
+
+func (a author) authorId(conn *model.DBConnection,
+	rw http.ResponseWriter, req *http.Request, id string) {
+
+	intId, err := strconv.ParseInt(id, 10, 64)
+	if err != nil {
+		log.Printf("AuthorController, parse id: ", err)
+		return
+	}
+
+	author, err := conn.FindAuthorById(intId)
+	if err != nil {
+		log.Printf("AuthorController, author db search: ", err)
+		return
+	}
+
+	posts, err := author.Posts()
+	if err != nil {
+		log.Printf("AuthorController, posts db search: ", err)
+		return
+	}
+
+	d := authorData{
+		User:     author.User(),
+		AllPosts: posts,
+	}
+
+	if err := a.view.Execute(rw, d); nil != err {
+		log.Printf("AuthorController for Posts: ", err)
+		return
 	}
 }
