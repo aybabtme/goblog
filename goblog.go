@@ -18,8 +18,8 @@ var oauthCfg = &oauth.Config{
 	ClientSecret: "dseJIDxz2ZlpYU6zn-BAMrYK",
 	AuthURL:      "https://accounts.google.com/o/oauth2/auth",
 	TokenURL:     "https://accounts.google.com/o/oauth2/token",
-	RedirectURL:  "http://flying-unicorn.com:5000/oauth2callback",
-	Scope:        "https://www.googleapis.com/auth/userinfo.email",
+	RedirectURL:  "http://flying-unicorn.aybabt.me:5000/oauth2callback",
+	Scope:        "https://www.googleapis.com/auth/userinfo.email profile",
 }
 
 func main() {
@@ -101,7 +101,8 @@ func doGeneration(pool chan int, conn *model.DBConnection, i int, generator func
 		strings.Title(gypsum.WordLorem(2)+generator()),
 		time.Now().UTC(),
 		-5,
-		strings.Title(gypsum.WordLorem(1)+generator()),
+		time.Now().Unix(),
+		strings.Title(gypsum.WordLorem(5)+generator()),
 		strings.Title(gypsum.WordLorem(5)+generator()),
 		strings.Title(gypsum.WordLorem(5)+generator()))
 	author := conn.NewAuthor(user)
@@ -131,7 +132,8 @@ func doGeneration(pool chan int, conn *model.DBConnection, i int, generator func
 			strings.Title(gypsum.WordLorem(2)+generator()),
 			time.Now().UTC(),
 			-5,
-			strings.Title(gypsum.WordLorem(1)+generator()),
+			time.Now().Unix(),
+			strings.Title(gypsum.WordLorem(5)+generator()),
 			strings.Title(gypsum.WordLorem(5)+generator()),
 			strings.Title(gypsum.WordLorem(5)+generator()))
 		commenter.Save()

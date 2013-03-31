@@ -15,9 +15,9 @@ CREATE TABLE IF NOT EXISTS BlogUser(
    username 			VARCHAR(255) NOT NULL,
    registration_date TIMESTAMP NOT NULL,
    timezone 			INTEGER NOT NULL,
-   oauth_provider		VARCHAR(128) NOT NULL,
-   access_token_hash	VARCHAR(128) NOT NULL,
-   salt 					VARCHAR(128) NOT NULL,
+   oauth_id				INTEGER NOT NULL,
+   access_token		VARCHAR(255) NOT NULL,
+   refresh_token		VARCHAR(255) NOT NULL,
    email 				VARCHAR(255) NOT NULL,
    UNIQUE(username),
    UNIQUE(email)
@@ -32,9 +32,9 @@ INSERT INTO BlogUser(
 	username,
 	registration_date,
 	timezone,
-	oauth_provider,
-	access_token_hash,
-	salt,
+	oauth_id,
+	access_token,
+	refresh_token,
 	email
 )
 VALUES( $1, $2, $3, $4, $5, $6, $7 )`
@@ -44,9 +44,9 @@ SELECT
 	U.username,
 	U.registration_date,
 	U.timezone,
-	U.oauth_provider,
-	U.access_token_hash,
-	U.salt,
+	U.oauth_id,
+	U.access_token,
+	U.refresh_token,
 	U.email
 FROM
 	BlogUser AS U
@@ -65,9 +65,9 @@ SELECT
 	U.username,
 	U.registration_date,
 	U.timezone,
-	U.oauth_provider,
-	U.access_token_hash,
-	U.salt,
+	U.oauth_id,
+	U.access_token,
+	U.refresh_token,
 	U.email
 FROM
 	BlogUser AS U`
@@ -103,9 +103,9 @@ type User struct {
 	registrationDate time.Time
 	timezone         int
 	email            string
-	oauthProvider    string
-	tokenHash        string
-	salt             string
+	oauthId          int64
+	accessToken      string
+	refreshToken     string
 	conn             *DBConnection
 }
 
@@ -137,24 +137,25 @@ func (u *User) SetTimezone(zone int) {
 	u.timezone = zone
 }
 
-func (u *User) OauthProvider() string {
-	return u.oauthProvider
+func (u *User) OauthId() int64 {
+	return u.oauthId
 }
 
-func (u *User) SetOauthProvider(provider string) {
-	u.oauthProvider = provider
+func (u *User) SetOauthId(id int64) {
+	u.oauthId = id
 }
 
-func (u *User) Token() string {
-	// return the decoded token
-	return u.tokenHash
+func (u *User) SetToken(access, refresh string) {
+	u.accessToken = access
+	u.refreshToken = refresh
 }
 
-func (u *User) SetToken(token string) {
-	// encode the token then save its encoded version
-	// also generate the salt here
-	u.tokenHash = token
-	u.salt = "ycvybunimonbjhgf"
+func (u *User) AccessToken() string {
+	return u.accessToken
+}
+
+func (u *User) RefreshToken() string {
+	return u.refreshToken
 }
 
 func (u *User) Email() string {
@@ -269,17 +270,18 @@ func (conn *DBConnection) dropUserTable() {
 
 // Creates a new User attached to the Database (but it is not saved).
 func (conn *DBConnection) NewUser(username string, regDate time.Time,
-	timezone int, oauthProvider string, token string, email string) *User {
+	timezone int, oauthId int64, access string, refresh string, email string) *User {
 	u := &User{
 		id:               -1,
 		username:         username,
 		registrationDate: regDate,
 		timezone:         timezone,
-		oauthProvider:    oauthProvider,
+		oauthId:          oauthId,
+		accessToken:      access,
+		refreshToken:     refresh,
 		email:            email,
 		conn:             conn,
 	}
-	u.SetToken(token)
 	return u
 }
 
@@ -308,17 +310,17 @@ func (conn *DBConnection) FindAllUsers() ([]User, error) {
 		var username string
 		var date time.Time
 		var timezone int
-		var oauthProvider string
-		var tokenHash string
-		var salt string
+		var oauthId int64
+		var accessToken string
+		var refreshToken string
 		var email string
 		err := rows.Scan(&id,
 			&username,
 			&date,
 			&timezone,
-			&oauthProvider,
-			&tokenHash,
-			&salt,
+			&oauthId,
+			&accessToken,
+			&refreshToken,
 			&email)
 
 		if err != nil {
@@ -330,9 +332,9 @@ func (conn *DBConnection) FindAllUsers() ([]User, error) {
 			username:         username,
 			registrationDate: date,
 			timezone:         timezone,
-			oauthProvider:    oauthProvider,
-			tokenHash:        tokenHash,
-			salt:             salt,
+			oauthId:          oauthId,
+			accessToken:      accessToken,
+			refreshToken:     refreshToken,
 			email:            email,
 			conn:             conn,
 		}
@@ -364,16 +366,16 @@ func (conn *DBConnection) FindUserById(id int64) (*User, error) {
 	var username string
 	var date time.Time
 	var timezone int
-	var oauthProvider string
-	var tokenHash string
-	var salt string
+	var oauthId int64
+	var accessToken string
+	var refreshToken string
 	var email string
 	err = stmt.QueryRow(id).Scan(&username,
 		&date,
 		&timezone,
-		&oauthProvider,
-		&tokenHash,
-		&salt,
+		&oauthId,
+		&accessToken,
+		&refreshToken,
 		&email)
 	if err != nil {
 		// normal if the User doesnt exist
@@ -385,9 +387,9 @@ func (conn *DBConnection) FindUserById(id int64) (*User, error) {
 		username:         username,
 		registrationDate: date,
 		timezone:         timezone,
-		oauthProvider:    oauthProvider,
-		tokenHash:        tokenHash,
-		salt:             salt,
+		oauthId:          oauthId,
+		accessToken:      accessToken,
+		refreshToken:     refreshToken,
 		email:            email,
 		conn:             conn,
 	}
@@ -421,9 +423,9 @@ func (u *User) Save() error {
 	_, err = stmt.Exec(u.username,
 		u.registrationDate,
 		u.timezone,
-		u.oauthProvider,
-		u.tokenHash,
-		u.salt,
+		u.oauthId,
+		u.accessToken,
+		u.refreshToken,
 		u.email)
 	if err != nil {
 		fmt.Println("Save 3:", err)
