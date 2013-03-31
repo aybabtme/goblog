@@ -1,5 +1,6 @@
 {{define "content"}}
-<div class="post-listing span9">
+<h1>Blog Authors</h1>
+<div class="author-listing span9">
    {{range .}}
    <div class="row-fluid">
       <div class="span10 page-header">
@@ -8,10 +9,11 @@
                {{.User.Username}}
             </a>
          </h1>
+         Registered since {{.User.RegistrationDate.Weekday}} {{.User.RegistrationDate.Day}} {{.User.RegistrationDate.Month}} {{.User.RegistrationDate.Year}}.
       </div>
    </div>
    {{else}}
-   <div class="hero-unit"><h1>There are not post on this blog!</h1></div>
+   <div class="hero-unit"><h1>No author currently exists.</h1></div>
    {{end}}
 </div>
 {{end}}

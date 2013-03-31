@@ -11,12 +11,12 @@
          <img src="{{.ImageURL}}" height="100px" width="100px"></img>
       </div>
       <div class="span10 page-header">
-         <h1>
+         <h2>
             <a href="/post/{{.Id}}">
                {{.Title}}
             </a>
             <p><small>Posted on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}</small></p>
-         </h1>
+         </h2>
       </div>
    </div>
    {{else}}
@@ -24,7 +24,7 @@
    {{end}}
 </div>
 
-<div id="comments" style="float:left;">
+<div id="comments" style="float:right;">
    {{if .User.Comments}}
    <h4>Comments</h4>
    {{range .User.Comments}}
@@ -43,6 +43,7 @@
    {{end}}
    {{else}}
    <h4>No comments</h4>
+   Ita, quae mutat, ea corrumpit, quae sequitur sunt tota Democriti, atomi, inane, imagines.<br>
    {{end}}
 
 {{end}}

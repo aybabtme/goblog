@@ -12,14 +12,14 @@ import (
 
 func NewAuthorController() Controller {
 	var a author
-	a.path = "/post/{id:[0-9]+}"
+	a.path = "/author/{id:[0-9]+}"
 	a.view = view.GetAuthorTemplate()
 	return a
 }
 
 func NewAuthorListController() Controller {
 	var a author
-	a.path = "/post"
+	a.path = "/author"
 	a.view = view.GetAuthorListTemplate()
 	return a
 }
@@ -32,6 +32,10 @@ type author struct {
 type authorData struct {
 	User     *model.User
 	AllPosts []model.Post
+}
+
+type authorList struct {
+	Users []model.User
 }
 
 func (a author) Path() string {
