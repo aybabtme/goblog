@@ -3,7 +3,7 @@
 <div class="index span9">
    {{if .}}
 
-   <img src="{{.ImageURL}}" height="100px" width="100px"></img>
+   <img class="img-rounded" src="{{.ImageURL}}" height="100px" width="100px"></img>
    <div class="page-header">
       <h1>
          {{.Title}}
@@ -21,15 +21,18 @@
    {{if .Comments}}
    <h4>Comments</h4>
    {{range .Comments}}
-   <h5 id="{{.Id}}">
-      <a href="/user/{{.User.Id}}">{{.User.Username}}</a>
-      <small>, at
+   <blockquote id="{{.Id}}">
+      <p>{{.Content}}</p>
+
+
+      <small><a href="/user/{{.User.Id}}">{{.User.Username}}</a>, at
          {{.Date.Hour}}h{{.Date.Minute}} on
          {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}},
          said:
       </small>
-   </h5>
-   <p>{{.Content}}</p>
+
+   </blockquote>
+
    {{end}}
    {{else}}
    <h4>No comments</h4>

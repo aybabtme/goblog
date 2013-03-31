@@ -5,6 +5,9 @@ import (
 	"html/template"
 )
 
+/*
+ * Helpers
+ */
 func getApplicationTemplate() (*template.Template, error) {
 	app, err := template.ParseFiles("view/template/application.tmpl")
 	if nil != err {
@@ -34,13 +37,17 @@ func getTemplateByName(templateName string) (*template.Template, error) {
 	return content, nil
 }
 
+/*
+ * Index
+ */
+
 func GetIndexTemplate() *template.Template {
 	return template.Must(getTemplateByName("index"))
 }
 
-func GetAuthorTemplate() *template.Template {
-	return template.Must(getTemplateByName("author"))
-}
+/*
+ *	Posts
+ */
 
 func GetPostListingTemplate() *template.Template {
 	return template.Must(getTemplateByName("post_listing"))
@@ -50,10 +57,34 @@ func GetPostTemplate() *template.Template {
 	return template.Must(getTemplateByName("post"))
 }
 
+func GetPostComposeTemplate() *template.Template {
+	return template.Must(getTemplateByName("post_compose"))
+}
+
+func GetPostDestroyTemplate() *template.Template {
+	return template.Must(getTemplateByName("post"))
+}
+
+/*
+ * Labels
+ */
+
 func GetLabelTemplate() *template.Template {
 	return template.Must(getTemplateByName("label"))
 }
 
+/*
+ * Users
+ */
+
 func GetUserTemplate() *template.Template {
 	return template.Must(getTemplateByName("user"))
+}
+
+/*
+ * Authors
+ */
+
+func GetAuthorTemplate() *template.Template {
+	return template.Must(getTemplateByName("author"))
 }
