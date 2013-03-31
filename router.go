@@ -14,6 +14,7 @@ func (r Router) Start(port string, conn *model.DBConnection) error {
 	controllers := []ctlr.Controller{
 		ctlr.NewIndexController(),
 		ctlr.NewAuthorController(),
+		ctlr.NewUserController(),
 		ctlr.NewLabelController(),
 		ctlr.NewPostController(),
 		ctlr.NewPostIdController()}

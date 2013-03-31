@@ -1,3 +1,20 @@
 {{define "content"}}
-<!-- TO BE DONE -->
+<div class="hero-unit span9">
+   <div class="page-header">
+      <h1>
+         {{.Username}}
+      </h1>
+      <small>
+         Registered since {{.RegistrationDate.Weekday}} {{.RegistrationDate.Day}} {{.RegistrationDate.Month}} {{.RegistrationDate.Year}}.
+      </small>
+   </div>
+   {{range .Comments}}
+   <h5>
+      <a href="/post/{{.Post.Id}}#{{.Id}}">{{.Post.Title}}</a><small>, commented on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}</small>
+   </h5>
+   {{.Content}}
+   {{else}}
+   <div class="alert">{{.Username}} hasn't posted any comment!</div>
+   {{end}}
+</div>
 {{end}}

@@ -21,11 +21,13 @@
    {{if .Comments}}
    <h4>Comments</h4>
    {{range .Comments}}
-   <h5>
-      <a href="/user/{{.User.Id}}">{{.User.Username}}</a>, at
-      {{.Date.Hour}}h{{.Date.Minute}} on
-      {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}},
-      said:
+   <h5 id="{{.Id}}">
+      <a href="/user/{{.User.Id}}">{{.User.Username}}</a>
+      <small>, at
+         {{.Date.Hour}}h{{.Date.Minute}} on
+         {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}},
+         said:
+      </small>
    </h5>
    <p>{{.Content}}</p>
    {{end}}
