@@ -43,12 +43,14 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("Generating data... ")
-	err = generateData(conn)
-	if err != nil {
-		fmt.Println("Couldn't generate data")
+	if os.Getenv("DEBUG") == "true" {
+		fmt.Printf("Generating data... ")
+		err = generateData(conn)
+		if err != nil {
+			fmt.Println("Couldn't generate data")
+		}
+		fmt.Println("Done.")
 	}
-	fmt.Println("Done.")
 
 	fmt.Println("Starting router")
 	var r Router
