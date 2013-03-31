@@ -4,8 +4,16 @@
    {{if .}}
 
    <img src="{{.ImageURL}}" height="100px" width="100px"></img>
-   <div class="page-header"><h1>{{.Title}}</h1></div>
-   <h2>by <a href="/author/{{.Author.Id}}">{{.Author.User.Username}}</a> on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}</h2>
+   <div class="page-header">
+      <h1>
+         {{.Title}}
+         <p>
+            <small>
+               by <a href="/author/{{.Author.Id}}">{{.Author.User.Username}}</a> on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}
+            </small>
+         </p>
+      </h1>
+   </div>
    <p>{{.Content}}</p>
 
    <hr></hr>

@@ -1,29 +1,63 @@
 package ctlr
 
 import (
-	"fmt"
 	"github.com/aybabtme/goblog/model"
+	"github.com/aybabtme/goblog/view"
 	"github.com/gorilla/mux"
+	"html/template"
+	"log"
 	"net/http"
+	"strconv"
 )
 
 func NewLabelController() Controller {
-	return new(label)
+	var l label
+	l.view = view.GetLabelTemplate()
+	return l
 }
 
-type label string
-
-func (l *label) Path() string {
-	return "/label/{key}"
+type label struct {
+	view *template.Template
 }
 
-func (l *label) Controller(conn *model.DBConnection) func(http.ResponseWriter, *http.Request) {
+type labelData struct {
+	Name     string
+	AllPosts []model.Post
+}
+
+func (l label) Path() string {
+	return "/label/{id:[0-9]+}"
+}
+
+func (l label) Controller(conn *model.DBConnection) func(http.ResponseWriter, *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		vars := mux.Vars(req)
-		key := vars["key"]
+		id, err := strconv.ParseInt(vars["id"], 10, 64)
+		if err != nil {
+			log.Println("LabelController, parse id:", err)
+			return
+		}
 
-		// dispatch with conn and rw, req
+		label, err := conn.FindLabelById(id)
+		if err != nil {
+			log.Printf("LabelController, for id(%d): \n%v\n", id, err)
+			return
+		}
 
-		fmt.Fprintf(rw, "<h1>I love %s</h1>", key)
+		posts, err := label.Posts()
+		if err != nil {
+			log.Println("LabelController, listing posts.", err)
+			return
+		}
+
+		d := labelData{
+			Name:     label.Name(),
+			AllPosts: posts,
+		}
+
+		if err := l.view.Execute(rw, d); nil != err {
+			log.Println("LabelController, execute:", err)
+		}
+
 	}
 }

@@ -1,20 +1,21 @@
 {{define "content"}}
 <div class="index span9">
    {{range .AllPosts}}
-      <div class="row-fluid">
-         <div class="span2">
-            <img src="{{.ImageURL}}" height="100px" width="100px"></img>
-         </div>
-         <div class="span10">
-            <a href="/post/{{.Id}}">
-               <h1>{{.Title}}</h1>
-            </a>
-            <p>Posted on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}</p>
-         </div>
+   <div class="row-fluid">
+      <div class="span2">
+         <img src="{{.ImageURL}}" height="100px" width="100px"></img>
       </div>
-      <hr></hr>
+      <div class="span10 page-header">
+         <h1>
+            <a href="/post/{{.Id}}">
+               {{.Title}}
+            </a>
+            <p><small>Posted on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}</small></p>
+         </h1>
+      </div>
+   </div>
    {{else}}
-      <div class="hero-unit"><h1>There are not post on this blog!</h1></div>
+   <div class="hero-unit"><h1>There are not post on this blog!</h1></div>
    {{end}}
 </div>
 {{template "sidebar" .AllLabels}}

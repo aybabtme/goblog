@@ -1,15 +1,21 @@
 {{define "content"}}
-<div class="index">
+<div class="post-listing span9">
    {{range .}}
-
-      <img src="{{.ImageURL}}" height="100px" width="100px"></img>
-      <a href="/post/{{.Id}}">
-         <h1>{{.Title}}</h1>
-      </a>
-      <h2>Posted on {{.Date}}</h2>
-
+   <div class="row-fluid">
+      <div class="span2">
+         <img src="{{.ImageURL}}" height="100px" width="100px"></img>
+      </div>
+      <div class="span10 page-header">
+         <h1>
+            <a href="/post/{{.Id}}">
+               {{.Title}}
+            </a>
+            <p><small>Posted on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}</small></p>
+         </h1>
+      </div>
+   </div>
    {{else}}
-      {{template "404" .}}
+   <div class="hero-unit"><h1>There are not post on this blog!</h1></div>
    {{end}}
 </div>
 {{end}}

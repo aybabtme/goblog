@@ -50,6 +50,10 @@ func GetPostTemplate() *template.Template {
 	return template.Must(getTemplateByName("post"))
 }
 
+func GetLabelTemplate() *template.Template {
+	return template.Must(getTemplateByName("label"))
+}
+
 func GetUserTemplate() *template.Template {
 	return template.Must(getTemplateByName("user"))
 }

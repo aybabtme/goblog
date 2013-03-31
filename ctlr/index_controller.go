@@ -1,10 +1,10 @@
 package ctlr
 
 import (
-	"fmt"
 	"github.com/aybabtme/goblog/model"
 	"github.com/aybabtme/goblog/view"
 	"html/template"
+	"log"
 	"net/http"
 )
 
@@ -12,7 +12,7 @@ type index struct {
 	view *template.Template
 }
 
-type data struct {
+type indexData struct {
 	AllLabels []model.Label
 	AllPosts  []model.Post
 }
@@ -32,22 +32,22 @@ func (i index) Controller(conn *model.DBConnection) func(http.ResponseWriter,
 	return func(rw http.ResponseWriter, req *http.Request) {
 		posts, err := conn.FindAllPosts()
 		if err != nil {
-			fmt.Println("IndexController: ", err)
+			log.Println("IndexController, list posts: ", err)
 			return
 		}
 		labels, err := conn.FindAllLabels()
 		if err != nil {
-			fmt.Println("IndexController: ", err)
+			log.Println("IndexController, list labels: ", err)
 			return
 		}
 
-		d := data{
+		d := indexData{
 			AllPosts:  posts,
 			AllLabels: labels,
 		}
 
 		if err := i.view.Execute(rw, d); nil != err {
-			fmt.Println("IndexController: ", err)
+			log.Println("IndexController, execute: ", err)
 			return
 		}
 	}

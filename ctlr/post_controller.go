@@ -1,11 +1,11 @@
 package ctlr
 
 import (
-	"fmt"
 	"github.com/aybabtme/goblog/model"
 	"github.com/aybabtme/goblog/view"
 	"github.com/gorilla/mux"
 	"html/template"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -52,11 +52,11 @@ func (p *post) forListing(conn *model.DBConnection,
 
 	posts, err := conn.FindAllPosts()
 	if err != nil {
-		fmt.Println("PostController for listing 1:", err)
+		log.Println("PostController for listing 1:", err)
 		return
 	}
 	if err := p.view.Execute(rw, posts); nil != err {
-		fmt.Println("PostController for listing 2:", err)
+		log.Println("PostController for listing 2:", err)
 		return
 	}
 
@@ -69,12 +69,12 @@ func (p *post) forId(conn *model.DBConnection,
 
 	intId, err := strconv.ParseInt(id, 10, 64)
 	if err != nil {
-		fmt.Println("PostController for id 1:", err)
+		log.Println("PostController for id 1:", err)
 		return
 	}
 	post, err := conn.FindPostById(intId)
 	if err := p.view.Execute(rw, post); nil != err {
-		fmt.Println("PostController for id 3:", err)
+		log.Println("PostController for id 3:", err)
 		return
 	}
 
