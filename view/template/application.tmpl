@@ -10,12 +10,10 @@
 </head>
 <body>
    <div id="wrap">
+      {{template "header" .}}
       <div class="container">
          <div id='content' class='row-fluid'>
-            <div class='span9 main'></div>
-            {{template "header" .}}
             {{template "content" .}}
-
          </div>
       </div><!-- container -->
       <div id="push"></div>

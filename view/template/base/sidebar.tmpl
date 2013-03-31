@@ -1,5 +1,5 @@
 {{define "sidebar"}}
-<div class='span3 sidebar'>
+<div class="span3 bs-docs-sidebar">
    <h2>
       More
    </h2>
@@ -9,16 +9,14 @@
    <h4>
       <a href="/label">Labels</a>
    </h4>
-   <ul>
       {{range .}}
-      <li style="list-style: none">
-         <a href="/label/{{.Id}}">{{.Name}}</a>
-      </li>
+      <a href="/label/{{.Id}}">
+         <span class="label">
+            {{.Name}}
+         </span>
+      </a>
       {{else}}
-      <li style="list-style: none">
-         No labels yet
-      </li>
+         <span class="label label-info">No labels yet</span>
       {{end}}
-   </ul>
 </div>
 {{end}}

@@ -69,7 +69,7 @@ func generateData(conn *model.DBConnection) error {
 	start := time.Now().UTC()
 	rand.Seed(time.Now().UTC().UnixNano())
 	generator := serialIntGenerator()
-	postCount := rand.Intn(1000) + 1000
+	postCount := rand.Intn(20) + 10
 	fmt.Printf(" post count = %d. \n", postCount)
 	// for rate limiting
 	pool := make(chan int, runtime.NumCPU())

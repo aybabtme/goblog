@@ -1,14 +1,21 @@
 {{define "content"}}
-{{template "sidebar" .AllLabels}}
-<div class="index">
+<div class="index span9">
    {{range .AllPosts}}
-   <img src="{{.ImageURL}}" height="100px" width="100px"></img>
-   <a href="/post/{{.Id}}">
-      <h1>{{.Title}}</h1>
-   </a>
-   <h2>Posted on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}</h2>
+      <div class="row-fluid">
+         <div class="span2">
+            <img src="{{.ImageURL}}" height="100px" width="100px"></img>
+         </div>
+         <div class="span10">
+            <a href="/post/{{.Id}}">
+               <h1>{{.Title}}</h1>
+            </a>
+            <p>Posted on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}</p>
+         </div>
+      </div>
+      <hr></hr>
    {{else}}
-   <h1>There are not post on this blog!</h1>
+      <div class="hero-unit"><h1>There are not post on this blog!</h1></div>
    {{end}}
 </div>
+{{template "sidebar" .AllLabels}}
 {{end}}
