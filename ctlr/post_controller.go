@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type post struct {
@@ -112,7 +113,12 @@ func (p *post) forCompose(conn *model.DBConnection,
 	rw http.ResponseWriter,
 	req *http.Request) {
 
-	if err := p.view.Execute(rw, nil); nil != err {
+	labels, err := conn.FindAllLabels()
+	if err != nil {
+		log.Println("Couldn't find previous labels for autosuggestion")
+	}
+
+	if err := p.view.Execute(rw, labels); nil != err {
 		log.Println("PostController for listing 2:", err)
 		return
 	}
@@ -122,10 +128,11 @@ func (p *post) forSave(conn *model.DBConnection,
 	rw http.ResponseWriter,
 	req *http.Request) {
 
-	title := req.FormValue("title")
+	title := strings.Title(req.FormValue("title"))
 	content := req.FormValue("content")
+	labelString := req.FormValue("label_list")
 
-	log.Printf("Title=%s\nContent=%s", title, content)
+	log.Printf("Title=%s\nContent=%s\nLabels=%s", title, content, labelString)
 
 	if err := p.view.Execute(rw, nil); nil != err {
 		log.Println("PostController for listing 2:", err)
