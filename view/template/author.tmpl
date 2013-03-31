@@ -4,11 +4,8 @@
       <h1>
          {{.Name}}
       </h1>
-      <small>
-         All the posts using this label.
-      </small>
    </div>
-   {{range .AllPosts}}
+      {{range .AllPosts}}
    <div class="row-fluid">
       <div class="span2">
          <img src="{{.ImageURL}}" height="100px" width="100px"></img>
@@ -22,8 +19,28 @@
          </h1>
       </div>
    </div>
+   <p>{{.Content}}</p>
+
+   <hr></hr>
+
+   {{if .Comments}}
+   <h4>Comments</h4>
+   {{range .Comments}}
+   <h5>
+      <a href="/user/{{.User.Id}}">{{.User.Username}}</a>, at
+      {{.Date.Hour}}h{{.Date.Minute}} on
+      {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}},
+      said:
+   </h5>
+   <p>{{.Content}}</p>
+   {{end}}
+   {{else}}
+   <h4>No comments</h4>
+   <p>Be the first to comment on this post!</p>
+   {{end}}
    {{else}}
    <div class="hero-unit"><h1>There are not post on this blog!</h1></div>
    {{end}}
+
 </div>
 {{end}}
