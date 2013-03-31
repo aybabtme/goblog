@@ -1,5 +1,7 @@
 {{define "content"}}
+{{template "sidebar" .AllLabels}}
 <div class = "author">
    <h1>{{ .Name }}</h1>
+   {{template "post" .AllPosts}}
 </div>
 {{end}}
