@@ -2,7 +2,7 @@ package model
 
 import (
 	"database/sql"
-	"fmt"
+	"log"
 	"time"
 )
 
@@ -15,12 +15,13 @@ CREATE TABLE IF NOT EXISTS BlogUser(
    username 			VARCHAR(255) NOT NULL,
    registration_date TIMESTAMP NOT NULL,
    timezone 			INTEGER NOT NULL,
-   oauth_id				INTEGER NOT NULL,
+   oauth_id				VARCHAR(255) NOT NULL,
    access_token		VARCHAR(255) NOT NULL,
    refresh_token		VARCHAR(255) NOT NULL,
    email 				VARCHAR(255) NOT NULL,
    UNIQUE(username),
-   UNIQUE(email)
+   UNIQUE(email),
+   UNIQUE(oauth_id)
 )`
 
 var dropUserTable string = `
@@ -52,6 +53,21 @@ FROM
 	BlogUser AS U
 WHERE
 	U.user_id = $1`
+
+var findUserByOAuthId string = `
+SELECT
+	U.user_id,
+	U.username,
+	U.registration_date,
+	U.timezone,
+	U.oauth_id,
+	U.access_token,
+	U.refresh_token,
+	U.email
+FROM
+	BlogUser AS U
+WHERE
+	U.oauth_id = $1`
 
 var deleteUserById string = `
 DELETE FROM
@@ -103,7 +119,7 @@ type User struct {
 	registrationDate time.Time
 	timezone         int
 	email            string
-	oauthId          int64
+	oauthId          string
 	accessToken      string
 	refreshToken     string
 	conn             *DBConnection
@@ -137,11 +153,11 @@ func (u *User) SetTimezone(zone int) {
 	u.timezone = zone
 }
 
-func (u *User) OauthId() int64 {
+func (u *User) OauthId() string {
 	return u.oauthId
 }
 
-func (u *User) SetOauthId(id int64) {
+func (u *User) SetOauthId(id string) {
 	u.oauthId = id
 }
 
@@ -170,15 +186,15 @@ func (u *User) Comments() ([]Comment, error) {
 	vendor := u.conn.databaser
 	db, err := sql.Open(vendor.Driver(), vendor.Name())
 	if err != nil {
-		fmt.Println("Couldn't open DB:", err)
+		log.Println("model.User. Couldn't open DB:", err)
 		return nil, err
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare(queryForAllCommentsOfUserId)
 	if err != nil {
-		fmt.Printf("Couldn't prepare statement: %s", queryForAllCommentsOfUserId)
-		fmt.Println(err)
+		log.Printf("Couldn't prepare statement: %s", queryForAllCommentsOfUserId)
+		log.Println(err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -187,7 +203,7 @@ func (u *User) Comments() ([]Comment, error) {
 
 	rows, err := stmt.Query(u.id)
 	if err != nil {
-		fmt.Println("Couldn't read rows from statement", err)
+		log.Println("model.User. Couldn't read rows from statement", err)
 		return comments, err
 	}
 	defer rows.Close()
@@ -203,7 +219,7 @@ func (u *User) Comments() ([]Comment, error) {
 
 		err := rows.Scan(&id, &userId, &postId, &content, &date, &upVote, &downVote)
 		if err != nil {
-			fmt.Println("Error while scanning comments", err)
+			log.Println("model.User. Error while scanning comments", err)
 			return comments, err
 		}
 		c := Comment{
@@ -237,16 +253,16 @@ func (conn *DBConnection) createUserTable() {
 
 	model, err := sql.Open(modelaser.Driver(), modelaser.Name())
 	if err != nil {
-		fmt.Println("Error on open of database", err)
+		log.Println("model.User. Error on open of database", err)
 		return
 	}
 	defer model.Close()
 
 	_, err = model.Exec(createUserTable)
 	if err != nil {
-		fmt.Printf("Error creating Users table, driver \"%s\", modelname \"%s\", query = \"%s\"\n",
+		log.Printf("Error creating Users table, driver \"%s\", modelname \"%s\", query = \"%s\"\n",
 			modelaser.Driver(), modelaser.Name(), createUserTable)
-		fmt.Println(err)
+		log.Println(err)
 		return
 	}
 }
@@ -257,20 +273,20 @@ func (conn *DBConnection) dropUserTable() {
 
 	model, err := sql.Open(modelaser.Driver(), modelaser.Name())
 	if err != nil {
-		fmt.Println("Error on open of database", err)
+		log.Println("model.User. Error on open of database", err)
 		return
 	}
 	defer model.Close()
 
 	_, err = model.Exec(dropUserTable)
 	if err != nil {
-		fmt.Println("Error droping table:", err)
+		log.Println("model.User. Error droping table:", err)
 	}
 }
 
 // Creates a new User attached to the Database (but it is not saved).
 func (conn *DBConnection) NewUser(username string, regDate time.Time,
-	timezone int, oauthId int64, access string, refresh string, email string) *User {
+	timezone int, oauthId string, access string, refresh string, email string) *User {
 	u := &User{
 		id:               -1,
 		username:         username,
@@ -293,14 +309,14 @@ func (conn *DBConnection) FindAllUsers() ([]User, error) {
 
 	model, err := sql.Open(modelaser.Driver(), modelaser.Name())
 	if err != nil {
-		fmt.Println("FindAllUsers:", err)
+		log.Println("model.User. FindAllUsers:", err)
 		return users, err
 	}
 	defer model.Close()
 
 	rows, err := model.Query(queryForAllUser)
 	if err != nil {
-		fmt.Println("FindAllUsers:", err)
+		log.Println("model.User. FindAllUsers:", err)
 		return users, err
 	}
 	defer rows.Close()
@@ -310,7 +326,7 @@ func (conn *DBConnection) FindAllUsers() ([]User, error) {
 		var username string
 		var date time.Time
 		var timezone int
-		var oauthId int64
+		var oauthId string
 		var accessToken string
 		var refreshToken string
 		var email string
@@ -351,14 +367,14 @@ func (conn *DBConnection) FindUserById(id int64) (*User, error) {
 
 	model, err := sql.Open(modelaser.Driver(), modelaser.Name())
 	if err != nil {
-		fmt.Println("FindUserById 1:", err)
+		log.Println("model.User. FindUserById 1:", err)
 		return nil, err
 	}
 	defer model.Close()
 
 	stmt, err := model.Prepare(findUserById)
 	if err != nil {
-		fmt.Println("FindUserById 2:", err)
+		log.Println("model.User. FindUserById 2:", err)
 		return nil, err
 	}
 	defer stmt.Close()
@@ -366,7 +382,7 @@ func (conn *DBConnection) FindUserById(id int64) (*User, error) {
 	var username string
 	var date time.Time
 	var timezone int
-	var oauthId int64
+	var oauthId string
 	var accessToken string
 	var refreshToken string
 	var email string
@@ -397,6 +413,62 @@ func (conn *DBConnection) FindUserById(id int64) (*User, error) {
 	return u, nil
 }
 
+// Finds a user that matches the given id
+func (conn *DBConnection) FindUserByOAuthId(oauthId string) (*User, error) {
+
+	var modelaser = conn.databaser
+
+	model, err := sql.Open(modelaser.Driver(), modelaser.Name())
+	if err != nil {
+		log.Println("model.User. FindUserByOAuthId1 :", err)
+		return nil, err
+	}
+	defer model.Close()
+
+	stmt, err := model.Prepare(findUserByOAuthId)
+	if err != nil {
+		log.Println("model.User. FindUserByOAuthId2 :", err)
+		return nil, err
+	}
+	defer stmt.Close()
+
+	var id int64
+	var username string
+	var date time.Time
+	var timezone int
+	var accessToken string
+	var refreshToken string
+	var email string
+
+	err = stmt.QueryRow(oauthId).Scan(&id,
+		&username,
+		&date,
+		&timezone,
+		&oauthId,
+		&accessToken,
+		&refreshToken,
+		&email)
+	if err != nil {
+		// normal if the User doesnt exist
+		log.Println("model.User. FindUserByOAuthId3 :", err)
+		return nil, err
+	}
+
+	u := &User{
+		id:               id,
+		username:         username,
+		registrationDate: date,
+		timezone:         timezone,
+		oauthId:          oauthId,
+		accessToken:      accessToken,
+		refreshToken:     refreshToken,
+		email:            email,
+		conn:             conn,
+	}
+
+	return u, nil
+}
+
 //
 // Operations on User
 //
@@ -408,14 +480,14 @@ func (u *User) Save() error {
 	vendor := u.conn.databaser
 	db, err := sql.Open(vendor.Driver(), vendor.Name())
 	if err != nil {
-		fmt.Println("Save 1:", err)
+		log.Println("model.User. Save 1:", err)
 		return err
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare(insertOrReplaceUserForId)
 	if err != nil {
-		fmt.Println("Save 2:", err)
+		log.Println("model.User. Save 2:", err)
 		return err
 	}
 	defer stmt.Close()
@@ -428,14 +500,14 @@ func (u *User) Save() error {
 		u.refreshToken,
 		u.email)
 	if err != nil {
-		fmt.Println("Save 3:", err)
+		log.Println("model.User. Save 3:", err)
 		return err
 	}
 
 	// query the ID we inserted
 	idStmt, err := db.Prepare(queryUserForUsername)
 	if err != nil {
-		fmt.Println("Save 5:", err)
+		log.Println("model.User. Save 5:", err)
 		return err
 	}
 	defer idStmt.Close()
@@ -451,21 +523,21 @@ func (u User) Destroy() error {
 	vendor := u.conn.databaser
 	db, err := sql.Open(vendor.Driver(), vendor.Name())
 	if err != nil {
-		fmt.Println("Destroy 1:", err)
+		log.Println("model.User. Destroy 1:", err)
 		return err
 	}
 	defer db.Close()
 
 	stmt, err := db.Prepare(deleteUserById)
 	if err != nil {
-		fmt.Println("Destroy 2:", err)
+		log.Println("model.User. Destroy 2:", err)
 		return err
 	}
 	defer stmt.Close()
 
 	_, err = stmt.Exec(u.id)
 	if err != nil {
-		fmt.Println("Destroy 3:", err)
+		log.Println("model.User. Destroy 3:", err)
 		return err
 	}
 

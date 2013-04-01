@@ -2,8 +2,12 @@ package auth
 
 import (
 	"code.google.com/p/goauth2/oauth"
-	"fmt"
+	"encoding/json"
+	"github.com/aybabtme/goblog/model"
+	"log"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 const profileInfoURL = "https://www.googleapis.com/oauth2/v1/userinfo?alt=json"
@@ -33,24 +37,101 @@ func AuthorizeOauth(w http.ResponseWriter, r *http.Request) {
 }
 
 // Function that handles the callback from the Google server
-func HandleOAuth2Callback(w http.ResponseWriter, r *http.Request) {
-	//Get the code from the response
-	code := r.FormValue("code")
-	err := r.FormValue("error")
+func GetHandleOAuth2Callback(conn *model.DBConnection) func(http.ResponseWriter, *http.Request) {
 
-	if "" != err {
-		fmt.Fprintf(w, "Access denied.")
-		return
+	return func(w http.ResponseWriter, r *http.Request) {
+		//Get the code from the response
+		code := r.FormValue("code")
+		errResp := r.FormValue("error")
+
+		if "" != errResp {
+			http.Redirect(w, r, "/", http.StatusExpectationFailed)
+			return
+		}
+
+		t := &oauth.Transport{oauth.Config: oauthCfg}
+
+		// Exchange the received code for a token
+		t.Exchange(code)
+
+		//now get user data based on the Transport which has the token
+		resp, _ := t.Client().Get(profileInfoURL)
+		dec := json.NewDecoder(resp.Body)
+
+		var gUser map[string]interface{}
+		if err := dec.Decode(&gUser); err != nil {
+			log.Println("Couldn't decode json OAuth answer:", err)
+			http.Redirect(w, r, "/", http.StatusInternalServerError)
+			return
+		}
+
+		if val, ok := gUser["verified_email"].(bool); !ok || !val {
+			http.Redirect(w, r, "/", http.StatusNotAcceptable)
+			return
+		}
+
+		// If user exists, retrieve it.
+		user := recoverAuthUser(conn, t.ClientId)
+		// Otherwise save create a new one and save it
+		if user == nil {
+			log.Println("Creating new user")
+			user = createAuthUser(conn, gUser, t)
+		}
+		if user == nil {
+			log.Println("Couldn't get a user for the token we received.")
+			http.Redirect(w, r, "/", http.StatusInternalServerError)
+			return
+		}
+
+		session, _ := store.Get(r, "user-session")
+		session.Values["userId"] = strconv.FormatInt(user.Id(), 10)
+		session.Save(r, w)
+		http.Redirect(w, r, "/", http.StatusFound)
+
+		userId, _ := session.Values["userId"].(string)
+		log.Printf("userId=%s saved to cookie", userId)
+
+	}
+}
+
+func recoverAuthUser(conn *model.DBConnection,
+	oauthId string) *model.User {
+	user, err := conn.FindUserByOAuthId(oauthId)
+	if err != nil {
+		log.Printf("Couldn't find user with id <%v>\n", oauthId)
+		log.Println(err)
+		return nil
+	}
+	return user
+
+}
+
+func createAuthUser(conn *model.DBConnection,
+	gUser map[string]interface{},
+	t *oauth.Transport) *model.User {
+
+	username, ok := gUser["name"].(string)
+	if !ok {
+		log.Println("HandleOAuth2: username.")
+		return nil
+	}
+	email, ok := gUser["email"].(string)
+	if !ok {
+		log.Println("HandleOAuth2: email.")
+		return nil
 	}
 
-	t := &oauth.Transport{oauth.Config: oauthCfg}
+	user := conn.NewUser(username,
+		time.Now().UTC(),
+		-5,
+		t.ClientId,
+		t.AccessToken,
+		t.RefreshToken,
+		email)
 
-	// Exchange the received code for a token
-	t.Exchange(code)
-
-	//now get user data based on the Transport which has the token
-	resp, _ := t.Client().Get(profileInfoURL)
-
-	buf := make([]byte, 1024)
-	resp.Body.Read(buf)
+	if err := user.Save(); err != nil {
+		log.Printf("Couldn't save new user <%v>\n", user)
+		return nil
+	}
+	return user
 }

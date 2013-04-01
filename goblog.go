@@ -91,7 +91,7 @@ func doGeneration(pool chan int, conn *model.DBConnection, i int, generator func
 		strings.Title(gypsum.WordLorem(2)+generator()),
 		time.Now().UTC(),
 		-5,
-		time.Now().Unix(),
+		generator(),
 		strings.Title(gypsum.WordLorem(5)+generator()),
 		strings.Title(gypsum.WordLorem(5)+generator()),
 		strings.Title(gypsum.WordLorem(5)+generator()))
@@ -118,11 +118,12 @@ func doGeneration(pool chan int, conn *model.DBConnection, i int, generator func
 
 	commentCount := rand.Intn(10)
 	for k := 0; k < commentCount; k++ {
+
 		commenter := conn.NewUser(
 			strings.Title(gypsum.WordLorem(2)+generator()),
 			time.Now().UTC(),
 			-5,
-			time.Now().Unix(),
+			generator(),
 			strings.Title(gypsum.WordLorem(5)+generator()),
 			strings.Title(gypsum.WordLorem(5)+generator()),
 			strings.Title(gypsum.WordLorem(5)+generator()))

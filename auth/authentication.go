@@ -8,12 +8,7 @@ import (
 	"strconv"
 )
 
-var store = sessions.NewCookieStore(
-	[]byte("auth key avec de la mayo"),
-	[]byte("crypto key avec de la mayo"),
-	[]byte("auth key avec du ketchup"),
-	[]byte("crypto key avec du ketchup"),
-)
+var store = sessions.NewCookieStore([]byte("auth key avec de la mayo"))
 
 func Login(conn *model.DBConnection, w http.ResponseWriter, r *http.Request) (*model.User, *model.Author) {
 	// Get a session. We're ignoring the error resulted from decoding an
@@ -24,8 +19,6 @@ func Login(conn *model.DBConnection, w http.ResponseWriter, r *http.Request) (*m
 	// Save it.
 	sessions.Save(r, w)
 
-	log.Printf("Session:User=%v Author=%v\n", user, author)
-
 	return user, author
 }
 
@@ -33,20 +26,20 @@ func getUser(conn *model.DBConnection,
 	store sessions.Store,
 	r *http.Request) *model.User {
 
-	session, err := store.Get(r, "user-session")
-	if err == nil {
-		return nil
-	}
+	session, _ := store.Get(r, "user-session")
 	idStr, ok := session.Values["userId"].(string)
 	if !ok {
+		log.Printf("auth.getUser. Couldn't get id string :%v", idStr)
 		return nil
 	}
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
+		log.Println("auth.getUser. Couldn't parse int64 from id string")
 		return nil
 	}
 	user, err := conn.FindUserById(id)
 	if err != nil {
+		log.Printf("auth.getUser. Couldn't find user with id <%d>", id)
 		return nil
 	}
 	return user
