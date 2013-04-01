@@ -22,6 +22,17 @@ func Login(conn *model.DBConnection, w http.ResponseWriter, r *http.Request) (*m
 	return user, author
 }
 
+func Logout(conn *model.DBConnection) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		session, _ := store.Get(r, "user-session")
+		session.Values["userId"] = ""
+		session, _ = store.Get(r, "author-session")
+		session.Values["authorId"] = ""
+		sessions.Save(r, w)
+		http.Redirect(w, r, "/", http.StatusFound)
+	}
+}
+
 func getUser(conn *model.DBConnection,
 	store sessions.Store,
 	r *http.Request) *model.User {

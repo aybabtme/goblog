@@ -36,6 +36,7 @@ func (r Router) Start(port string, conn *model.DBConnection) error {
 	// For user authentication
 	http.HandleFunc("/authorize", auth.AuthorizeOauth)
 	http.HandleFunc("/oauth2callback", auth.GetHandleOAuth2Callback(conn))
+	http.HandleFunc("/logout", auth.Logout(conn))
 
 	return http.ListenAndServe(":"+port, nil)
 }
