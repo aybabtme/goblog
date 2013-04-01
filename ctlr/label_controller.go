@@ -20,11 +20,6 @@ type label struct {
 	view *template.Template
 }
 
-type labelData struct {
-	Name     string
-	AllPosts []model.Post
-}
-
 func (l label) Path() string {
 	return "/label/{id:[0-9]+}"
 }
@@ -50,12 +45,15 @@ func (l label) Controller(conn *model.DBConnection) func(http.ResponseWriter, *h
 			return
 		}
 
-		d := labelData{
-			Name:     label.Name(),
-			AllPosts: posts,
+		data := struct {
+			Name     string
+			AllPosts []model.Post
+		}{
+			label.Name(),
+			posts,
 		}
 
-		if err := l.view.Execute(rw, d); nil != err {
+		if err := l.view.Execute(rw, data); nil != err {
 			log.Println("LabelController, execute:", err)
 		}
 

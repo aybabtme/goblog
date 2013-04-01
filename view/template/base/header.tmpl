@@ -11,11 +11,20 @@
                <li>
                   <a href="https://github.com/aybabtme/goblog">Source Code</a>
                </li>
+               {{if .CurrentAuthor}}
+               <li>
+                  <a href="/post/compose">Compose</a>
+               </li>
+               {{else}}
+               {{end}}
+               {{if .CurrentUser}}
+               {{else}}
                <li>
                   <form action="/authorize" method="post">
                      <button type="submit" class="btn btn-primary">Login</button>
                   </form>
                </li>
+               {{end}}
             </ul>
          </div>
       </div>

@@ -3,6 +3,7 @@ package auth
 import (
 	"github.com/aybabtme/goblog/model"
 	"github.com/gorilla/sessions"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -22,6 +23,8 @@ func Login(conn *model.DBConnection, w http.ResponseWriter, r *http.Request) (*m
 
 	// Save it.
 	sessions.Save(r, w)
+
+	log.Printf("Session:User=%v Author=%v\n", user, author)
 
 	return user, author
 }

@@ -1,14 +1,17 @@
 package ctlr
 
 import (
+	"github.com/aybabtme/goblog/auth"
 	"github.com/aybabtme/goblog/model"
 	"github.com/aybabtme/goblog/view"
 	"github.com/gorilla/mux"
+	"github.com/russross/blackfriday"
 	"html/template"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type post struct {
@@ -84,7 +87,20 @@ func (p *post) forListing(conn *model.DBConnection,
 		log.Println("PostController for listing 1:", err)
 		return
 	}
-	if err := p.view.Execute(rw, posts); nil != err {
+
+	currentUser, currentAuthor := auth.Login(conn, rw, req)
+
+	data := struct {
+		CurrentAuthor *model.Author
+		CurrentUser   *model.User
+		Posts         []model.Post
+	}{
+		currentAuthor,
+		currentUser,
+		posts,
+	}
+
+	if err := p.view.Execute(rw, data); nil != err {
 		log.Println("PostController for listing 2:", err)
 		return
 	}
@@ -101,8 +117,22 @@ func (p *post) forId(conn *model.DBConnection,
 		log.Println("PostController for id 1:", err)
 		return
 	}
+
+	currentUser, currentAuthor := auth.Login(conn, rw, req)
+
 	post, err := conn.FindPostById(intId)
-	if err := p.view.Execute(rw, post); nil != err {
+
+	data := struct {
+		CurrentAuthor *model.Author
+		CurrentUser   *model.User
+		Post          *model.Post
+	}{
+		currentAuthor,
+		currentUser,
+		post,
+	}
+
+	if err := p.view.Execute(rw, data); nil != err {
 		log.Println("PostController for id 3:", err)
 		return
 	}
@@ -118,7 +148,19 @@ func (p *post) forCompose(conn *model.DBConnection,
 		log.Println("Couldn't find previous labels for autosuggestion")
 	}
 
-	if err := p.view.Execute(rw, labels); nil != err {
+	currentUser, currentAuthor := auth.Login(conn, rw, req)
+
+	data := struct {
+		CurrentAuthor *model.Author
+		CurrentUser   *model.User
+		Labels        []model.Label
+	}{
+		currentAuthor,
+		currentUser,
+		labels,
+	}
+
+	if err := p.view.Execute(rw, data); nil != err {
 		log.Println("PostController for listing 2:", err)
 		return
 	}
@@ -129,12 +171,37 @@ func (p *post) forSave(conn *model.DBConnection,
 	req *http.Request) {
 
 	title := strings.Title(req.FormValue("title"))
-	content := req.FormValue("content")
+	imageUrl := req.FormValue("imageUrl")
+	markdown := req.FormValue("content")
 	labelString := req.FormValue("label_list")
+	content := string(blackfriday.MarkdownCommon([]byte(markdown)))
 
 	log.Printf("Title=%s\nContent=%s\nLabels=%s", title, content, labelString)
 
-	if err := p.view.Execute(rw, nil); nil != err {
+	currentUser, currentAuthor := auth.Login(conn, rw, req)
+
+	if currentAuthor == nil {
+		// Can't save posts when you're not an author
+		return
+	}
+
+	post := conn.NewPost(currentAuthor, title, content, imageUrl, time.Now().UTC())
+	if err := post.Save(); err != nil {
+		log.Println("Couldn't save post", err)
+		return
+	}
+
+	data := struct {
+		CurrentAuthor *model.Author
+		CurrentUser   *model.User
+		Post          *model.Post
+	}{
+		currentAuthor,
+		currentUser,
+		post,
+	}
+
+	if err := p.view.Execute(rw, data); nil != err {
 		log.Println("PostController for listing 2:", err)
 		return
 	}
@@ -150,10 +217,25 @@ func (p *post) forDestroy(conn *model.DBConnection,
 		log.Println("PostController for id 1:", err)
 		return
 	}
-	post, err := conn.FindPostById(intId)
-	if err := p.view.Execute(rw, post); nil != err {
-		log.Println("PostController for id 3:", err)
+
+	_, currentAuthor := auth.Login(conn, rw, req)
+	if currentAuthor == nil {
+		http.Redirect(rw, req, "/", 401)
 		return
 	}
+
+	post, err := conn.FindPostById(intId)
+
+	if post.Author().Id() != currentAuthor.Id() {
+		log.Printf("%s tried to delete a post that isn't their.\n",
+			currentAuthor.User().Username())
+		return
+	}
+
+	if err := post.Destroy(); err != nil {
+		log.Println("Couldn't delete post:", err)
+	}
+
+	http.Redirect(rw, req, "/", 301)
 
 }
