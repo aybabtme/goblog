@@ -1,7 +1,6 @@
 package main
 
 import (
-	"code.google.com/p/goauth2/oauth"
 	"fmt"
 	"github.com/aybabtme/goblog/model"
 	"github.com/aybabtme/gypsum"
@@ -12,15 +11,6 @@ import (
 	"strings"
 	"time"
 )
-
-var oauthCfg = &oauth.Config{
-	ClientId:     "733675763142.apps.googleusercontent.com",
-	ClientSecret: "dseJIDxz2ZlpYU6zn-BAMrYK",
-	AuthURL:      "https://accounts.google.com/o/oauth2/auth",
-	TokenURL:     "https://accounts.google.com/o/oauth2/token",
-	RedirectURL:  "http://flying-unicorn.aybabt.me:5000/oauth2callback",
-	Scope:        "https://www.googleapis.com/auth/userinfo.email profile",
-}
 
 func main() {
 
