@@ -1,51 +1,51 @@
 {{define "content"}}
-{{with .Author}}
-<div class="page-header">
-   <h1>
-      {{.User.Username}}
-   </h1>
-   Registered since {{.User.RegistrationDate.Weekday}} {{.User.RegistrationDate.Day}} {{.User.RegistrationDate.Month}} {{.User.RegistrationDate.Year}}.
-</div>
-<div class="row">
-   <div class="span6">
-      {{range .AllPosts}}
-      <div lcass="row-fluid">
-         <div class="span2">
-            <img src="{{.ImageURL}}" height="100px" width="100px"></img>
-         </div>
-         <div class ="span10 page-header">
-            <h2>
-               <a href="/post/{{.Id}}">{{.Title}}</a>
-                  <p><small>
-                  Posted on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}
-                  </small></p>
-            </h2>
-         </div>
-      </div>
-      {{else}}
-      <div class="hero-unit"><h1>There are not post on this blog!</h1></div>
-      {{end}}
+   {{with .Author}}
+   <div class="page-header">
+      <h1>
+         {{.User.Username}}
+      </h1>
+      Registered since {{.User.RegistrationDate.Weekday}} {{.User.RegistrationDate.Day}} {{.User.RegistrationDate.Month}} {{.User.RegistrationDate.Year}}.
    </div>
-   <div class="span6">
-      {{if .User.Comments}}
-      <div class="span12">
-         <h4>Comments</h4>
-         {{range .User.Comments}}
-         <blockquote id="{{.Id}}">
-            <p>{{.Content}}</p>
-         <small><a href="/post/{{.Post.Id}}#{{.Id}}">{{.Post.Title}}</a>, on
-               {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}},
-               said:
-            </small>
-         </blockquote>
+   <div class="row">
+      <div class="span6">
+         {{range .Posts}}
+         <div lcass="row-fluid">
+            <div class="span2">
+               <img src="{{.ImageURL}}" height="100px" width="100px"></img>
+            </div>
+            <div class ="span10 page-header">
+               <h2>
+                  <a href="/post/{{.Id}}">{{.Title}}</a>
+                     <p><small>
+                     Posted on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}
+                     </small></p>
+               </h2>
+            </div>
+         </div>
+         {{else}}
+         <div class="hero-unit"><h1>There are not post on this blog!</h1></div>
+         {{end}}
       </div>
+      <div class="span6">
+         {{if .User.Comments}}
+         <div class="span12">
+            <h4>Comments</h4>
+            {{range .User.Comments}}
+            <blockquote id="{{.Id}}">
+               <p>{{.Content}}</p>
+            <small><a href="/post/{{.Post.Id}}#{{.Id}}">{{.Post.Title}}</a>, on
+                  {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}},
+                  said:
+               </small>
+            </blockquote>
+         </div>
+      {{end}}
+         {{else}}
+            <div class="alert">
+               <h4>{{.User.Username}} has not commented on any posts.</h4>
+            </div>
+         {{end}}
+      </div>
+   </div>
    {{end}}
-      {{else}}
-         <div class="alert">
-            <h4>{{.User.Username}} has not commented on any posts.</h4>
-         </div>
-      {{end}}
-   </div>
-</div>
-{{end}}
 {{end}}
