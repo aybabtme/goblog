@@ -27,8 +27,6 @@ func (i index) Controller(conn *model.DBConnection) func(http.ResponseWriter,
 	*http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 
-		currentUser, currentAuthor := auth.Login(conn, rw, req)
-
 		posts, err := conn.FindAllPosts()
 		if err != nil {
 			log.Println("IndexController, list posts: ", err)
@@ -39,6 +37,8 @@ func (i index) Controller(conn *model.DBConnection) func(http.ResponseWriter,
 			log.Println("IndexController, list labels: ", err)
 			return
 		}
+
+		currentUser, currentAuthor := auth.Login(conn, rw, req)
 
 		data := struct {
 			CurrentUser   *model.User

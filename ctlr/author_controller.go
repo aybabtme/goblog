@@ -1,6 +1,7 @@
 package ctlr
 
 import (
+	"github.com/aybabtme/goblog/auth"
 	"github.com/aybabtme/goblog/model"
 	"github.com/aybabtme/goblog/view"
 	"github.com/gorilla/mux"
@@ -27,15 +28,6 @@ func NewAuthorListController() Controller {
 type author struct {
 	path string
 	view *template.Template
-}
-
-type authorData struct {
-	User     *model.User
-	AllPosts []model.Post
-}
-
-type authorList struct {
-	Users []model.User
 }
 
 func (a author) Path() string {
@@ -65,7 +57,19 @@ func (a author) authorIndex(conn *model.DBConnection,
 		log.Printf("AuthorController, find all authors: ", err)
 	}
 
-	if err := a.view.Execute(rw, authors); nil != err {
+	currentUser, currentAuthor := auth.Login(conn, rw, req)
+
+	data := struct {
+		CurrentUser   *model.User
+		CurrentAuthor *model.Author
+		Authors       []model.Author
+	}{
+		currentUser,
+		currentAuthor,
+		authors,
+	}
+
+	if err := a.view.Execute(rw, data); nil != err {
 		log.Printf("AuthorController for Listing", err)
 	}
 }
@@ -91,12 +95,21 @@ func (a author) authorId(conn *model.DBConnection,
 		return
 	}
 
-	d := authorData{
-		User:     author.User(),
-		AllPosts: posts,
+	currentUser, currentAuthor := auth.Login(conn, rw, req)
+
+	data := struct {
+		CurrentUser   *model.User
+		CurrentAuthor *model.Author
+		Author        *model.Author
+		Posts         []model.Post
+	}{
+		currentUser,
+		currentAuthor,
+		author,
+		posts,
 	}
 
-	if err := a.view.Execute(rw, d); nil != err {
+	if err := a.view.Execute(rw, data); nil != err {
 		log.Printf("AuthorController for Posts: ", err)
 		return
 	}
