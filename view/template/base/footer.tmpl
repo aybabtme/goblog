@@ -1,8 +1,12 @@
 {{define "footer"}}
-<div id="footer">
+<div id="footer" class="navbar navbar-fixed-bottom">
    <div class="container">
       <p class="muted credit">
+         {{if .CurrentUser}}
+         Hello {{.CurrentUser.Username}}!
+         {{else}}
          Mmmmh this footer looks tasty.
+         {{end}}
       </p>
    </div>
 </div>

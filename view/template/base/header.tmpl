@@ -18,11 +18,15 @@
                {{else}}
                {{end}}
                {{if .CurrentUser}}
+               <li>
+
+               </li>
+               <li>
+                  <a href="/logout" class="btn-small btn-inverse">Logout</a>
+               </li>
                {{else}}
                <li>
-                  <form action="/authorize" method="post">
-                     <button type="submit" class="btn btn-primary">Login</button>
-                  </form>
+                  <a href="/authorize" class="btn-small btn-inverse">Login</a>
                </li>
                {{end}}
             </ul>

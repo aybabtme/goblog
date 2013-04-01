@@ -1,20 +1,33 @@
 {{define "content"}}
-<form action="/post/save" method="post">
-  <fieldset>
-  <legend>Compose a post</legend>
-  <label>Post title</label>
-  <input type="text" name="title" placeholder="Type a title here">
-  <label>Content</label>
-  <textarea name="content" class="field span12" rows="15" placeholder="Your juicy gossips here"></textarea>
-  <label>Labels</label>
-  <input
-    type="text"
-    name="label_list"
-    placeholder="Separated by commas">
-  </fieldset>
-<div class="form-actions">
-  <button type="submit" class="btn btn-primary">Save post</button>
-  <button type="button" class="btn">Cancel</button>
-</div>
-</form>
+{{if .CurrentUser}}
+  {{if .CurrentAuthor}}
+  <form action="/post/save" method="post">
+    <fieldset>
+      <legend>Compose a post</legend>
+      <label>Post title</label>
+      <input type="text" name="title" placeholder="Type a title here">
+      <label>Content</label>
+      <textarea name="content" class="field span12" rows="15" placeholder="Your juicy gossips here"></textarea>
+      <label>Labels</label>
+      <input
+      type="text"
+      name="label_list"
+      placeholder="Separated by commas">
+    </fieldset>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Save post</button>
+      <button type="button" class="btn">Cancel</button>
+    </div>
+  </form>
+  {{else}}
+  <div class="alert alert-error">
+  <h1>Sorry!<small> Only authors can compose blog posts!</small></h1>
+  </div>
+
+  {{end}}
+{{else}}
+  <div class="alert alert-error">
+    <h1>Sorry!<small> You are not a registered user!</small></h1>
+  </div>
+{{end}}
 {{end}}
