@@ -4,42 +4,47 @@
    <h1>
       {{.User.Username}}
    </h1>
+   Registered since {{.User.RegistrationDate.Weekday}} {{.User.RegistrationDate.Day}} {{.User.RegistrationDate.Month}} {{.User.RegistrationDate.Year}}.
 </div>
-<div id="posts" style="float:left;">
-   {{range .Posts}}
-   <div class="row-fluid">
-      <div class="span2">
-         <img src="{{.ImageURL}}" height="100px" width="100px"></img>
+<div class="row">
+   <div class="span6">
+      {{range .AllPosts}}
+      <div lcass="row-fluid">
+         <div class="span2">
+            <img src="{{.ImageURL}}" height="100px" width="100px"></img>
+         </div>
+         <div class ="span10 page-header">
+            <h2>
+               <a href="/post/{{.Id}}">{{.Title}}</a>
+                  <p><small>
+                  Posted on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}
+                  </small></p>
+            </h2>
+         </div>
       </div>
-      <div class="span10 page-header">
-         <h2>
-            <a href="/post/{{.Id}}">
-               {{.Title}}
-            </a>
-            <p><small>Posted on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}</small></p>
-         </h2>
-      </div>
+      {{else}}
+      <div class="hero-unit"><h1>There are not post on this blog!</h1></div>
+      {{end}}
    </div>
-   {{else}}
-   <div class="hero-unit"><h1>There are not post on this blog!</h1></div>
+   <div class="span6">
+      {{if .User.Comments}}
+      <div class="span12">
+         <h4>Comments</h4>
+         {{range .User.Comments}}
+         <blockquote id="{{.Id}}">
+            <p>{{.Content}}</p>
+         <small><a href="/post/{{.Post.Id}}#{{.Id}}">{{.Post.Title}}</a>, on
+               {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}},
+               said:
+            </small>
+         </blockquote>
+      </div>
    {{end}}
+      {{else}}
+         <div class="alert">
+            <h4>{{.User.Username}} has not commented on any posts.</h4>
+         </div>
+      {{end}}
+   </div>
 </div>
-
-<div id="comments" style="float:right;">
-   {{range .User.Comments}}
-   <h4>Comments</h4>
-   <blockquote id="{{.Id}}">
-      <p>{{.Content}}</p>
-      <small><a href="/user/{{.User.Id}}">{{.User.Username}}</a>, at
-         {{.Date.Hour}}h{{.Date.Minute}} on
-         {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}},
-         said:
-      </small>
-   </blockquote>
-   {{else}}
-   <h4>No comments</h4>
-   Ita, quae mutat, ea corrumpit, quae sequitur sunt tota Democriti, atomi, inane, imagines.
-   {{end}}
-</div>
-{{end}}
 {{end}}
