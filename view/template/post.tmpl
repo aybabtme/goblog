@@ -1,7 +1,7 @@
 {{define "content"}}
 
 <div class="index span9">
-   {{if .}}
+   {{with .Post}}
 
    <img class="img-rounded" src="{{.ImageURL}}" height="100px" width="100px"></img>
    <div class="page-header">
@@ -44,6 +44,6 @@
    {{end}}
 </div>
 
-{{template "sidebar" .Labels}}
+{{template "sidebar" .Post.Labels}}
 
 {{end}}

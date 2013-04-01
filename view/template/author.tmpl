@@ -1,11 +1,12 @@
 {{define "content"}}
+{{with .Author}}
 <div class="page-header">
-      <h1>
-         {{.User.Username}}
-      </h1>
-   </div>
+   <h1>
+      {{.User.Username}}
+   </h1>
+</div>
 <div id="posts" style="float:left;">
-   {{range .AllPosts}}
+   {{range .Posts}}
    <div class="row-fluid">
       <div class="span2">
          <img src="{{.ImageURL}}" height="100px" width="100px"></img>
@@ -25,25 +26,20 @@
 </div>
 
 <div id="comments" style="float:right;">
-   {{if .User.Comments}}
-   <h4>Comments</h4>
    {{range .User.Comments}}
+   <h4>Comments</h4>
    <blockquote id="{{.Id}}">
       <p>{{.Content}}</p>
-
-
       <small><a href="/user/{{.User.Id}}">{{.User.Username}}</a>, at
          {{.Date.Hour}}h{{.Date.Minute}} on
          {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}},
          said:
       </small>
-
    </blockquote>
-
-   {{end}}
    {{else}}
    <h4>No comments</h4>
-   Ita, quae mutat, ea corrumpit, quae sequitur sunt tota Democriti, atomi, inane, imagines.<br>
+   Ita, quae mutat, ea corrumpit, quae sequitur sunt tota Democriti, atomi, inane, imagines.
    {{end}}
-
+</div>
+{{end}}
 {{end}}

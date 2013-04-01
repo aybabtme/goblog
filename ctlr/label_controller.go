@@ -1,6 +1,7 @@
 package ctlr
 
 import (
+	"github.com/aybabtme/goblog/auth"
 	"github.com/aybabtme/goblog/model"
 	"github.com/aybabtme/goblog/view"
 	"github.com/gorilla/mux"
@@ -45,10 +46,16 @@ func (l label) Controller(conn *model.DBConnection) func(http.ResponseWriter, *h
 			return
 		}
 
+		currentUser, currentAuthor := auth.Login(conn, rw, req)
+
 		data := struct {
-			Name     string
-			AllPosts []model.Post
+			CurrentAuthor *model.Author
+			CurrentUser   *model.User
+			Name          string
+			AllPosts      []model.Post
 		}{
+			currentAuthor,
+			currentUser,
 			label.Name(),
 			posts,
 		}
