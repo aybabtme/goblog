@@ -26,7 +26,6 @@ func Logout(conn *model.DBConnection) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		session, _ := store.Get(r, "user-session")
 		session.Values["userId"] = ""
-		session, _ = store.Get(r, "author-session")
 		session.Values["authorId"] = ""
 		sessions.Save(r, w)
 		http.Redirect(w, r, "/", http.StatusFound)
@@ -40,7 +39,6 @@ func getUser(conn *model.DBConnection,
 	session, _ := store.Get(r, "user-session")
 	idStr, ok := session.Values["userId"].(string)
 	if !ok {
-		log.Printf("auth.getUser. Couldn't get id string :%v", idStr)
 		return nil
 	}
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -61,20 +59,21 @@ func getAuthor(conn *model.DBConnection,
 	r *http.Request) *model.Author {
 
 	session, err := store.Get(r, "author-session")
-	if err == nil {
-		return nil
-	}
 	idStr, ok := session.Values["authorId"].(string)
 	if !ok {
 		return nil
 	}
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
+		log.Println(err)
+		log.Printf("auth.getAuthor. Couldn't parse int64 from id string: %s\n",
+			idStr)
 		return nil
 	}
 	author, err := conn.FindAuthorById(id)
 
 	if err != nil {
+		log.Printf("auth.getAuthor. Couldn't find user with id <%d>", id)
 		return nil
 	}
 

@@ -1,9 +1,10 @@
 package main
 
 import (
-	"fmt"
+	"github.com/aybabtme/goblog/auth"
 	"github.com/aybabtme/goblog/model"
 	"github.com/aybabtme/gypsum"
+	"log"
 	"math/rand"
 	"os"
 	"runtime"
@@ -16,33 +17,38 @@ func main() {
 
 	modelurl := os.Getenv("DATABASE_URL")
 	if modelurl == "" {
-		fmt.Println("Need a database to connect to!\n" +
+		log.Println("Need a database to connect to!\n" +
 			"export DATABASE_URL=<your model url here>")
 		return
 	}
 	port := os.Getenv("PORT")
 	if port == "" {
-		fmt.Println("No port specified.\n" +
+		log.Println("No port specified.\n" +
 			"export PORT=<port number here>")
 		return
 	}
 
 	conn, err := setupDatabase(modelurl)
 	if err != nil {
-		fmt.Println("Couldn't connect to database.")
+		log.Println("Couldn't connect to database.")
 		panic(err)
 	}
 
+	auth.InteractiveOauth(conn, port)
+
 	if os.Getenv("DEBUG") == "true" {
-		fmt.Printf("Generating data... ")
+		log.Printf("Generating data... ")
 		err = generateData(conn)
 		if err != nil {
-			fmt.Println("Couldn't generate data")
+			log.Println("Couldn't generate data")
 		}
-		fmt.Println("Done.")
+		log.Println("Done.")
 	}
 
-	fmt.Println("Starting router")
+	log.Printf("Setting GOMAXPROCS(%d)\n", runtime.NumCPU())
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	log.Println("Starting router")
 	var r Router
 	if err := r.Start(port, conn); err != nil {
 		panic(err)
@@ -72,7 +78,7 @@ func generateData(conn *model.DBConnection) error {
 	rand.Seed(time.Now().UTC().UnixNano())
 	generator := serialIntGenerator()
 	postCount := rand.Intn(20) + 10
-	fmt.Printf(" post count = %d. \n", postCount)
+	log.Printf(" post count = %d. \n", postCount)
 	// for rate limiting
 	pool := make(chan int, runtime.NumCPU())
 	for i := 0; i < postCount; i++ {
@@ -81,7 +87,7 @@ func generateData(conn *model.DBConnection) error {
 		pool <- i
 
 	}
-	fmt.Printf("Generated %s rows using %d cores in %d ms.\n",
+	log.Printf("Generated %s rows using %d cores in %d ms.\n",
 		generator(), runtime.NumCPU(), time.Now().Sub(start).Nanoseconds()/1000000)
 	return nil
 }
@@ -136,7 +142,7 @@ func doGeneration(pool chan int, conn *model.DBConnection, i int, generator func
 	}
 	<-pool
 	if i%100 == 0 {
-		fmt.Printf("%d done (%d/%d)\n", (i * 100 / postCount), i, postCount)
+		log.Printf("%d done (%d/%d)\n", (i * 100 / postCount), i, postCount)
 	}
 
 }
