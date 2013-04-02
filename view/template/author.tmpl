@@ -21,7 +21,7 @@
       </div>
    </div>
    {{else}}
-   <div class="hero-unit"><h1>There are not post on this blog!</h1></div>
+   <div class="alert">{{.User.Username}} hasn't blogged anything!</div>
    {{end}}
 </div>
 
@@ -37,8 +37,7 @@
       </small>
    </blockquote>
    {{else}}
-   <h4>No comments</h4>
-   Ita, quae mutat, ea corrumpit, quae sequitur sunt tota Democriti, atomi, inane, imagines.
+   <div class="alert">{{.User.Username}} hasn't commented on anything!</div>
    {{end}}
 </div>
 {{end}}
