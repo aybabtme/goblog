@@ -26,7 +26,7 @@ var dropPostTable string = `
 DROP TABLE Post;
 `
 
-var insertOrReplacePostForId string = `
+var insertPostForId string = `
 INSERT INTO Post(
 	author_id,
 	title,
@@ -34,6 +34,17 @@ INSERT INTO Post(
 	image_url,
 	date)
 VALUES( $1, $2, $3, $4, $5)`
+
+var updatePostForId string = `
+UPDATE Post
+SET
+	author_id = $1,
+	title = $2,
+	content = $3,
+	image_url = $4,
+	date = $5
+WHERE
+	post_id = $6;`
 
 var findPostById string = `
 SELECT
@@ -453,7 +464,7 @@ func (p *Post) Save() error {
 	}
 	defer db.Close()
 
-	stmt, err := db.Prepare(insertOrReplacePostForId)
+	stmt, err := db.Prepare(insertPostForId)
 	if err != nil {
 		fmt.Println("Save 2:", err)
 		return err
@@ -477,6 +488,30 @@ func (p *Post) Save() error {
 	row := idStmt.QueryRow(p.Date())
 
 	return row.Scan(&p.id)
+}
+
+func (p *Post) Update() error {
+	vendor := p.conn.databaser
+	db, err := sql.Open(vendor.Driver(), vendor.Name())
+	if err != nil {
+		fmt.Println("Save 1:", err)
+		return err
+	}
+	defer db.Close()
+
+	stmt, err := db.Prepare(updatePostForId)
+	if err != nil {
+		fmt.Println("Save 2:", err)
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(p.author.Id(), p.title, p.content, p.imageURL, p.date, p.id)
+	if err != nil {
+		fmt.Println("Save 3:", err)
+		return err
+	}
+	return nil
 }
 
 // Deletes the post from the database

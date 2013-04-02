@@ -1,6 +1,7 @@
 {{define "content"}}
 
 <div class="index span9">
+
    {{with .Post}}
 
    <img class="img-rounded" src="{{.ImageURL}}" height="100px" width="100px"></img>
@@ -15,6 +16,10 @@
       </h1>
    </div>
    <p>{{.ContentMarkdown}}</p>
+   {{end}}
+   {{if .CurrentAuthor}}
+   <a href="/post/edit/{{.Post.Id}}" class="btn btn-warning">Edit</a>
+   <a href="/post/destroy/{{.Post.Id}}" class="btn btn-danger">Delete</a>
    {{end}}
    <hr></hr>
    {{if .CurrentUser}}

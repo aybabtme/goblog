@@ -39,6 +39,20 @@ func NewPostSaveController() Controller {
 	return p
 }
 
+func NewPostUpdateController() Controller {
+	var p post
+	p.path = "/post/save/{saveId:[0-9]+}"
+	p.view = view.GetPostTemplate()
+	return p
+}
+
+func NewPostEditController() Controller {
+	var p post
+	p.path = "/post/edit/{editId:[0-9]+}"
+	p.view = view.GetPostComposeTemplate()
+	return p
+}
+
 func NewPostCommentController() Controller {
 	var p post
 	p.path = "/post/comment/{commentId:[0-9]+}"
@@ -70,6 +84,8 @@ func (p post) Controller(conn *model.DBConnection) func(http.ResponseWriter, *ht
 		id := vars["id"]
 		destroyId := vars["destroyId"]
 		commentId := vars["commentId"]
+		editId := vars["editId"]
+		saveId := vars["saveId"]
 
 		if p.path == "/post/compose" {
 			p.forCompose(conn, rw, req)
@@ -79,6 +95,10 @@ func (p post) Controller(conn *model.DBConnection) func(http.ResponseWriter, *ht
 			p.forComment(conn, rw, req, commentId)
 		} else if destroyId != "" {
 			p.forDestroy(conn, rw, req, destroyId)
+		} else if editId != "" {
+			p.forEdit(conn, rw, req, editId)
+		} else if saveId != "" {
+			p.forUpdate(conn, rw, req, saveId)
 		} else if id == "" {
 			p.forListing(conn, rw, req)
 		} else {
@@ -163,10 +183,55 @@ func (p *post) forCompose(conn *model.DBConnection,
 		CurrentAuthor *model.Author
 		CurrentUser   *model.User
 		Labels        []model.Label
+		Post          *model.Post
 	}{
 		currentAuthor,
 		currentUser,
 		labels,
+		nil,
+	}
+
+	if err := p.view.Execute(rw, data); nil != err {
+		log.Println("PostController for listing 2:", err)
+		return
+	}
+}
+
+func (p *post) forEdit(conn *model.DBConnection,
+	rw http.ResponseWriter,
+	req *http.Request,
+	id string) {
+
+	currentUser, currentAuthor := auth.Login(conn, rw, req)
+
+	if currentAuthor == nil {
+		http.Error(rw, "/post/"+id, http.StatusForbidden)
+		return
+	}
+
+	postId, _ := strconv.ParseInt(id, 10, 64)
+	post, err := conn.FindPostById(postId)
+	if err != nil || post == nil {
+		log.Println("Can't edit, post doesn't exist")
+		http.Error(rw, "/post/"+id, http.StatusBadRequest)
+		return
+	}
+
+	labels, err := conn.FindAllLabels()
+	if err != nil {
+		log.Println("Couldn't find previous labels for autosuggestion")
+	}
+
+	data := struct {
+		CurrentAuthor *model.Author
+		CurrentUser   *model.User
+		Labels        []model.Label
+		Post          *model.Post
+	}{
+		currentAuthor,
+		currentUser,
+		labels,
+		post,
 	}
 
 	if err := p.view.Execute(rw, data); nil != err {
@@ -205,6 +270,50 @@ func (p *post) forSave(conn *model.DBConnection,
 
 	id := strconv.FormatInt(post.Id(), 10)
 	http.Redirect(rw, req, "/post/"+id, http.StatusFound)
+}
+
+func (p *post) forUpdate(conn *model.DBConnection,
+	rw http.ResponseWriter,
+	req *http.Request,
+	postId string) {
+
+	_, currentAuthor := auth.Login(conn, rw, req)
+
+	if currentAuthor == nil {
+		http.Redirect(rw, req, "/post/"+postId, http.StatusForbidden)
+		return
+	}
+
+	id, _ := strconv.ParseInt(postId, 10, 64)
+
+	post, err := conn.FindPostById(id)
+	if err != nil {
+		http.Redirect(rw, req, "/post/"+postId, http.StatusForbidden)
+		return
+	}
+
+	title := strings.Title(req.FormValue("title"))
+	imageUrl := req.FormValue("imageUrl")
+	content := req.FormValue("content")
+	labelString := req.FormValue("label_list")
+
+	post.SetTitle(title)
+	post.SetImageURL(imageUrl)
+	post.SetDate(time.Now().UTC())
+	post.SetContent(content)
+	if err := post.Update(); err != nil {
+		log.Println("Couldn't update post", err)
+		return
+	}
+
+	for _, label := range strings.Split(labelString, ",") {
+		if _, err := post.AddLabel(label); err != nil {
+			log.Printf("Couldn't add label <%s> to Post id<%d>\n", label, post.Id())
+			log.Println(err)
+		}
+	}
+
+	http.Redirect(rw, req, "/post/"+postId, http.StatusFound)
 }
 
 func (p *post) forComment(conn *model.DBConnection,
@@ -258,17 +367,11 @@ func (p *post) forDestroy(conn *model.DBConnection,
 
 	_, currentAuthor := auth.Login(conn, rw, req)
 	if currentAuthor == nil {
-		http.Redirect(rw, req, "/", http.StatusForbidden)
+		http.Error(rw, "/", http.StatusForbidden)
 		return
 	}
 
 	post, err := conn.FindPostById(intId)
-
-	if post.Author().Id() != currentAuthor.Id() {
-		log.Printf("%s tried to delete a post that isn't their.\n",
-			currentAuthor.User().Username())
-		return
-	}
 
 	if err := post.Destroy(); err != nil {
 		log.Println("Couldn't delete post:", err)

@@ -21,8 +21,10 @@ func (r Router) Start(port string, conn *model.DBConnection) error {
 		ctlr.NewPostController(),
 		ctlr.NewPostComposeController(),
 		ctlr.NewPostSaveController(),
+		ctlr.NewPostUpdateController(),
 		ctlr.NewPostDestroyController(),
 		ctlr.NewPostCommentController(),
+		ctlr.NewPostEditController(),
 		ctlr.NewPostIdController()}
 
 	muxer := mux.NewRouter()
