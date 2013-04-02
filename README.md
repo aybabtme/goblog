@@ -6,11 +6,35 @@ Course project to build a blogging engine in Go.
 # Usage
 
 To start the blog in dev mode, you need the following variables set:
+
 ```
 export PORT=5000
 export DATABASE_URL="<a url to your postgres url>"
-export DEBUG=true
 ```
 
-The `DEBUG` variable will generate random data in the database.  If you
-do not want that, simply let the variable an empty string.
+Then start the blog:
+
+```
+go get github.com/aybabtme/goblog
+goblog
+```
+
+This will start the blog with no users and no data in it.  You might want to have an author, so that you can write posts.
+
+To do this, use the `--create-admin` flag.  When you start the blog, it will askes you to do somethings to create
+an author user, and then the blog will start per-se.  __As it stands, the URL of OAuth callbacks is hardcoded to `flying-unicorns.aybabt.me:5000`__
+I might change that sometime in the future to use a config file.
+
+```
+goblog --create-admin
+```
+
+If you'd like to get some random lorem ipsum data in your blog, run it using the `--debug` flag.
+
+```
+goblog --debug --create-admin
+```
+
+# Writing posts and comments
+
+Comments and posts are converted to HTML using a Markdown compiler.  The syntax is kind-of Github-like.  Any HTML you leave in there will be escaped.
