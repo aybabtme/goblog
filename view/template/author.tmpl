@@ -1,44 +1,50 @@
 {{define "content"}}
-{{with .Author}}
-<div class="page-header">
-   <h1>
-      {{.User.Username}}
-   </h1>
-</div>
-<div id="posts" style="float:left;">
-   {{range .Posts}}
-   <div class="row-fluid">
-      <div class="span2">
-         <img src="{{.ImageURL}}" height="100px" width="100px"></img>
+   {{with .Author}}
+   <div class="page-header">
+      <h1>
+         {{.User.Username}}
+      </h1>
+      Registered since {{.User.RegistrationDate.Weekday}} {{.User.RegistrationDate.Day}} {{.User.RegistrationDate.Month}} {{.User.RegistrationDate.Year}}.
+   </div>
+   <div class="row">
+      <div class="span6">
+         {{range .Posts}}
+         <div lcass="row-fluid">
+            <div class="span2">
+               <img src="{{.ImageURL}}" height="100px" width="100px"></img>
+            </div>
+            <div class ="span10 page-header">
+               <h2>
+                  <a href="/post/{{.Id}}">{{.Title}}</a>
+                     <p><small>
+                     Posted on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}
+                     </small></p>
+               </h2>
+            </div>
+         </div>
+         {{else}}
+         <div class="hero-unit"><h1>There are not post on this blog!</h1></div>
+         {{end}}
       </div>
-      <div class="span10 page-header">
-         <h2>
-            <a href="/post/{{.Id}}">
-               {{.Title}}
-            </a>
-            <p><small>Posted on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}</small></p>
-         </h2>
+      <div class="span6">
+         {{if .User.Comments}}
+         <div class="span12">
+            <h4>Comments</h4>
+            {{range .User.Comments}}
+            <blockquote>
+               <p>{{.ContentMarkdown}}</p>
+            <small><a href="/post/{{.Post.Id}}#{{.Id}}">{{.Post.Title}}</a>, on
+                  {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}.
+               </small>
+            </blockquote>
+         </div>
+      {{end}}
+            {{else}}
+            <div class="alert">
+               <h4>{{.User.Username}} has not commented on any posts.</h4>
+            </div>
+            {{end}}
       </div>
    </div>
-   {{else}}
-   <div class="alert">{{.User.Username}} hasn't blogged anything!</div>
    {{end}}
-</div>
-
-<div id="comments" style="float:right;">
-   {{range .User.Comments}}
-   <h4>Comments</h4>
-   <blockquote id="{{.Id}}">
-      <p>{{.ContentMarkdown}}</p>
-      <small><a href="/user/{{.User.Id}}">{{.User.Username}}</a>, at
-         {{.Date.Hour}}h{{.Date.Minute}} on
-         {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}},
-         said:
-      </small>
-   </blockquote>
-   {{else}}
-   <div class="alert">{{.User.Username}} hasn't commented on anything!</div>
-   {{end}}
-</div>
-{{end}}
 {{end}}

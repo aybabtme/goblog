@@ -1,21 +1,19 @@
 {{define "content"}}
-{{with .Authors}}
-<h1>Blog Authors</h1>
-<div class="author-listing span9">
-   {{range .}}
-   <div class="row-fluid">
-      <div class="span10 page-header">
-         <h1>
-            <a href="/author/{{.Id}}">
-               {{.User.Username}}
-            </a>
-         </h1>
-         Registered since {{.User.RegistrationDate.Weekday}} {{.User.RegistrationDate.Day}} {{.User.RegistrationDate.Month}} {{.User.RegistrationDate.Year}}.
+   {{with .Authors}}
+   <h1>Blog Authors</h1>
+   <div class="author-listing span9">
+      {{range .}}
+      <div class="row-fluid">
+         <div class="span10 page-header">
+            <h1>
+               <a href="/author/{{.Id}}">{{.User.Username}}</a>
+            </h1>
+            Registered since {{.User.RegistrationDate.Weekday}} {{.User.RegistrationDate.Day}} {{.User.RegistrationDate.Month}} {{.User.RegistrationDate.Year}}.
+         </div>
       </div>
+      {{else}}
+      <div class="hero-unit"><h1>No author currently exists.</h1></div>
+      {{end}}
    </div>
-   {{else}}
-   <div class="hero-unit"><h1>No author currently exists.</h1></div>
    {{end}}
-</div>
-{{end}}
 {{end}}
