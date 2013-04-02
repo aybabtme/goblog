@@ -29,7 +29,7 @@
    {{range .User.Comments}}
    <h4>Comments</h4>
    <blockquote id="{{.Id}}">
-      <p>{{.Content}}</p>
+      <p>{{.ContentMarkdown}}</p>
       <small><a href="/user/{{.User.Id}}">{{.User.Username}}</a>, at
          {{.Date.Hour}}h{{.Date.Minute}} on
          {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}},

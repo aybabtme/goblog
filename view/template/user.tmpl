@@ -13,7 +13,7 @@
    <h5>
       <a href="/post/{{.Post.Id}}#{{.Id}}">{{.Post.Title}}</a><small>, commented on {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}</small>
    </h5>
-   {{.Content}}
+   {{.ContentMarkdown}}
    {{else}}
    <div class="alert">{{.Username}} hasn't posted any comment!</div>
    {{end}}

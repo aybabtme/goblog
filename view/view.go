@@ -2,7 +2,7 @@ package view
 
 import (
 	"fmt"
-	"html/template"
+	"text/template"
 )
 
 /*

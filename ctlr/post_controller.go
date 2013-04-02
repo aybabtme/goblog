@@ -5,12 +5,11 @@ import (
 	"github.com/aybabtme/goblog/model"
 	"github.com/aybabtme/goblog/view"
 	"github.com/gorilla/mux"
-	"github.com/russross/blackfriday"
-	"html/template"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 )
 
@@ -40,6 +39,13 @@ func NewPostSaveController() Controller {
 	return p
 }
 
+func NewPostCommentController() Controller {
+	var p post
+	p.path = "/post/comment/{commentId:[0-9]+}"
+	p.view = view.GetPostTemplate()
+	return p
+}
+
 func NewPostIdController() Controller {
 	var p post
 	p.path = "/post/{id:[0-9]+}"
@@ -63,11 +69,14 @@ func (p post) Controller(conn *model.DBConnection) func(http.ResponseWriter, *ht
 		vars := mux.Vars(req)
 		id := vars["id"]
 		destroyId := vars["destroyId"]
+		commentId := vars["commentId"]
 
 		if p.path == "/post/compose" {
 			p.forCompose(conn, rw, req)
 		} else if p.path == "/post/save" {
 			p.forSave(conn, rw, req)
+		} else if commentId != "" {
+			p.forComment(conn, rw, req, commentId)
 		} else if destroyId != "" {
 			p.forDestroy(conn, rw, req, destroyId)
 		} else if id == "" {
@@ -172,13 +181,10 @@ func (p *post) forSave(conn *model.DBConnection,
 
 	title := strings.Title(req.FormValue("title"))
 	imageUrl := req.FormValue("imageUrl")
-	markdown := req.FormValue("content")
+	content := req.FormValue("content")
 	labelString := req.FormValue("label_list")
-	content := string(blackfriday.MarkdownCommon([]byte(markdown)))
 
-	log.Printf("Title=%s\nContent=%s\nLabels=%s", title, content, labelString)
-
-	currentUser, currentAuthor := auth.Login(conn, rw, req)
+	_, currentAuthor := auth.Login(conn, rw, req)
 
 	if currentAuthor == nil {
 		// Can't save posts when you're not an author
@@ -191,20 +197,52 @@ func (p *post) forSave(conn *model.DBConnection,
 		return
 	}
 
-	data := struct {
-		CurrentAuthor *model.Author
-		CurrentUser   *model.User
-		Post          *model.Post
-	}{
-		currentAuthor,
-		currentUser,
-		post,
+	for _, label := range strings.Split(labelString, ",") {
+		if _, err := post.AddLabel(label); err != nil {
+			log.Printf("Couldn't add label <%s> to Post id<%d>\n", label, post.Id())
+		}
 	}
 
-	if err := p.view.Execute(rw, data); nil != err {
-		log.Println("PostController for listing 2:", err)
+	id := strconv.FormatInt(post.Id(), 10)
+	http.Redirect(rw, req, "/post/"+id, http.StatusFound)
+}
+
+func (p *post) forComment(conn *model.DBConnection,
+	rw http.ResponseWriter,
+	req *http.Request,
+	id string) {
+
+	content := req.FormValue("content")
+
+	currentUser, _ := auth.Login(conn, rw, req)
+	if currentUser == nil {
+		http.Redirect(rw, req, "/", http.StatusForbidden)
 		return
 	}
+
+	postId, _ := strconv.ParseInt(id, 10, 64)
+	post, err := conn.FindPostById(postId)
+	if err != nil || post == nil {
+		log.Printf("Post id<%d> doesn't exist", postId)
+		log.Println(err)
+		http.Redirect(rw, req, "/", http.StatusForbidden)
+		return
+	}
+
+	comment := conn.NewComment(currentUser.Id(),
+		postId,
+		content,
+		time.Now().UTC())
+
+	if err := comment.Save(); err != nil {
+		log.Printf("Error saving comment on post id<%d>\n", postId)
+		log.Println(err)
+		http.Error(rw, "/", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(rw, req, "/post/"+id, http.StatusFound)
+
 }
 
 func (p *post) forDestroy(conn *model.DBConnection,
@@ -220,7 +258,7 @@ func (p *post) forDestroy(conn *model.DBConnection,
 
 	_, currentAuthor := auth.Login(conn, rw, req)
 	if currentAuthor == nil {
-		http.Redirect(rw, req, "/", 401)
+		http.Redirect(rw, req, "/", http.StatusForbidden)
 		return
 	}
 
@@ -236,6 +274,6 @@ func (p *post) forDestroy(conn *model.DBConnection,
 		log.Println("Couldn't delete post:", err)
 	}
 
-	http.Redirect(rw, req, "/", 301)
+	http.Redirect(rw, req, "/", http.StatusFound)
 
 }

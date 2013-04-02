@@ -5,10 +5,10 @@ import (
 	"github.com/aybabtme/goblog/model"
 	"github.com/aybabtme/goblog/view"
 	"github.com/gorilla/mux"
-	"html/template"
 	"log"
 	"net/http"
 	"strconv"
+	"text/template"
 )
 
 func NewLabelController() Controller {

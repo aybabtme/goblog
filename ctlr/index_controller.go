@@ -4,9 +4,9 @@ import (
 	"github.com/aybabtme/goblog/auth"
 	"github.com/aybabtme/goblog/model"
 	"github.com/aybabtme/goblog/view"
-	"html/template"
 	"log"
 	"net/http"
+	"text/template"
 )
 
 type index struct {

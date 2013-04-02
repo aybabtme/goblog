@@ -14,34 +14,46 @@
          </p>
       </h1>
    </div>
-   <p>{{.Content}}</p>
-
+   <p>{{.ContentMarkdown}}</p>
+   {{end}}
    <hr></hr>
-
-   {{if .Comments}}
-   <h4>Comments</h4>
-   {{range .Comments}}
-   <blockquote id="{{.Id}}">
-      <p>{{.Content}}</p>
-
-
-      <small><a href="/user/{{.User.Id}}">{{.User.Username}}</a>, at
-         {{.Date.Hour}}h{{.Date.Minute}} on
-         {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}},
-         said:
-      </small>
-
-   </blockquote>
-
+   {{if .CurrentUser}}
+   <form action="/post/comment/{{.Post.Id}}" method="post">
+   <fieldset>
+      <legend>Comment</legend>
+      <textarea name="content" class="field span5" rows="4" placeholder="Your rant goes here"></textarea>
+   </fieldset>
+   <div class="form-actions">
+      <button type="submit" class="btn btn-primary">Submit</button>
+      <button type="button" class="btn">Cancel</button>
+   </div>
    {{end}}
-   {{else}}
-   <h4>No comments</h4>
-   <p>Be the first to comment on this post!</p>
-   {{end}}
+</form>
+<hr></hr>
+{{with .Post}}
+{{if .Comments}}
+<h4>Comments</h4>
+{{range .Comments}}
+<blockquote id="{{.Id}}">
+   <p>{{.ContentMarkdown}}</p>
 
-   {{else}}
-   {{template "404" .}}
-   {{end}}
+
+   <small>said <a href="/user/{{.User.Id}}">{{.User.Username}}</a>, at
+      {{.Date.Hour}}h{{.Date.Minute}} on
+      {{.Date.Weekday}} {{.Date.Day}} {{.Date.Month}} {{.Date.Year}}.
+   </small>
+
+</blockquote>
+
+{{end}}
+{{else}}
+<h4>No comments</h4>
+<p>Be the first to comment on this post!</p>
+{{end}}
+
+{{else}}
+{{template "404" .}}
+{{end}}
 </div>
 
 {{template "sidebar" .Post.Labels}}

@@ -3,6 +3,7 @@ package model
 import (
 	"database/sql"
 	"fmt"
+	"github.com/russross/blackfriday"
 	"time"
 )
 
@@ -146,6 +147,10 @@ func (p *Post) SetTitle(title string) {
 
 func (p *Post) Content() string {
 	return p.content
+}
+
+func (p *Post) ContentMarkdown() string {
+	return string(blackfriday.MarkdownCommon([]byte(p.content)))
 }
 
 func (p *Post) SetContent(content string) {
