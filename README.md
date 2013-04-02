@@ -1,4 +1,4 @@
-goblog-prototype
+goblog
 ================
 
 Originally a course project where we had to code anything that uses a SQL database, we decided to take the opportunity to learn Go and write the whole thing from scratch.
