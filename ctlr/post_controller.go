@@ -249,10 +249,15 @@ func (p *post) forSave(conn *model.DBConnection,
 	content := req.FormValue("content")
 	labelString := req.FormValue("label_list")
 
-	_, currentAuthor := auth.Login(conn, rw, req)
+	currentUser, currentAuthor := auth.Login(conn, rw, req)
+
+	if currentUser == nil {
+		http.Redirect(rw, req, "/", http.StatusForbidden)
+		return
+	}
 
 	if currentAuthor == nil {
-		// Can't save posts when you're not an author
+		http.Redirect(rw, req, "/", http.StatusForbidden)
 		return
 	}
 
@@ -365,9 +370,14 @@ func (p *post) forDestroy(conn *model.DBConnection,
 		return
 	}
 
-	_, currentAuthor := auth.Login(conn, rw, req)
+	currentUser, currentAuthor := auth.Login(conn, rw, req)
+	if currentUser == nil {
+		http.Redirect(rw, req, "/post/"+id, http.StatusForbidden)
+		return
+	}
+
 	if currentAuthor == nil {
-		http.Error(rw, "/", http.StatusForbidden)
+		http.Redirect(rw, req, "/post/"+id, http.StatusForbidden)
 		return
 	}
 

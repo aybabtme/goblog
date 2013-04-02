@@ -87,23 +87,25 @@ func GetHandleOAuth2Callback(conn *model.DBConnection) func(http.ResponseWriter,
 		session.Values["userId"] = strconv.FormatInt(user.Id(), 10)
 
 		author, err := conn.FindAuthorById(user.Id())
-		if err != nil {
-			log.Printf("User <%s> is not an author", user.Username())
-		} else if author != nil {
-			log.Printf("Author id(%d) %v", author.Id(), author)
+		if author != nil && err == nil {
 			authId := strconv.FormatInt(author.Id(), 10)
 			session.Values["authorId"] = authId
-			log.Printf("User <%s> is an author", user.Username())
+		}
+
+		if user != nil {
+			if author != nil {
+				log.Printf("LOGIN: Author id(%d)<%v>",
+					author.User().Id(),
+					author.User().Username())
+			} else {
+				log.Printf("LOGIN: User id(%d)<%v>",
+					user.Id(),
+					user.Username())
+			}
 		}
 
 		session.Save(r, w)
 		http.Redirect(w, r, "/", http.StatusFound)
-
-		userId, _ := session.Values["userId"].(string)
-		authorId, _ := session.Values["authorId"].(string)
-		log.Printf("userId=%s saved to cookie", userId)
-		log.Printf("authorId=%s saved to cookie", authorId)
-
 	}
 }
 

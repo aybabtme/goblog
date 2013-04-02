@@ -21,8 +21,8 @@
    <a href="/post/edit/{{.Post.Id}}" class="btn btn-warning">Edit</a>
    <a href="/post/destroy/{{.Post.Id}}" class="btn btn-danger">Delete</a>
    {{end}}
-   <hr></hr>
    {{if .CurrentUser}}
+   <hr></hr>
    <form action="/post/comment/{{.Post.Id}}" method="post">
    <fieldset>
       <legend>Comment</legend>

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"github.com/aybabtme/goblog/auth"
 	"github.com/aybabtme/goblog/model"
 	"github.com/aybabtme/gypsum"
@@ -8,12 +9,27 @@ import (
 	"math/rand"
 	"os"
 	"runtime"
+	"runtime/pprof"
 	"strconv"
 	"strings"
 	"time"
 )
 
+var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+var debug = flag.Bool("debug", false, "write random data on the database before starting the blog")
+var createAdmin = flag.Bool("create-admin", false, "interactively creates an admin user before starting the blog")
+
 func main() {
+
+	flag.Parse()
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
 
 	modelurl := os.Getenv("DATABASE_URL")
 	if modelurl == "" {
@@ -34,9 +50,11 @@ func main() {
 		panic(err)
 	}
 
-	auth.InteractiveOauth(conn, port)
+	if *createAdmin {
+		auth.InteractiveOauth(conn, port)
+	}
 
-	if os.Getenv("DEBUG") == "true" {
+	if *debug {
 		log.Printf("Generating data... ")
 		err = generateData(conn)
 		if err != nil {
@@ -61,7 +79,9 @@ func setupDatabase(modelurl string) (*model.DBConnection, error) {
 	if err != nil {
 		return nil, err
 	}
-	conn.DeleteConnection()
+	if *debug {
+		conn.DeleteConnection()
+	}
 	return model.NewConnection(postgres)
 }
 

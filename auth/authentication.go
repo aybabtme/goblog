@@ -16,6 +16,18 @@ func Login(conn *model.DBConnection, w http.ResponseWriter, r *http.Request) (*m
 	user := getUser(conn, store, r)
 	author := getAuthor(conn, store, r)
 
+	if user != nil {
+		if author != nil {
+			log.Printf("LOGIN: Author id(%d)<%v>",
+				author.User().Id(),
+				author.User().Username())
+		} else {
+			log.Printf("LOGIN: User id(%d)<%v>",
+				user.Id(),
+				user.Username())
+		}
+	}
+
 	// Save it.
 	sessions.Save(r, w)
 
@@ -38,7 +50,7 @@ func getUser(conn *model.DBConnection,
 
 	session, _ := store.Get(r, "user-session")
 	idStr, ok := session.Values["userId"].(string)
-	if !ok {
+	if !ok || idStr == "" {
 		return nil
 	}
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -58,9 +70,9 @@ func getAuthor(conn *model.DBConnection,
 	store sessions.Store,
 	r *http.Request) *model.Author {
 
-	session, err := store.Get(r, "author-session")
+	session, err := store.Get(r, "user-session")
 	idStr, ok := session.Values["authorId"].(string)
-	if !ok {
+	if !ok || idStr == "" {
 		return nil
 	}
 	id, err := strconv.ParseInt(idStr, 10, 64)
