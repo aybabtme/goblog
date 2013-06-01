@@ -1,3 +1,5 @@
+I do not recommend the usage of this software, it is incomplete.
+
 goblog
 ================
 
